@@ -1,0 +1,7 @@
+entities:
+  customer:
+    pk: customer_id
+    fields: [customer_id, name, email, city, country, created_at]
+  transaction:
+    pk: transaction_id
+    fields: [transaction_id, customer_id, amount, order_date]
