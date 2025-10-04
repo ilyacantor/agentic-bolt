@@ -29,27 +29,31 @@ function renderGraph() {
   }
   console.log("Rendering graph with", state.graph.nodes.length, "nodes");
 
-  if (!cy) {
-    cy = cytoscape({
-      container: document.getElementById("cy"),
-      elements: [],
-      style: [
-        { selector: "node", style: { "background-color": "#2563eb", "label": "data(label)", "color": "#fff", "text-valign": "center" }},
-        { selector: "edge", style: { "line-color": "#999", "target-arrow-shape": "triangle", "target-arrow-color": "#999" }}
-      ]
-    });
-  }
-  
-  cy.elements().remove();
-  cy.add([
-    ...state.graph.nodes.map(n => ({
-      data: { id: n.id, label: n.label }
-    })),
-    ...state.graph.edges.map(e => ({
-      data: { source: e.source, target: e.target }
-    }))
-  ]);
-  cy.layout({ name: "cose", animate: true, randomize: false, fit: true, padding: 30 }).run();
+  cy = cytoscape({
+    container: document.getElementById("cy"),
+    elements: [
+      ...state.graph.nodes.map(n => ({
+        data: { id: n.id, label: n.label }
+      })),
+      ...state.graph.edges.map(e => ({
+        data: { source: e.source, target: e.target }
+      }))
+    ],
+    style: [
+      { selector: "node", style: { "background-color": "#2563eb", "label": "data(label)" }},
+      { selector: "edge", style: { "line-color": "#999", "target-arrow-shape": "triangle" }}
+    ],
+    layout: {
+      name: "cose",
+      animate: false,
+      randomize: false,
+      fit: true,
+      nodeRepulsion: 5000
+    }
+  });
+
+  // Make nodes draggable but static afterwards
+  cy.nodes().forEach(n => n.grabify());
 }
 
 function renderTable(elId, tables){
