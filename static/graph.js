@@ -54,6 +54,15 @@ function renderGraph() {
 
   // Make nodes draggable but static afterwards
   cy.nodes().forEach(n => n.grabify());
+  
+  // Add click handler for preview
+  cy.on('tap', 'node', async (evt) => {
+    const id = evt.target.id();
+    const r = await fetch('/preview?node=' + encodeURIComponent(id));
+    const data = await r.json();
+    renderTable('preview_sources', data.sources);
+    renderTable('preview_ontology', data.ontology);
+  });
 }
 
 function renderTable(elId, tables){
