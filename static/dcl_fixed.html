@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>DCL 2D FIX (static preset)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background:#f8fafc; margin:0; padding:20px; }
+    #cy  { height: 600px; background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.1); }
+    .hdr { margin-bottom:10px; color:#0f172a }
+    .ver { font-size:12px; color:#475569 }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+</head>
+<body>
+  <div class="hdr">
+    <h2>✅ DCL 2D FIX — static preset</h2>
+    <div class="ver">Cytoscape version: <span id="ver"></span></div>
+  </div>
+  <div id="cy"></div>
+
+  <script>
+    document.getElementById('ver').textContent = cytoscape.version();
+
+    (async function () {
+      try {
+        const res = await fetch('/state', { cache: 'no-store' });
+        const state = await res.json();
+        console.log('STATE:', state);
+
+        const nodes = (state.graph && state.graph.nodes) ? state.graph.nodes : [];
+        const edges = (state.graph && state.graph.edges) ? state.graph.edges : [];
+
+        // Build elements with a robust type guess fallback
+        const elements = [
+          ...nodes.map(n => ({ data: { id: n.id, label: n.label, type: n.type || guessType(n) } })),
+          ...edges.map(e => ({ data: { source: e.source, target: e.target, label: e.label || '', type: e.type || '' } }))
+        ];
+
+        // Deterministic positions by type (L→R) – NO physics
+        const positions = computePositionsByType(elements.filter(el => el.data && el.data.id).map(el => el.data));
+
+        const cy = cytoscape({
+          container: document.getElementById('cy'),
+          elements,
+          style: [
+            { selector: 'node', style: {
+                'label': 'data(label)', 'color': '#111827', 'text-wrap': 'wrap', 'text-max-width': 160,
+                'font-size': 14, 'background-color': '#2563eb', 'shape': 'round-rectangle'
+              } },
+            { selector: 'node[type="ontology"]', style: { 'background-color': '#16a34a', 'color':'#fff' } },
+            { selector: 'node[type="agent"]',     style: { 'background-color': '#9333ea', 'color':'#fff', 'shape':'ellipse' } },
+            { selector: 'node[type="consumer"]',  style: { 'background-color': '#475569', 'color':'#fff', 'shape':'rectangle' } },
+            { selector: 'edge', style: {
+                'curve-style': 'bezier', 'line-color': '#9ca3af', 'target-arrow-shape': 'triangle',
+                'target-arrow-color': '#9ca3af', 'width': 2, 'font-size': 10, 'label': 'data(label)'
+              } }
+          ],
+          layout: { name: 'preset', positions, fit: true, padding: 20 }  // <- FIX: static, no jitter
+        });
+
+        // Lock after layout so nothing moves
+        cy.nodes().lock();
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('cy').innerHTML =
+          '<p style="color:#b91c1c;padding:12px">Failed to load /state. Check FastAPI /state endpoint.</p>';
+      }
+
+      function guessType(n) {
+        const L = (n.label || '').toLowerCase();
+        if (L.includes('unified') || L.includes('ontology')) return 'ontology';
+        if (L.includes('agent') || L.includes('connector')) return 'agent';
+        if (L.includes('consumer') || L.includes('dashboard') || L.includes('bi')) return 'consumer';
+        return 'source';
+      }
+
+      function computePositionsByType(nodes) {
+        // Columns: source → agent → ontology → consumer
+        const colIndex = { source: 0, agent: 1, ontology: 2, consumer: 3 };
+        const colX = [140, 420, 700, 980];   // X position per column
+        const rowGap = 110, yStart = 120;
+        const counters = [0, 0, 0, 0], pos = {};
+        nodes.forEach(n => {
+          const t = n.type || 'source';
+          const col = (colIndex[t] !== undefined) ? colIndex[t] : 1;
+          const x = colX[col];
+          const y = yStart + counters[col] * rowGap;
+          counters[col] += 1;
+          pos[n.id] = { x, y };
+        });
+        return pos;
+      }
+    })();
+  </script>
+</body>
+</html>
