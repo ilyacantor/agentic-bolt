@@ -1,10 +1,6 @@
 async function fetchState(){
-  const r = await fetch('/state');
-  state = await r.json();
+  await refreshState();
   document.getElementById('autoIngestToggle').checked = state.auto_ingest_unmapped || false;
-  renderLog();
-  renderGraph();
-  renderPreviews();
 }
 
 async function addSource(){
