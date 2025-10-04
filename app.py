@@ -377,11 +377,11 @@ def index():
     <div class="card grid2">
       <div>
         <h3 class="title">Source Preview</h3>
-        <div id="preview_sources"></div>
+        <div id="preview_sources"><div class='pill'>Click a node to preview data</div></div>
       </div>
       <div>
         <h3 class="title">Unified Preview</h3>
-        <div id="preview_ontology"></div>
+        <div id="preview_ontology"><div class='pill'>Click a node to preview data</div></div>
       </div>
     </div>
     
