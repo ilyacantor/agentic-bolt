@@ -1,5 +1,4 @@
 let state = {events: [], timeline: [], graph: {nodes:[], edges:[], confidence:null, last_updated:null}, preview:{sources:{}, ontology:{}}, llm:{calls:0, tokens:0}, auto_ingest_unmapped:false};
-let cy;
 
 async function refreshState() {
   const res = await fetch("/state");
@@ -27,42 +26,68 @@ function renderGraph() {
     console.warn("No graph data in state");
     return;
   }
-  console.log("Rendering graph with", state.graph.nodes.length, "nodes");
 
-  cy = cytoscape({
-    container: document.getElementById("cy"),
-    elements: [
-      ...state.graph.nodes.map(n => ({
-        data: { id: n.id, label: n.label }
-      })),
-      ...state.graph.edges.map(e => ({
-        data: { source: e.source, target: e.target }
-      }))
-    ],
-    style: [
-      { selector: "node", style: { "background-color": "#2563eb", "label": "data(label)" }},
-      { selector: "edge", style: { "line-color": "#999", "target-arrow-shape": "triangle" }}
-    ],
-    layout: {
-      name: "cose",
-      animate: false,
-      randomize: false,
-      fit: true,
-      nodeRepulsion: 5000
-    }
-  });
+  const elements = [
+    ...state.graph.nodes.map(n => ({
+      data: { id: n.id, label: n.label, type: n.type }
+    })),
+    ...state.graph.edges.map(e => ({
+      data: { source: e.source, target: e.target, label: e.label || "", type: e.type || "" }
+    }))
+  ];
 
-  // Make nodes draggable but static afterwards
-  cy.nodes().forEach(n => n.grabify());
-  
-  // Add click handler for preview
-  cy.on('tap', 'node', async (evt) => {
-    const id = evt.target.id();
-    const r = await fetch('/preview?node=' + encodeURIComponent(id));
-    const data = await r.json();
-    renderTable('preview_sources', data.sources);
-    renderTable('preview_ontology', data.ontology);
+  // deterministic positions by type
+  const positions = computePositionsByType(state.graph.nodes);
+
+  if (!window.__cy) {
+    window.__cy = cytoscape({
+      container: document.getElementById("cy"),
+      elements,
+      style: [
+        { selector: "node[type='source']", style: { "background-color": "#2563eb", "shape": "round-rectangle", "color": "#fff", "label": "data(label)" }},
+        { selector: "node[type='agent']",   style: { "background-color": "#9333ea", "shape": "ellipse", "color": "#fff", "label": "data(label)" }},
+        { selector: "node[type='ontology']",style: { "background-color": "#16a34a", "shape": "round-rectangle", "color": "#fff", "label": "data(label)" }},
+        { selector: "node[type='consumer']",style: { "background-color": "#475569", "shape": "rectangle", "color": "#fff", "label": "data(label)" }},
+        { selector: "edge", style: { "curve-style": "bezier", "line-color": "#9ca3af", "target-arrow-shape": "triangle", "target-arrow-color": "#9ca3af", "width": 2, "label": "data(label)" }}
+      ],
+      layout: { name: "preset", positions, fit: true, padding: 20 }
+    });
+
+    // lock nodes so nothing moves
+    window.__cy.nodes().lock();
+
+    // Add click handler for preview
+    window.__cy.on('tap', 'node', async (evt) => {
+      const id = evt.target.id();
+      const r = await fetch('/preview?node=' + encodeURIComponent(id));
+      const data = await r.json();
+      renderTable('preview_sources', data.sources);
+      renderTable('preview_ontology', data.ontology);
+    });
+
+  } else {
+    const cy = window.__cy;
+    cy.elements().remove();
+    cy.add(elements);
+    cy.layout({ name: "preset", positions, fit: true }).run();
+    cy.nodes().lock();
+  }
+}
+
+function computePositionsByType(nodes) {
+  const colIndex = { source: 0, agent: 1, ontology: 2, consumer: 3 };
+  const colX = [140, 420, 700, 980];
+  const rowGap = 110, yStart = 120;
+  const counters = [0, 0, 0, 0], pos = {};
+  nodes.forEach(n => {
+    const t = n.type || "source";
+    const col = colIndex[t] !== undefined ? colIndex[t] : 1;
+    const x = colX[col];
+    const y = yStart + counters[col] * rowGap;
+    counters[col] += 1;
+    pos[n.id] = { x, y };
   });
+  return pos;
 }
 
 function renderTable(elId, tables){
