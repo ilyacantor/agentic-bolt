@@ -1,0 +1,43 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, sans-serif;
+  background: #f8fafc;  /* light background */
+  color: #111827;       /* dark slate text */
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+button {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  margin-right: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+button:hover {
+  background: #1e40af;
+}
+
+#cy, #graph3d {
+  width: 100%;
+  height: 600px;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  margin-top: 12px;
+}

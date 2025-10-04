@@ -2,6 +2,7 @@
 import os, time, json, glob, duckdb, pandas as pd, yaml, warnings, threading, re, traceback
 from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 import google.generativeai as genai
@@ -319,6 +320,7 @@ def reset_demo():
     log("I reset the demo. Pick a source from the menu to add it.")
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 def index():
@@ -326,40 +328,14 @@ def index():
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>DCL Agent — Sources Demo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="https://unpkg.com/qtip2@3.0.3/dist/jquery.qtip.min.css">
-  <style>
-    body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 0; background:#0b0f14; color:#e6eef5;}
-    header { padding:16px 20px; display:flex; align-items:center; gap:12px; border-bottom:1px solid #1b2430; position:sticky; top:0; background:#0b0f14; z-index:10;}
-    select, button { background:#121a24; color:#e6eef5; border:1px solid #2a3644; padding:8px 10px; border-radius:10px; cursor:pointer; }
-    button:disabled { opacity:0.5; cursor:not-allowed; }
-    button.primary { background:#2563eb; border-color:#2563eb; }
-    .wrap { display:flex; flex-direction:column; gap:16px; padding:16px; }
-    #graphWrapper { display:flex; gap:16px; align-items:flex-start; }
-    #narrationPanel { flex: 0 0 320px; max-width: 320px; min-width: 320px; }
-    .card { background:#0d131b; border:1px solid #1b2430; border-radius:14px; padding:14px; }
-    .title { font-weight:600; margin:0 0 8px 0; color:#cfe7ff; }
-    #log { white-space:pre-line; line-height:1.45; color:#d6e2ee; }
-    #cy { flex: 1 1 auto; width:100%; height:520px; min-height:520px; max-height:520px; background:#0a0f15; border:1px solid #1b2430; border-radius:12px; overflow:hidden;}
-    .badge, .llm-badge { position:absolute; background:#142133; border:1px solid #29405b; color:#bfe1ff; padding:4px 8px; border-radius:8px; font-size:11px; }
-    .badge { bottom:16px; right:16px; }
-    .badge.good { background:#0e2f1b; border-color:#1b5e2b; color:#bfffd0; }
-    .badge.warn { background:#39250e; border-color:#7a4d14; color:#ffd3aa; }
-    .badge.pause { background:#2c2c2c; border-color:#444; color:#ddd; }
-    .llm-badge { top:16px; left:16px; background:#1a2330; border-color:#2c3f55; color:#9ecbff; }
-    .controls { display:flex; gap:8px; align-items:center;}
-    .timeline { font-size:13px; color:#b2c3d6;}
-    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-    table { width:100%; border-collapse: collapse; }
-    th, td { border-bottom:1px solid #1b2430; padding:6px 8px; font-size:13px; }
-    th { color:#a8c7ff; text-align:left; }
-    table tr:nth-child(even) { background:#111822; }
-    td { max-width: 160px; overflow:hidden; text-overflow: ellipsis; white-space:nowrap; }
-    .pill { padding:2px 8px; border-radius:999px; border:1px solid #253144; font-size:12px; color:#b5cbe6; }
-    .toggle { margin-left:auto; display:flex; gap:8px; align-items:center; }
-  </style>
+  <meta charset="UTF-8">
+  <title>DCL Visualizer</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+  <script src="https://unpkg.com/cytoscape-cose-bilkent/cytoscape-cose-bilkent.js"></script>
+  <script src="https://unpkg.com/3d-force-graph"></script>
+  <script src="https://unpkg.com/three/build/three.min.js"></script>
+  <script src="https://unpkg.com/three-spritetext/dist/three-spritetext.min.js"></script>
 </head>
 <body>
   <header>
@@ -374,6 +350,8 @@ def index():
       </select>
       <button class="primary" onclick="addSource()">Add Source</button>
       <button onclick="resetDemo()">Reset</button>
+      <button class="mode-toggle" onclick="show2D()">2D Mode</button>
+      <button class="mode-toggle" onclick="show3D()">3D Mode</button>
     </div>
     <div class="toggle">
       <label for="autoIngestToggle" style="font-size: 13px; color: #b2c3d6; cursor: pointer;">Auto-ingest unmapped sources</label>
@@ -387,16 +365,11 @@ def index():
         <div id="log"></div>
       </div>
       <div class="card" style="position:relative; flex:1;">
-        <h3 class="title">Graph</h3>
+        <h3 class="title">Graph Visualization</h3>
         <div id="llmBadge" class="llm-badge">LLM Calls: 0 | Tokens: ~0</div>
-        <div id="legend" style="margin: 8px 0; font-size: 13px; color: #bfe1ff;">
-          <strong>Legend:</strong>
-          <span style="color:#4a90e2;">■ Source Tables (in Cloud)</span>
-          <span style="margin-left:12px; color:#2ecc71;">■ Unified Ontology (in Company Block)</span>
-          <span style="margin-left:12px; color:#9b59b6;">— Mapping Edges</span>
-        </div>
-        <div id="cy"></div>
-        <div id="statusBadge" style="position:absolute; bottom:12px; right:16px; background:#142133; border:1px solid #29405b; color:#bfe1ff; padding:4px 8px; border-radius:6px; font-size:12px;">
+        <div id="cy" style="width:100%; height:600px;"></div>
+        <div id="graph3d" style="width:100%; height:600px; display:none;"></div>
+        <div id="statusBadge" style="position:absolute; bottom:12px; right:16px; background:#ffffff; border:1px solid #e2e8f0; color:#111827; padding:6px 10px; border-radius:8px; font-size:12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           LLM Calls: 0 | Confidence: -- | Updated: --
         </div>
       </div>
@@ -423,487 +396,11 @@ def index():
       </div>
       <div id="schemaResults" style="margin-top: 16px;"></div>
     </div>
-  </div>
 
-  <script src="https://unpkg.com/jquery@3.6.0/dist/jquery.min.js"></script>
-  <script src="https://unpkg.com/qtip2@3.0.3/dist/jquery.qtip.min.js"></script>
-  <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
-  <script src="https://unpkg.com/cytoscape-qtip@2.8.0/cytoscape-qtip.js"></script>
-  <script>
-    let state = {events: [], timeline: [], graph: {nodes:[], edges:[], confidence:null, last_updated:null}, preview:{sources:{}, ontology:{}}};
-    let cy;
-
-    // Anchors & Sizes
-    const CLOUD_X = 120;
-    const CLOUD_WIDTH = 320;
-    const CLOUD_HEIGHT = 280;
-    const OFFSET = 220;
-    const INITECH_X = CLOUD_X + CLOUD_WIDTH/2 + OFFSET;
-
-    function badgeClass(conf){
-      if(conf===null) return "badge";
-      if(conf >= 0.8) return "badge good";
-      if(conf >= 0.6) return "badge warn";
-      return "badge pause";
-    }
-
-    async function fetchState(){
-      const r = await fetch('/state');
-      state = await r.json();
-      document.getElementById('autoIngestToggle').checked = state.auto_ingest_unmapped || false;
-      renderLog();
-      renderGraph();
-      renderPreviews();
-    }
-
-    function renderLog(){
-      const logEl = document.getElementById('log');
-      logEl.textContent = state.events.join("\\n");
-      const conf = state.graph.confidence;
-      const statusBadge = document.getElementById('statusBadge');
-      const confText = conf != null ? `${Math.round(conf*100)}%` : '--';
-      const updateText = state.graph.last_updated || '--';
-      statusBadge.textContent = `LLM Calls: ${state.llm.calls} | Confidence: ${confText} | Updated: ${updateText}`;
-      const llmBadge = document.getElementById('llmBadge');
-      llmBadge.textContent = `LLM Calls: ${state.llm.calls} | Tokens: ~${state.llm.tokens}`;
-    }
-
-    function getGridPosition(nodeType, index) {
-      const yStart = 120;
-      const ySpacing = 90;
-      return {
-        x: nodeType === "source" ? CLOUD_X : INITECH_X,
-        y: yStart + index * ySpacing
-      };
-    }
-
-    function spotlightNode(nodeId) {
-      const node = cy.getElementById(nodeId);
-      if (!node || node.length === 0) return;
-      node.animate({
-        style: { 'border-color': '#f1c40f', 'border-width': 4 },
-        duration: 400
-      }).animate({
-        style: { 'border-color': node.data('type') === 'source' ? '#4a90e2' : '#2ecc71', 'border-width': 1 },
-        duration: 800
-      });
-    }
-
-    function revealOntology() {
-      const unifiedBlock = cy.getElementById('unified_block');
-      if (unifiedBlock.length > 0) {
-        unifiedBlock.animate({ style: { opacity: 0.15 }, duration: 600 });
-      }
-      cy.nodes('[type="ontology"]').forEach(node => {
-        node.animate({ style: { opacity: 1 }, duration: 600 });
-      });
-      cy.edges('[type="mapping"]').forEach(edge => {
-        edge.animate({ style: { opacity: 1 }, duration: 600 });
-      });
-    }
-
-    function renderGraph(){
-      const sourceNodes = state.graph.nodes.filter(n => n.type !== 'ontology');
-      const ontologyNodes = state.graph.nodes.filter(n => n.type === 'ontology');
-      
-      // Find unmapped sources (sources without mapping edges)
-      const mappedSources = new Set(state.graph.edges.filter(e => e.type === 'mapping').map(e => e.source));
-      const unmappedSources = sourceNodes.filter(n => !mappedSources.has(n.id));
-      
-      // Add Unclassified node if auto_ingest is ON and there are unmapped sources
-      let ontologyNodesWithUnclassified = [...ontologyNodes];
-      if (state.auto_ingest_unmapped && unmappedSources.length > 0) {
-        if (!ontologyNodesWithUnclassified.find(n => n.id === 'dcl_unclassified')) {
-          ontologyNodesWithUnclassified.push({ id: 'dcl_unclassified', label: 'Unclassified (Unified)', type: 'ontology_unclassified' });
-        }
-      }
-      
-      const nodes = [
-        ...sourceNodes.map((n, idx) => ({ 
-          data: { id: n.id, label: n.label, type: 'source' },
-          position: getGridPosition('source', idx),
-          locked: true
-        })),
-        ...ontologyNodesWithUnclassified.map((n, idx) => ({ 
-          data: { id: n.id, label: n.label, type: n.type === 'ontology_unclassified' ? 'ontology_unclassified' : 'ontology' },
-          position: getGridPosition('ontology', idx),
-          locked: true
-        }))
-      ];
-      
-      // Create edges, including auto-ingest edges for unmapped sources
-      let allEdges = [...state.graph.edges.filter(e => e.type !== 'source' && e.type !== 'join')];
-      if (state.auto_ingest_unmapped && unmappedSources.length > 0) {
-        unmappedSources.forEach(source => {
-          allEdges.push({
-            source: source.id,
-            target: 'dcl_unclassified',
-            label: 'auto-ingested',
-            type: 'mapping',
-            confidence: 50
-          });
-        });
-      }
-      
-      const edges = allEdges.map(e => ({ data: { source: e.source, target: e.target, label: e.label, type: e.type, confidence: e.confidence || 85 } }));
-      
-      if(!cy){
-        cy = cytoscape({
-          container: document.getElementById('cy'),
-          elements: [],
-          style: [
-            {
-              selector: 'node[type="source"]',
-              style: {
-                'background-color': '#4a90e2',
-                'label': 'data(label)',
-                'color': '#ffffff',
-                'font-size': 14,
-                'text-valign': 'center',
-                'text-halign': 'center',
-                'shape': 'round-rectangle',
-                'padding': '10px',
-                'width': 'label',
-                'height': 'label',
-                'border-width': 1,
-                'border-color': '#4a90e2'
-              }
-            },
-            {
-              selector: 'node[type="ontology"]',
-              style: {
-                'background-color': '#2ecc71',
-                'label': 'data(label)',
-                'color': '#ffffff',
-                'font-size': 14,
-                'text-valign': 'center',
-                'text-halign': 'center',
-                'shape': 'round-rectangle',
-                'padding': '10px',
-                'width': 'label',
-                'height': 'label',
-                'border-width': 1,
-                'border-color': '#2ecc71'
-              }
-            },
-            {
-              selector: 'node[type="ontology_unclassified"]',
-              style: {
-                'background-color': '#7f8c8d',
-                'label': 'data(label)',
-                'color': '#ffffff',
-                'font-size': 14,
-                'text-valign': 'center',
-                'text-halign': 'center',
-                'shape': 'round-rectangle',
-                'padding': '10px',
-                'width': 'label',
-                'height': 'label',
-                'border-width': 2,
-                'border-color': '#95a5a6',
-                'border-style': 'dashed'
-              }
-            },
-            {
-              selector: 'edge[type="source"]',
-              style: {
-                'line-color': '#4a90e2',
-                'width': 2,
-                'curve-style': 'straight',
-                'target-arrow-shape': 'triangle',
-                'target-arrow-color': '#4a90e2'
-              }
-            },
-            {
-              selector: 'edge[type="mapping"]',
-              style: {
-                'line-color': '#9b59b6',
-                'width': 2,
-                'line-style': 'dashed',
-                'curve-style': 'straight',
-                'target-arrow-shape': 'triangle',
-                'target-arrow-color': '#9b59b6'
-              }
-            },
-            {
-              selector: 'node[type="container"]',
-              style: {
-                'background-color': 'data(bgcolor)',
-                'opacity': 0.15,
-                'shape': 'round-rectangle',
-                'width': 260,
-                'height': 300,
-                'text-valign': 'top',
-                'font-size': 14,
-                'font-weight': 'bold',
-                'color': '#ffffff',
-                'padding': '20px',
-                'label': 'data(label)',
-                'z-index': 0
-              }
-            },
-            {
-              selector: 'node[id="source_cloud"]',
-              style: {
-                'shape': 'ellipse',
-                'width': 280,
-                'height': 320,
-                'background-color': '#4a90e2',
-                'opacity': 0.12
-              }
-            }
-          ],
-          layout: { name: 'preset' }
-        });
-
-        // Disable zooming & fix viewport
-        cy.userZoomingEnabled(false);
-        cy.userPanningEnabled(false);
-        cy.boxSelectionEnabled(false);
-        cy.zoom(1);
-        cy.pan({ x: 50, y: 0 });
-        cy.resize();
-
-        cy.on('tap', 'node', async (evt) => {
-          const id = evt.target.id();
-          spotlightNode(id);
-          const r = await fetch('/preview?node=' + encodeURIComponent(id));
-          const data = await r.json();
-          renderTable('preview_sources', data.sources);
-          renderTable('preview_ontology', data.ontology);
-        });
-      }
-      
-      cy.elements().remove();
-      
-      // Add container nodes first (background boxes)
-      if (sourceNodes.length > 0) {
-        cy.add({
-          group: "nodes",
-          data: { id: "source_cloud", label: "Source Cloud", type: "container" },
-          position: { x: CLOUD_X, y: 200 },
-          style: {
-            'shape': 'round-rectangle',
-            'width': CLOUD_WIDTH,
-            'height': CLOUD_HEIGHT,
-            'background-color': '#ecf0f1',
-            'background-image': 'url(https://upload.wikimedia.org/wikipedia/commons/3/3c/Cloud_icon.svg)',
-            'background-fit': 'cover',
-            'background-opacity': 0.15,
-            'opacity': 0.35,
-            'border-width': 2,
-            'border-color': '#95a5a6',
-            'text-valign': 'top',
-            'text-halign': 'center',
-            'font-size': 14,
-            'font-weight': 'bold',
-            'color': '#7f8c8d',
-            'z-index': 0
-          },
-          locked: true
-        });
-      }
-      
-      if (ontologyNodes.length > 0) {
-        cy.add({
-          group: "nodes",
-          data: { id: "unified_block", label: "Initech Corp.", type: "container" },
-          position: { x: INITECH_X, y: 200 },
-          style: {
-            'shape': 'round-rectangle',
-            'width': 340,
-            'height': 300,
-            'background-color': '#2ecc71',
-            'background-image': 'url(https://upload.wikimedia.org/wikipedia/commons/3/33/Building_icon.svg)',
-            'background-fit': 'cover',
-            'background-opacity': 0.15,
-            'opacity': 0.35,
-            'border-width': 2,
-            'border-color': '#27ae60',
-            'text-valign': 'top',
-            'text-halign': 'center',
-            'font-size': 16,
-            'font-weight': 'bold',
-            'color': '#27ae60',
-            'z-index': 0
-          },
-          locked: true
-        });
-      }
-      
-      cy.add(nodes);
-      cy.add(edges);
-      
-      // Add qtip tooltips (skip container nodes)
-      cy.nodes('[type!="container"]').forEach(node => {
-        node.qtip({
-          content: () => `<strong>${node.data('label')}</strong><br>Type: ${node.data('type')}`,
-          position: { my: 'top center', at: 'bottom center' },
-          style: { classes: 'qtip-light qtip-shadow' }
-        });
-      });
-      
-      cy.edges().forEach(edge => {
-        edge.qtip({
-          content: () => `Confidence: ${edge.data('confidence')}%`,
-          position: { my: 'top center', at: 'bottom center' },
-          style: { classes: 'qtip-dark qtip-shadow' }
-        });
-      });
-      
-      // Always show unified view
-      revealOntology();
-      
-      // Lock viewport on left side
-      cy.pan({ x: 50, y: 0 });
-      cy.zoom(1);
-    }
-
-    function renderTable(elId, tables){
-      const el = document.getElementById(elId);
-      if(!tables || Object.keys(tables).length===0) { el.innerHTML = "<div class='pill'>Click a node to preview data</div>"; return; }
-      let html = "";
-      for(const [name, rows] of Object.entries(tables)){
-        if(!rows || rows.length==0){ continue; }
-        const cols = Object.keys(rows[0]);
-        html += `<div class='pill' style='margin:6px 0;'>${name}</div>`;
-        html += "<table><thead><tr>" + cols.map(c=>`<th>${c}</th>`).join("") + "</tr></thead><tbody>";
-        rows.forEach(r => { html += "<tr>" + cols.map(c=>`<td>${r[c]}</td>`).join("") + "</tr>"; });
-        html += "</tbody></table>";
-      }
-      el.innerHTML = html || "<div class='pill'>No data</div>";
-    }
-
-    function renderPreviews(){
-      renderTable('preview_sources', state.preview.sources);
-      renderTable('preview_ontology', state.preview.ontology);
-    }
-
-    async function addSource(){
-      const btn = event.target;
-      const src = document.getElementById('source').value;
-      btn.disabled = true;
-      btn.textContent = 'Processing...';
-      try {
-        await fetch('/connect?source='+encodeURIComponent(src));
-        await fetchState();
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Add Source';
-      }
-    }
-    async function resetDemo(){
-      await fetch('/reset');
-      await fetchState();
-    }
-    
-    async function toggleAutoIngest(){
-      const toggle = document.getElementById('autoIngestToggle');
-      await fetch('/toggle_auto_ingest?enabled=' + toggle.checked);
-      await fetchState();
-    }
-
-    let schemaFields = [{name: '', type: ''}];
-    
-    function renderSchemaFields(){
-      const container = document.getElementById('schemaFieldsContainer');
-      container.innerHTML = schemaFields.map((field, i) => `
-        <div style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
-          <input 
-            type="text" 
-            placeholder="Field name (e.g., custRef)" 
-            value="${field.name}" 
-            onchange="updateSchemaField(${i}, 'name', this.value)"
-            style="flex: 1; padding: 8px; background: #121a24; border: 1px solid #2a3644; border-radius: 6px; color: #e6eef5;"
-          />
-          <select 
-            onchange="updateSchemaField(${i}, 'type', this.value)"
-            style="padding: 8px; background: #121a24; border: 1px solid #2a3644; border-radius: 6px; color: #e6eef5;"
-          >
-            <option value="">Select type</option>
-            <option value="Text" ${field.type === 'Text' ? 'selected' : ''}>Text</option>
-            <option value="Number" ${field.type === 'Number' ? 'selected' : ''}>Number</option>
-            <option value="DateTime" ${field.type === 'DateTime' ? 'selected' : ''}>DateTime</option>
-            <option value="Currency" ${field.type === 'Currency' ? 'selected' : ''}>Currency</option>
-          </select>
-          ${schemaFields.length > 1 ? `<button onclick="removeSchemaField(${i})" style="padding: 6px 10px;">✕</button>` : ''}
-        </div>
-      `).join('');
-    }
-    
-    function addSchemaField(){
-      if(schemaFields.length < 5){
-        schemaFields.push({name: '', type: ''});
-        renderSchemaFields();
-      }
-    }
-    
-    function removeSchemaField(index){
-      schemaFields.splice(index, 1);
-      renderSchemaFields();
-    }
-    
-    function updateSchemaField(index, key, value){
-      schemaFields[index][key] = value;
-    }
-    
-    async function resetSchemaInference(){
-      schemaFields = [{name: '', type: ''}];
-      renderSchemaFields();
-      document.getElementById('schemaResults').innerHTML = '';
-      await resetDemo();
-    }
-    
-    async function inferOntology(){
-      const validFields = schemaFields.filter(f => f.name && f.type);
-      if(validFields.length === 0){
-        alert('Please add at least one field with both name and type');
-        return;
-      }
-      
-      const resultsDiv = document.getElementById('schemaResults');
-      resultsDiv.innerHTML = '<p style="color: #9ecbff;">Processing with AI...</p>';
-      
-      try {
-        const response = await fetch('/api/infer', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({fields: validFields})
-        });
-        
-        const data = await response.json();
-        
-        resultsDiv.innerHTML = `
-          <table border="1" style="margin-top: 12px; width: 100%;">
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Type</th>
-                <th>Suggested Mapping</th>
-                <th>Transformation</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.mappings.map(m => `
-                <tr>
-                  <td>${m.name}</td>
-                  <td>${m.type}</td>
-                  <td style="color: #2ecc71; font-weight: 600;">${m.suggested_mapping}</td>
-                  <td>${m.transformation}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        `;
-      } catch(err) {
-        resultsDiv.innerHTML = `<p style="color: #ff6b6b;">Error: ${err.message}</p>`;
-      }
-    }
-
-    renderSchemaFields();
-    setInterval(fetchState, 5000);
-    fetchState();
-  </script>
+  <script src="/static/api.js"></script>
+  <script src="/static/schema.js"></script>
+  <script src="/static/graph.js"></script>
+  <script src="/static/graph3d.js"></script>
 </body>
 </html>
     """
