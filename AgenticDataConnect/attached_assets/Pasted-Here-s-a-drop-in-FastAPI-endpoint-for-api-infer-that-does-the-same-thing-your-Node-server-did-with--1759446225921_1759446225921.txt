@@ -1,0 +1,85 @@
+Here’s a drop-in FastAPI endpoint for /api/infer that does the same thing your Node server did with Gemini:
+
+app.py (FastAPI version of inference route)
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+import os
+import google.generativeai as genai
+
+app = FastAPI()
+
+# ✅ Configure Gemini
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-2.5-pro")
+
+@app.post("/api/infer")
+async def infer_schema(request: Request):
+    data = await request.json()
+    fields = data.get("fields", [])
+
+    prompt = f"""
+You are a data integration assistant.
+Your ONLY job is to output valid JSON for ontology mappings.
+
+Schema:
+{{
+  "mappings": [
+    {{
+      "name": string,
+      "type": string,
+      "suggested_mapping": string,
+      "transformation": string
+    }}
+  ]
+}}
+
+Guidelines:
+- Output ONLY JSON (no prose, no markdown).
+- Use "suggested_mapping" to map to enterprise ontology domains (CRM, Finance, Geography, Sales, etc).
+- Use "transformation" for normalization or conversions.
+- Respect the given "type" (Text, Number, DateTime, Currency, etc).
+
+Fields:
+{fields}
+"""
+
+    try:
+        result = model.generate_content(prompt)
+        raw_text = result.text.strip()
+
+        # Try parsing JSON safely
+        import json
+        try:
+            parsed = json.loads(raw_text)
+        except Exception:
+            parsed = {
+                "mappings": [
+                    {
+                        "name": f["name"],
+                        "type": f["type"],
+                        "suggested_mapping": "Unknown",
+                        "transformation": "Review required"
+                    }
+                    for f in fields
+                ]
+            }
+
+        return JSONResponse(content=parsed)
+
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+✅ What to Do
+
+Copy this into your existing FastAPI app (app.py).
+
+Remove/comment out any inference-server.js or Node start commands.
+
+Make sure your Replit run command in replit.nix or .replit is:
+
+uvicorn app:app --host 0.0.0.0 --port 5000
+
+
+(This ensures one server, one port.)
+
+Redeploy → Replit should pass health checks.

@@ -1,0 +1,160 @@
+<!-- Legend + Mode Status -->
+<div id="modeStatus" style="font-size:14px; font-weight:bold; color:#e6eef5; margin-bottom:6px;">
+  Mode: Showing <span id="modeLabel">Source Schema Only</span>
+</div>
+
+<div id="legend" style="margin: 8px 0; font-size: 13px; color: #bfe1ff;">
+  <strong>Legend:</strong>
+  <span style="color:#4a90e2;">■ Source Tables</span>
+  <span style="margin-left:12px; color:#2ecc71;">■ Unified Ontology</span>
+  <span style="margin-left:12px; color:#9b59b6;">— Mapping Edges</span>
+</div>
+
+<!-- Graph container -->
+<div id="cy"></div>
+
+<script>
+  // Init Cytoscape
+  cy = cytoscape({
+    container: document.getElementById('cy'),
+    elements: [],
+    style: [
+      {
+        selector: 'node[type="source"]',
+        style: {
+          'background-color': '#4a90e2',
+          'label': 'data(label)',
+          'color': '#ffffff',
+          'font-size': 14,
+          'text-valign': 'center',
+          'text-halign': 'center',
+          'shape': 'round-rectangle',
+          'padding': '10px',
+          'width': 'label',
+          'height': 'label'
+        }
+      },
+      {
+        selector: 'node[type="ontology"]',
+        style: {
+          'background-color': '#2ecc71',
+          'label': 'data(label)',
+          'color': '#ffffff',
+          'font-size': 14,
+          'text-valign': 'center',
+          'text-halign': 'center',
+          'shape': 'round-rectangle',
+          'padding': '10px',
+          'width': 'label',
+          'height': 'label',
+          'opacity': 0 // start hidden for animation
+        }
+      },
+      {
+        selector: 'edge[type="source"]',
+        style: {
+          'line-color': '#4a90e2',
+          'width': 2,
+          'curve-style': 'straight',
+          'target-arrow-shape': 'triangle',
+          'target-arrow-color': '#4a90e2'
+        }
+      },
+      {
+        selector: 'edge[type="mapping"]',
+        style: {
+          'line-color': '#9b59b6',
+          'width': 2,
+          'line-style': 'dashed',
+          'curve-style': 'straight',
+          'target-arrow-shape': 'triangle',
+          'target-arrow-color': '#9b59b6',
+          'opacity': 0 // start hidden
+        }
+      }
+    ],
+    layout: { name: 'preset' }
+  });
+
+  // Lock viewport
+  cy.userZoomingEnabled(false);
+  cy.userPanningEnabled(false);
+  cy.boxSelectionEnabled(false);
+
+  // Position helper
+  function getGridPosition(type, rowIndex) {
+    const xSource = 100;
+    const xOntology = 500;
+    const yStart = 100;
+    const ySpacing = 120;
+    return {
+      x: type === 'source' ? xSource : xOntology,
+      y: yStart + rowIndex * ySpacing
+    };
+  }
+
+  // Add nodes + edges
+  function addSourceMapping(sourceId, sourceLabel, ontologyId, ontologyLabel, rowIndex) {
+    cy.add({
+      group: "nodes",
+      data: { id: sourceId, label: sourceLabel, type: "source" },
+      position: getGridPosition("source", rowIndex),
+      locked: true
+    });
+
+    cy.add({
+      group: "nodes",
+      data: { id: ontologyId, label: ontologyLabel, type: "ontology" },
+      position: getGridPosition("ontology", rowIndex),
+      locked: true
+    });
+
+    cy.add({
+      group: "edges",
+      data: { id: sourceId + "_" + ontologyId, source: sourceId, target: ontologyId, type: "mapping" }
+    });
+  }
+
+  // Toggle handling
+  function updateModeLabel(isAfter) {
+    document.getElementById("modeLabel").textContent =
+      isAfter ? "Source + Unified Ontology Mappings" : "Source Schema Only";
+  }
+
+  function revealOntology() {
+    cy.nodes('[type="ontology"]').forEach(node => {
+      node.animate({
+        style: { opacity: 1 },
+        duration: 600
+      });
+    });
+    cy.edges('[type="mapping"]').forEach(edge => {
+      edge.animate({
+        style: { opacity: 1 },
+        duration: 600
+      });
+    });
+  }
+
+  function hideOntology() {
+    cy.nodes('[type="ontology"]').style('opacity', 0);
+    cy.edges('[type="mapping"]').style('opacity', 0);
+  }
+
+  // Wire up your checkbox toggle
+  const toggle = document.querySelector("#beforeAfterToggle"); // assume you have a checkbox
+  toggle.addEventListener("change", () => {
+    const isAfter = toggle.checked;
+    updateModeLabel(isAfter);
+    if (isAfter) {
+      revealOntology();
+    } else {
+      hideOntology();
+    }
+  });
+
+  // Example nodes
+  addSourceMapping("acc_dyn", "accounts (Dynamics)", "cust_unified", "Customer (Unified)", 0);
+  addSourceMapping("opp_dyn", "opportunities (Dynamics)", "txn_unified", "Transaction (Unified)", 1);
+  cy.fit();
+</script>

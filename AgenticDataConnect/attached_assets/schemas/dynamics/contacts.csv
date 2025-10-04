@@ -1,0 +1,6 @@
+contactid,fullname,emailaddress1,parentcustomerid
+C001,Jane Doe,jane.doe@acme.com,A001
+C002,Mark Smith,mark@contoso.com,A002
+C003,Priya Nair,priya.nair@northwind.com,A003
+C004,Liam de Vries,liam@blueocean.eu,A004
+C005,Camille Durand,camille@globex.fr,A005
