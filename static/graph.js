@@ -27,11 +27,24 @@ function renderGraph() {
     return;
   }
 
+  // Create node type lookup
+  const nodeTypeMap = {};
+  state.graph.nodes.forEach(n => {
+    nodeTypeMap[n.id] = n.type;
+  });
+
+  // Filter out edges between source nodes
+  const filteredEdges = state.graph.edges.filter(e => {
+    const sourceType = nodeTypeMap[e.source];
+    const targetType = nodeTypeMap[e.target];
+    return !(sourceType === 'source' && targetType === 'source');
+  });
+
   const elements = [
     ...state.graph.nodes.map(n => ({
       data: { id: n.id, label: n.label, type: n.type }
     })),
-    ...state.graph.edges.map(e => ({
+    ...filteredEdges.map(e => ({
       data: { source: e.source, target: e.target, label: e.label || "", type: e.type || "" }
     }))
   ];
