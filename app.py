@@ -324,87 +324,9 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 def index():
-    html = """
-<!doctype html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>DCL Visualizer</title>
-  <link rel="stylesheet" href="/static/styles.css" />
-  <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
-  <script src="https://unpkg.com/cytoscape-cose-bilkent/cytoscape-cose-bilkent.js"></script>
-  <script src="https://unpkg.com/3d-force-graph"></script>
-  <script src="https://unpkg.com/three/build/three.min.js"></script>
-  <script src="https://unpkg.com/three-spritetext/dist/three-spritetext.min.js"></script>
-</head>
-<body>
-  <header>
-    <div class="controls">
-      <select id="source">
-        <option value="dynamics">Connect Dynamics CRM (schema sample)</option>
-        <option value="salesforce">Connect Salesforce (schema sample)</option>
-        <option value="sap">Connect SAP ERP (schema sample)</option>
-        <option value="netsuite">Connect NetSuite (schema sample)</option>
-        <option value="legacy_sql">Connect Legacy SQL Server (schema sample)</option>
-        <option value="snowflake">Connect Snowflake (schema sample)</option>
-      </select>
-      <button class="primary" onclick="addSource()">Add Source</button>
-      <button onclick="resetDemo()">Reset</button>
-      <button class="mode-toggle" onclick="show2D()">2D Mode</button>
-      <button class="mode-toggle" onclick="show3D()">3D Mode</button>
-    </div>
-    <div class="toggle">
-      <label for="autoIngestToggle" style="font-size: 13px; color: #b2c3d6; cursor: pointer;">Auto-ingest unmapped sources</label>
-      <input type="checkbox" id="autoIngestToggle" onchange="toggleAutoIngest()" style="width: 18px; height: 18px; cursor: pointer;">
-    </div>
-  </header>
-  <div class="wrap">
-    <div id="graphWrapper">
-      <div id="narrationPanel" class="card">
-        <h3 class="title">Narration</h3>
-        <div id="log"></div>
-      </div>
-      <div class="card" style="position:relative; flex:1;">
-        <h3 class="title">Graph Visualization</h3>
-        <div id="llmBadge" class="llm-badge">LLM Calls: 0 | Tokens: ~0</div>
-        <div id="cy" style="width:100%; height:600px;"></div>
-        <div id="graph3d" style="width:100%; height:600px; display:none;"></div>
-        <div id="statusBadge" style="position:absolute; bottom:12px; right:16px; background:#ffffff; border:1px solid #e2e8f0; color:#111827; padding:6px 10px; border-radius:8px; font-size:12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-          LLM Calls: 0 | Confidence: -- | Updated: --
-        </div>
-      </div>
-    </div>
-    <div class="card grid2">
-      <div>
-        <h3 class="title">Source Preview</h3>
-        <div id="preview_sources"><div class='pill'>Click a node to preview data</div></div>
-      </div>
-      <div>
-        <h3 class="title">Unified Preview</h3>
-        <div id="preview_ontology"><div class='pill'>Click a node to preview data</div></div>
-      </div>
-    </div>
-    
-    <div class="card">
-      <h3 class="title">🧪 Invent Schema (Demo Mode)</h3>
-      <p style="font-size: 13px; color: #b2c3d6; margin-bottom: 12px;">Create custom fields and let AI map them to enterprise ontology domains</p>
-      <div id="schemaFieldsContainer"></div>
-      <div style="margin-top: 12px; display: flex; gap: 8px;">
-        <button onclick="addSchemaField()">+ Add Field</button>
-        <button class="primary" onclick="inferOntology()">Infer Ontology</button>
-        <button onclick="resetSchemaInference()" style="background: #8b0000; border-color: #8b0000;">Reset All</button>
-      </div>
-      <div id="schemaResults" style="margin-top: 16px;"></div>
-    </div>
-
-  <script src="/static/api.js"></script>
-  <script src="/static/schema.js"></script>
-  <script src="/static/graph.js"></script>
-  <script src="/static/graph3d.js"></script>
-</body>
-</html>
-    """
-    return HTMLResponse(content=html)
+    with open("static/index.html", "r", encoding="utf-8") as f:
+        html_content = f.read()
+    return HTMLResponse(content=html_content)
 
 @app.get("/state")
 def state():

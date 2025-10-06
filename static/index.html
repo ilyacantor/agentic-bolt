@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>AutonomOS — Prototype</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#e6fbff',
+                500: '#06b6d4', /* cyan-ish */
+                600: '#0891b2'
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="/static/styles-react.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-slate-950 text-slate-100 font-[Inter]">
+    <div id="root"></div>
+
+    <!-- Cytoscape for graph visualization -->
+    <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+
+    <!-- React UMD + Babel for JSX in-browser -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- App files -->
+    <script type="text/babel" src="/static/src/router.js"></script>
+    <script type="text/babel" src="/static/src/components/NavBar.jsx"></script>
+    <script type="text/babel" src="/static/src/components/SideNav.jsx"></script>
+    <script type="text/babel" src="/static/src/components/StatusPill.jsx"></script>
+    <script type="text/babel" src="/static/src/pages/DCLDashboard.jsx"></script>
+    <script type="text/babel" src="/static/src/pages/OntologyMapping.jsx"></script>
+    <script type="text/babel" src="/static/src/pages/Agents.jsx"></script>
+    <script type="text/babel" src="/static/src/pages/Pipeline.jsx"></script>
+    <script type="text/babel" src="/static/src/pages/CommandCenter.jsx"></script>
+    <script type="text/babel" src="/static/src/App.jsx"></script>
+  </body>
+</html>

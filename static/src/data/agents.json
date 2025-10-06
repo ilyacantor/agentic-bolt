@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Sales Pipeline Optimizer",
+    "state": "Running",
+    "progress": 62,
+    "tasksCompleted": 1245,
+    "lastActivity": "5 mins ago"
+  },
+  {
+    "name": "Customer Support Bot",
+    "state": "Running",
+    "progress": 48,
+    "tasksCompleted": 876,
+    "lastActivity": "10 mins ago"
+  },
+  {
+    "name": "Inventory Manager",
+    "state": "Paused",
+    "progress": 22,
+    "tasksCompleted": 341,
+    "lastActivity": "2 hours ago"
+  },
+  {
+    "name": "Social Media Engagement",
+    "state": "Error",
+    "progress": 5,
+    "tasksCompleted": 567,
+    "lastActivity": "1 day ago"
+  },
+  {
+    "name": "Data Integrity Checker",
+    "state": "Running",
+    "progress": 30,
+    "tasksCompleted": 210,
+    "lastActivity": "30 mins ago"
+  }
+]
