@@ -1,0 +1,67 @@
+Refactor the DCL UI so that the 2D Cytoscape graph renders reliably.
+
+1. dcl.html
+- Ensure the container for the 2D graph exists:
+  <div id="cy"></div>
+- Make sure <head> includes:
+  <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+  <script src="https://unpkg.com/cytoscape-cose-bilkent/cytoscape-cose-bilkent.js"></script>
+- At the bottom, include external files in this order:
+  <script src="/static/api.js"></script>
+  <script src="/static/schema.js"></script>
+  <script src="/static/graph.js"></script>
+  <script src="/static/graph3d.js"></script>
+
+2. styles.css
+Add this CSS so the container is visible:
+#cy {
+  width: 100%;
+  height: 600px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+3. graph.js
+- Add a refreshState() function that fetches state from FastAPI and calls renderGraph():
+async function refreshState() {
+  const res = await fetch("/state");
+  state = await res.json();
+  console.log("Fetched state:", state);
+  renderGraph();
+}
+refreshState();
+
+- Replace renderGraph() with this minimal baseline to guarantee rendering:
+function renderGraph() {
+  if (!state.graph || !state.graph.nodes) {
+    console.warn("No graph data in state");
+    return;
+  }
+  console.log("Rendering graph with", state.graph.nodes.length, "nodes");
+
+  cytoscape({
+    container: document.getElementById("cy"),
+    elements: [
+      ...state.graph.nodes.map(n => ({
+        data: { id: n.id, label: n.label }
+      })),
+      ...state.graph.edges.map(e => ({
+        data: { source: e.source, target: e.target }
+      }))
+    ],
+    style: [
+      { selector: "node", style: { "background-color": "#2563eb", "label": "data(label)" }},
+      { selector: "edge", style: { "line-color": "#999", "target-arrow-shape": "triangle" }}
+    ],
+    layout: { name: "cose-bilkent" }
+  });
+}
+
+4. Leave api.js and schema.js untouched.
+
+Goal:
+- On page load, the 2D Cytoscape graph must render visible nodes and edges.
+- Console should log "Rendering graph with N nodes".
+- This is the minimal working baseline for 2D; once verified, we can reintroduce styling, confidence coloring, and animations.

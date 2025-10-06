@@ -1,0 +1,76 @@
+// Define fixed positions for a clean grid
+function getGridPosition(nodeType, index) {
+  const xSource = 100;
+  const xOntology = 500;
+  const yStart = 100;
+  const ySpacing = 120;
+
+  if (nodeType === "source") {
+    return { x: xSource, y: yStart + index * ySpacing };
+  } else if (nodeType === "ontology") {
+    return { x: xOntology, y: yStart + index * ySpacing };
+  }
+  return { x: 300, y: yStart + index * ySpacing };
+}
+
+cy = cytoscape({
+  container: document.getElementById('cy'),
+  elements: [],
+  style: [
+    {
+      selector: 'node',
+      style: {
+        'background-color': '#1f3b59',
+        'label': 'data(label)',
+        'color': '#e6eef5',
+        'font-size': 14,
+        'text-valign': 'center',
+        'text-halign': 'center',
+        'shape': 'round-rectangle',
+        'padding': '10px',
+        'width': 'label',
+        'height': 'label',
+        'border-width': 1,
+        'border-color': '#2a4868'
+      }
+    },
+    {
+      selector: 'node[type="ontology"]',
+      style: {
+        'background-color': '#1e5a3d',
+        'border-color': '#2c8a5b',
+        'font-size': 15,
+        'font-weight': 'bold'
+      }
+    },
+    {
+      selector: 'edge',
+      style: {
+        'curve-style': 'straight',
+        'line-color': '#4a6a8c',
+        'width': 2,
+        'target-arrow-shape': 'triangle',
+        'target-arrow-color': '#4a6a8c',
+        'arrow-scale': 1.2
+      }
+    }
+  ],
+  layout: { name: 'preset' } // positions are assigned manually
+});
+
+// Utility: add node with fixed position
+function addNode(id, label, type, index) {
+  cy.add({
+    data: { id, label, type },
+    position: getGridPosition(type, index),
+    locked: true
+  });
+}
+
+// Example usage: add source + ontology nodes
+addNode('sap_orders', 'SAP Orders', 'source', 0);
+addNode('unified_orders', 'Orders (Unified)', 'ontology', 0);
+cy.add({ data: { id: 'edge1', source: 'sap_orders', target: 'unified_orders' } });
+
+// Fit nicely in view
+cy.fit();

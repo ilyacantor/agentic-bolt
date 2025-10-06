@@ -1,0 +1,113 @@
+// === Anchors & Sizes ===
+const CLOUD_X = 120;       // left margin anchor
+const CLOUD_WIDTH = 320;   // cloud bounding width
+const CLOUD_HEIGHT = 280;  // cloud bounding height
+const OFFSET = 220;        // distance between cloud and Initech
+
+const INITECH_X = CLOUD_X + CLOUD_WIDTH/2 + OFFSET;
+
+// === Manual Layout (lock to preset positions) ===
+cy.layout({ name: 'preset' }).run();
+
+// === Cloud Node (with faint cloud overlay) ===
+cy.add({
+  group: "nodes",
+  data: { id: "cloud_wrap" },
+  position: { x: CLOUD_X, y: 200 },
+  style: {
+    'shape': 'round-rectangle',
+    'width': CLOUD_WIDTH,
+    'height': CLOUD_HEIGHT,
+    'background-color': '#ecf0f1',   // fallback
+    'background-image': 'url(https://upload.wikimedia.org/wikipedia/commons/3/3c/Cloud_icon.svg)',
+    'background-fit': 'cover',
+    'background-opacity': 0.15,
+    'opacity': 0.35,
+    'border-width': 2,
+    'border-color': '#95a5a6',
+    'z-index': 0
+  },
+  locked: true
+});
+
+// === Initech Block (with faint building watermark) ===
+cy.add({
+  group: "nodes",
+  data: { id: "unified_block", label: "Initech Corp." },
+  position: { x: INITECH_X, y: 200 },
+  style: {
+    'background-color': '#2ecc71',  // fallback
+    'background-image': 'url(https://upload.wikimedia.org/wikipedia/commons/3/33/Building_icon.svg)',
+    'background-fit': 'cover',
+    'background-opacity': 0.12,
+    'opacity': 0.2,
+    'shape': 'round-rectangle',
+    'width': 340,
+    'height': 300,
+    'text-valign': 'top',
+    'text-halign': 'center',
+    'font-size': 16,
+    'font-weight': 'bold',
+    'color': '#2ecc71',
+    'z-index': 0
+  },
+  locked: true
+});
+
+// === Helper for Child Node Grid ===
+function getGridPosition(type, rowIndex) {
+  const yStart = 120;
+  const ySpacing = 90;
+  if (type === "source") {
+    return { x: CLOUD_X, y: yStart + rowIndex * ySpacing };
+  } else {
+    return { x: INITECH_X, y: yStart + rowIndex * ySpacing };
+  }
+}
+
+// === Source Nodes (inside cloud) ===
+["DB1", "DB2", "DB3"].forEach((id, i) => {
+  cy.add({
+    group: "nodes",
+    data: { id, label: id },
+    position: getGridPosition("source", i),
+    style: {
+      'background-color': '#3498db',
+      'color': '#fff',
+      'shape': 'ellipse',
+      'width': 70,
+      'height': 40,
+      'z-index': 10
+    }
+  });
+});
+
+// === Ontology Nodes (with faint building overlay) ===
+["Ontology1", "Ontology2"].forEach((id, i) => {
+  cy.add({
+    group: "nodes",
+    data: { id, label: id },
+    position: getGridPosition("ontology", i),
+    style: {
+      'background-color': '#9b59b6',  // fallback
+      'background-image': 'url(https://upload.wikimedia.org/wikipedia/commons/3/33/Building_icon.svg)',
+      'background-fit': 'cover',
+      'background-opacity': 0.08, // faint stamp
+      'color': '#fff',
+      'shape': 'round-rectangle',
+      'width': 120,
+      'height': 50,
+      'text-valign': 'center',
+      'text-halign': 'center',
+      'font-size': 14,
+      'z-index': 10
+    }
+  });
+});
+
+// === Example Edges ===
+cy.add([
+  { data: { id: "e1", source: "DB1", target: "Ontology1" }},
+  { data: { id: "e2", source: "DB2", target: "Ontology2" }},
+  { data: { id: "e3", source: "DB3", target: "Ontology1" }}
+]);

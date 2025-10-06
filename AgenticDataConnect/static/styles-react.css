@@ -1,0 +1,11 @@
+
+/* Minimal tweaks on top of Tailwind */
+html, body, #root { height: 100%; }
+.card { @apply bg-slate-900/70 border border-slate-800 rounded-2xl p-4; }
+.card-title { @apply text-slate-200 font-semibold; }
+.subtle { @apply text-slate-400 text-sm; }
+.separator { @apply h-px bg-slate-800 my-4; }
+.badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium; }
+.badge-green { @apply bg-emerald-500/10 text-emerald-400 border border-emerald-500/20; }
+.badge-red { @apply bg-rose-500/10 text-rose-400 border border-rose-500/20; }
+.badge-amber { @apply bg-amber-500/10 text-amber-400 border border-amber-500/20; }

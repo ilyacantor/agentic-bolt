@@ -1,0 +1,17 @@
+entities:
+  customer:
+    pk: customer_id
+    fields:
+      customer_id: {type: integer}
+      full_name: {type: string, synonyms: [name, customer_name]}
+      email: {type: string, pattern: '.*@.*'}
+      created_at: {type: datetime, synonyms: [signup_date, created]}
+  order:
+    pk: order_id
+    fk:
+      customer_id: {ref: customer.customer_id}
+    fields:
+      order_id: {type: integer}
+      order_date: {type: datetime, synonyms: [purchased_at, created_at, ordered_at]}
+      amount: {type: numeric, synonyms: [total, grand_total, order_total, amount_paid]}
+      customer_id: {type: integer}
