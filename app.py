@@ -435,3 +435,9 @@ Fields:
     
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.get("/agentic-connection", response_class=HTMLResponse)
+def agentic_connection():
+    with open("static/agentic-connection.html", "r", encoding="utf-8") as f:
+        html_content = f.read()
+    return HTMLResponse(content=html_content)
