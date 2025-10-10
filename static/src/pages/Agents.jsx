@@ -1,13 +1,27 @@
 function Agents(){
-  // unified JSON hook (caching, error handling)
-  const { data: list, error, loading } = useJSON('/attached_assets/react-ui/src/data/agents.json');
+  const [list, setList] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    fetch('/static/src/data/agents.json')
+      .then(res => res.json())
+      .then(data => {
+        setList(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err);
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <div className="p-5 w-full">
       <div className="max-w-7xl mx-auto space-y-6">
         <h2 className="text-xl font-semibold">Active Agents</h2>
 
-        {loading && <Skeleton className="h-32 w-full col-span-full" />}
+        {loading && <div className="text-slate-400 text-sm">Loading agents...</div>}
         {error && (
           <div className="text-rose-300 text-sm col-span-full">
             Failed to load agents
