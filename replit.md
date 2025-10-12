@@ -4,12 +4,19 @@
 An intelligent system that autonomously discovers data sources from multiple enterprise systems, uses AI to map them to a predefined ontology, validates mappings with quality checks, and automatically publishes DuckDB views. Features a real-time web dashboard with interactive data flow graphs and AI-powered schema inference.
 
 ## Recent Changes (October 12, 2025)
+- ✅ **Processing Progress Indicator**: Added animated progress bar in top right above "Source Preview" 
+  - Shows when AI is analyzing schema and mapping to ontology
+  - Pulsing cyan dot and gradient progress bar with descriptive message
+  - Automatically disappears when processing completes
+  - Provides clear visual feedback for async operations
+
 - ✅ **RAG Engine Implementation**: Added context-aware, learning-based schema mapping with historical memory
   - Uses ChromaDB + Sentence Transformers (all-MiniLM-L6-v2, 384-dim embeddings)
   - Retrieves top 5 similar mappings as context for LLM inference
   - Automatically stores successful mappings for future reference
   - Persists to ./chroma_db directory with cosine similarity search
   - Fixed critical prompt construction bug that broke LLM workflow when RAG context existed
+  - Visual RAG panel in left sidebar shows retrieved mappings with similarity scores
 
 ## Previous Changes (October 2, 2025)
 - ✅ **Schema Inference UI Integration**: Added "Invent Schema (Demo Mode)" section to dashboard allowing users to create custom fields and get AI-powered ontology mappings

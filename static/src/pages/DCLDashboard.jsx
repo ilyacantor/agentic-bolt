@@ -7,6 +7,7 @@ function DCLDashboard(){
     rag: {retrievals: [], total_mappings: 0, last_retrieval_count: 0}
   });
   const [selectedSource, setSelectedSource] = React.useState('dynamics');
+  const [isProcessing, setIsProcessing] = React.useState(false);
   const cyRef = React.useRef(null);
 
   React.useEffect(()=>{
@@ -28,9 +29,14 @@ function DCLDashboard(){
   }
 
   async function addSource(){
-    const res = await fetch(`/connect?source=${selectedSource}`);
-    await res.json();
-    fetchState();
+    setIsProcessing(true);
+    try {
+      const res = await fetch(`/connect?source=${selectedSource}`);
+      await res.json();
+      await fetchState();
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
   async function resetDemo(){
@@ -239,6 +245,24 @@ function DCLDashboard(){
 
         {/* Right Sidebar - Previews */}
         <div className="col-span-12 lg:col-span-3 space-y-4">
+          {/* Processing Indicator */}
+          {isProcessing && (
+            <div className="card border-2 border-cyan-500/40 bg-gradient-to-r from-cyan-900/20 to-blue-900/20">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-cyan-500 rounded-full animate-pulse"></div>
+                  <span className="text-cyan-300 font-bold text-sm">Processing...</span>
+                </div>
+              </div>
+              <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500 animate-pulse bg-[length:200%_100%]" style={{width: '100%'}}></div>
+              </div>
+              <div className="text-xs text-slate-400 mt-2">
+                🤖 AI is analyzing schema and mapping to ontology...
+              </div>
+            </div>
+          )}
+          
           <div className="card">
             <div className="card-title mb-3">Source Preview</div>
             <div className="text-xs max-h-[280px] overflow-y-auto">
