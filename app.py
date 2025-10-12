@@ -1,7 +1,7 @@
 
 import os, time, json, glob, duckdb, pandas as pd, yaml, warnings, threading, re, traceback
-from fastapi import FastAPI, Query
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
@@ -401,6 +401,23 @@ def reset_demo():
     log("I reset the demo. Pick a source from the menu to add it.")
 
 app = FastAPI()
+
+# Custom route for JSX files with no-cache headers to force browser refresh
+@app.get("/static/src/{filepath:path}")
+async def serve_jsx_nocache(filepath: str):
+    """Serve JSX/JS files with no-cache headers to prevent browser caching issues."""
+    file_path = os.path.join("static", "src", filepath)
+    if os.path.exists(file_path):
+        return FileResponse(
+            file_path,
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
+        )
+    return JSONResponse({"error": "Not found"}, status_code=404)
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.on_event("startup")
@@ -417,7 +434,23 @@ async def startup_event():
 def index():
     with open("static/index.html", "r", encoding="utf-8") as f:
         html_content = f.read()
-    return HTMLResponse(content=html_content)
+    # Add cache-busting timestamp to all JSX script tags
+    cache_buster = str(int(time.time()))
+    html_content = html_content.replace(
+        'src="/static/src/',
+        f'src="/static/src/'
+    ).replace(
+        '.jsx"',
+        f'.jsx?v={cache_buster}"'
+    ).replace(
+        '.js"',
+        f'.js?v={cache_buster}"'
+    )
+    return HTMLResponse(content=html_content, headers={
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+    })
 
 @app.get("/state")
 def state():
