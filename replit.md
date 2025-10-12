@@ -4,6 +4,12 @@
 An intelligent system that autonomously discovers data sources from multiple enterprise systems, uses AI to map them to a predefined ontology, validates mappings with quality checks, and automatically publishes DuckDB views. Features a real-time web dashboard with interactive data flow graphs and AI-powered schema inference.
 
 ## Recent Changes (October 12, 2025)
+- ✅ **Deployment Optimization**: Reduced disk footprint by ~10GB for Autoscale deployment
+  - Removed duplicate dependencies from requirements.txt (chromadb, sentence-transformers, langchain-community were listed twice)
+  - Configured build step to install CPU-only torch instead of CUDA version (CUDA unnecessary for Autoscale)
+  - Build command: `pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install -r requirements.txt`
+  - Verified RAG Engine and sentence-transformers work correctly with CPU-only torch
+
 - ✅ **Layout Reorganization**: Improved dashboard flow and visual consistency
   - Progress indicator always visible at top of right sidebar (shows idle/active state)
   - Narration moved to right sidebar with bounding box and scroll bar
