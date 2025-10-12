@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 import google.generativeai as genai
+from rag_engine import RAGEngine
 
 DB_PATH = "registry.duckdb"
 ONTOLOGY_PATH = "ontology/catalog.yml"
@@ -26,6 +27,7 @@ AUTO_INGEST_UNMAPPED = False
 ontology = None
 LLM_CALLS = 0
 LLM_TOKENS = 0
+rag_engine = None
 
 def log(msg: str):
     print(msg, flush=True)
@@ -142,8 +144,46 @@ def safe_llm_call(prompt: str, source_key: str, tables: Dict[str, Any]) -> Dict[
         return None
 
 def llm_propose(ontology: Dict[str, Any], source_key: str, tables: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    global rag_engine
     if not os.getenv("GEMINI_API_KEY"):
         return None
+    
+    # Build RAG context if available
+    rag_context = ""
+    if rag_engine:
+        try:
+            # Collect all fields from tables and get similar mappings
+            all_similar = []
+            for table_name, table_info in tables.items():
+                schema = table_info.get('schema', {})
+                for field_name, field_type in schema.items():
+                    similar = rag_engine.retrieve_similar_mappings(
+                        field_name=field_name,
+                        field_type=field_type,
+                        source_system=source_key,
+                        top_k=3,
+                        min_confidence=0.7
+                    )
+                    all_similar.extend(similar)
+            
+            # Deduplicate and get top examples
+            seen = set()
+            unique_similar = []
+            for mapping in all_similar:
+                key = f"{mapping['source_field']}_{mapping['ontology_entity']}"
+                if key not in seen:
+                    seen.add(key)
+                    unique_similar.append(mapping)
+            
+            # Build context from top 5 most similar
+            unique_similar.sort(key=lambda x: x.get('similarity', 0), reverse=True)
+            top_similar = unique_similar[:5]
+            
+            if top_similar:
+                rag_context = rag_engine.build_context_for_llm(top_similar)
+                log(f"📚 RAG: Retrieved {len(top_similar)} similar mappings for context")
+        except Exception as e:
+            log(f"⚠️ RAG retrieval failed: {e}")
     
     sys_prompt = (
         "You are a data integration planner. Given an ontology and a set of new tables from a source system, "
@@ -159,13 +199,36 @@ def llm_propose(ontology: Dict[str, Any], source_key: str, tables: Dict[str, Any
     )
     prompt = (
         f"{sys_prompt}\n\n"
+        f"{rag_context}\n\n" if rag_context else ""
         f"Ontology:\n{json.dumps(ontology)}\n\n"
         f"SourceKey: {source_key}\n"
         f"Tables:\n{json.dumps(tables)}\n\n"
         f"Return ONLY JSON."
     )
     
-    return safe_llm_call(prompt, source_key, tables)
+    result = safe_llm_call(prompt, source_key, tables)
+    
+    # Store successful mappings in RAG
+    if result and rag_engine:
+        try:
+            for mapping in result.get("mappings", []):
+                entity = mapping.get("entity")
+                source_table = mapping.get("source_table")
+                for field in mapping.get("fields", []):
+                    rag_engine.store_mapping(
+                        source_field=field["source"],
+                        source_type="string",  # We can enhance this later
+                        ontology_entity=f"{entity}.{field['onto_field']}",
+                        source_system=source_key,
+                        transformation="direct",
+                        confidence=field.get("confidence", 0.8),
+                        validated=False
+                    )
+            log(f"💾 Stored {len(result.get('mappings', []))} mappings to RAG")
+        except Exception as e:
+            log(f"⚠️ Failed to store mappings in RAG: {e}")
+    
+    return result
 
 def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, Any]) -> Dict[str, Any]:
     mappings, joins = [], []
@@ -322,6 +385,16 @@ def reset_demo():
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize RAG engine on startup."""
+    global rag_engine
+    try:
+        rag_engine = RAGEngine(persist_dir="./chroma_db")
+        log("✅ RAG Engine initialized successfully")
+    except Exception as e:
+        log(f"⚠️ RAG Engine initialization failed: {e}. Continuing without RAG.")
+
 @app.get("/", response_class=HTMLResponse)
 def index():
     with open("static/index.html", "r", encoding="utf-8") as f:
@@ -371,6 +444,17 @@ def toggle_auto_ingest(enabled: bool = Query(...)):
     global AUTO_INGEST_UNMAPPED
     AUTO_INGEST_UNMAPPED = enabled
     return JSONResponse({"ok": True, "enabled": AUTO_INGEST_UNMAPPED})
+
+@app.get("/rag/stats")
+def rag_stats():
+    """Get RAG engine statistics."""
+    if not rag_engine:
+        return JSONResponse({"error": "RAG Engine not initialized"}, status_code=503)
+    try:
+        stats = rag_engine.get_stats()
+        return JSONResponse(stats)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 @app.post("/api/infer")
 async def infer_schema(request: Dict[str, Any]):
