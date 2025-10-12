@@ -4,15 +4,14 @@
 An intelligent system that autonomously discovers data sources from multiple enterprise systems, uses AI to map them to a predefined ontology, validates mappings with quality checks, and automatically publishes DuckDB views. Features a real-time web dashboard with interactive data flow graphs and AI-powered schema inference.
 
 ## Recent Changes (October 12, 2025)
-- ✅ **Reserved VM Deployment**: Switched to Reserved VM for sufficient disk space with ML dependencies
+- ✅ **Autoscale Deployment Optimization**: Optimized for Autoscale deployment with efficient dependency installation
   - Removed duplicate dependencies from requirements.txt (chromadb, sentence-transformers, langchain-community were listed twice)
   - Removed unused sift-stack-py dependency
-  - Configured build step with `--no-cache-dir` flag and cache purging to prevent disk quota exceeded errors
-  - Switched to CPU-only torch installation (saves ~10GB over CUDA version - 184MB vs 888MB+594MB CUDA libs)
-  - Build command: `pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu && rm -rf ~/.cache/pip && pip install --no-cache-dir -r requirements.txt && rm -rf ~/.cache/pip`
-  - Run command: `uvicorn app:app --host 0.0.0.0 --port 5000`
-  - Deployment target: `vm` (Reserved VM - suitable for stateful apps with persistent ChromaDB vector store)
-  - All dependencies installed successfully with CPU-only torch
+  - Added CPU-only torch to requirements.txt with PyTorch CPU index URL (saves ~10GB over CUDA version)
+  - Simplified build command to single installation with cache cleanup: `pip install --no-cache-dir -r requirements.txt && rm -rf ~/.cache/pip`
+  - Run command: `uvicorn app:app --host 0.0.0.0` (Autoscale automatically maps to port 80)
+  - Deployment target: `autoscale` (serverless, scales to zero when idle)
+  - All dependencies installed successfully with CPU-only torch (184MB vs 888MB+594MB CUDA)
   - RAG Engine, ChromaDB, and sentence-transformers working correctly in development and production
 
 - ✅ **Layout Reorganization**: Improved dashboard flow and visual consistency

@@ -11,10 +11,14 @@ command = "uvicorn app:app --host 0.0.0.0 --port 8080"
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 36763
+externalPort = 3000
+
 [deployment]
-deploymentTarget = "vm"
-run = ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000"]
-build = ["bash", "-c", "pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu && rm -rf ~/.cache/pip && pip install --no-cache-dir -r requirements.txt && rm -rf ~/.cache/pip"]
+deploymentTarget = "autoscale"
+run = ["uvicorn", "app:app", "--host", "0.0.0.0"]
+build = ["bash", "-c", "pip install --no-cache-dir -r requirements.txt && rm -rf ~/.cache/pip"]
 
 [workflows]
 runButton = "Project"
