@@ -7,12 +7,14 @@ An intelligent system that autonomously discovers data sources from multiple ent
 - ✅ **Autoscale Deployment Optimization**: Optimized for Autoscale deployment with efficient dependency installation
   - Removed duplicate dependencies from requirements.txt (chromadb, sentence-transformers, langchain-community were listed twice)
   - Removed unused sift-stack-py dependency
-  - Added CPU-only torch to requirements.txt with PyTorch CPU index URL (saves ~10GB over CUDA version)
+  - Added CPU-only torch/torchvision to requirements.txt with `--extra-index-url https://download.pytorch.org/whl/cpu` (saves ~10GB over CUDA)
+  - Critical fix: Used `--extra-index-url` (not `--index-url`) to preserve PyPI access while adding PyTorch CPU index
   - Simplified build command to single installation with cache cleanup: `pip install --no-cache-dir -r requirements.txt && rm -rf ~/.cache/pip`
   - Run command: `uvicorn app:app --host 0.0.0.0` (Autoscale automatically maps to port 80)
   - Deployment target: `autoscale` (serverless, scales to zero when idle)
   - All dependencies installed successfully with CPU-only torch (184MB vs 888MB+594MB CUDA)
-  - RAG Engine, ChromaDB, and sentence-transformers working correctly in development and production
+  - RAG Engine, ChromaDB, and sentence-transformers working correctly in development
+  - Production-ready configuration verified by architect review
 
 - ✅ **Layout Reorganization**: Improved dashboard flow and visual consistency
   - Progress indicator always visible at top of right sidebar (shows idle/active state)
