@@ -3,7 +3,15 @@
 ## Overview
 An intelligent system that autonomously discovers data sources from multiple enterprise systems, uses AI to map them to a predefined ontology, validates mappings with quality checks, and automatically publishes DuckDB views. Features a real-time web dashboard with interactive data flow graphs and AI-powered schema inference.
 
-## Recent Changes (October 2, 2025)
+## Recent Changes (October 12, 2025)
+- ✅ **RAG Engine Implementation**: Added context-aware, learning-based schema mapping with historical memory
+  - Uses ChromaDB + Sentence Transformers (all-MiniLM-L6-v2, 384-dim embeddings)
+  - Retrieves top 5 similar mappings as context for LLM inference
+  - Automatically stores successful mappings for future reference
+  - Persists to ./chroma_db directory with cosine similarity search
+  - Fixed critical prompt construction bug that broke LLM workflow when RAG context existed
+
+## Previous Changes (October 2, 2025)
 - ✅ **Schema Inference UI Integration**: Added "Invent Schema (Demo Mode)" section to dashboard allowing users to create custom fields and get AI-powered ontology mappings
 - ✅ **API Proxy Layer**: Created `/api/infer` proxy endpoint in FastAPI to forward inference requests from browser to Node.js inference server
 - ✅ **Dual-Server Architecture**: Python FastAPI (port 5000) for dashboard + Node.js Express (port 3000) for Gemini inference
@@ -17,8 +25,16 @@ An intelligent system that autonomously discovers data sources from multiple ent
    - Ontology mapping engine with LLM-enhanced heuristics
    - DuckDB view management and data preview
    - Proxy endpoint for schema inference API
+   - RAG Engine integration for context-aware schema mapping
 
-2. **Inference Server** (`inference-server.js`, port 3000)
+2. **RAG Engine** (`rag_engine.py`)
+   - ChromaDB vector store with persistent storage
+   - Sentence Transformers embeddings (all-MiniLM-L6-v2, 384 dimensions)
+   - Stores field-level mapping history with metadata
+   - Retrieves top 5 similar mappings via cosine similarity
+   - Provides historical context to LLM for improved accuracy
+
+3. **Inference Server** (`inference-server.js`, port 3000)
    - Node.js Express server with Gemini 2.5 Pro integration
    - Intelligent schema-to-ontology mapping via `/api/infer` endpoint
    - Handles markdown-wrapped JSON responses from Gemini
@@ -41,10 +57,21 @@ An intelligent system that autonomously discovers data sources from multiple ent
 - **Design Constraint**: Preserve existing GUI, add new features as separate sections
 
 ## Technical Details
+
+### RAG Workflow
+1. **Field Embedding**: For each source field, generate 384-dim embedding using Sentence Transformers
+2. **Context Retrieval**: Search ChromaDB for top 5 most similar historical mappings (cosine similarity)
+3. **Enhanced Prompting**: Inject retrieved mappings as context into LLM prompt
+4. **Mapping Inference**: LLM generates ontology mappings with improved accuracy
+5. **Storage**: Successful mappings stored in vector database for future reference
+6. **API Endpoint**: `/rag/stats` shows total mappings, collection info, and embedding model
+
+### Other Technical Details
 - **Gemini Response Handling**: Strip markdown code blocks with `.replace(/```json\n?|\n?```/g, '')`
 - **ES Modules**: package.json configured with `"type": "module"` for Node.js
 - **Join Edges**: Filtered from visualization (type='join') but tracked internally
 - **Auto-Ingest Mode**: Toggle between Strict Mode (curated only) and Inclusive Mode (auto-connect unmapped sources to gray "Unclassified" node)
+- **Persistent Vector Store**: ChromaDB data stored in ./chroma_db directory (gitignored)
 
 ## Environment Variables
 - `GEMINI_API_KEY` - Required for AI-powered schema inference
