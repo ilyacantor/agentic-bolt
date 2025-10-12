@@ -6,8 +6,10 @@ An intelligent system that autonomously discovers data sources from multiple ent
 ## Recent Changes (October 12, 2025)
 - ✅ **Deployment Optimization**: Reduced disk footprint by ~10GB for Autoscale deployment
   - Removed duplicate dependencies from requirements.txt (chromadb, sentence-transformers, langchain-community were listed twice)
-  - Configured build step to install CPU-only torch instead of CUDA version (CUDA unnecessary for Autoscale)
-  - Build command: `pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install -r requirements.txt`
+  - Configured build step with `--no-cache-dir` flag to prevent disk quota exceeded errors
+  - Switched to CPU-only torch installation (CUDA libraries unnecessary for Autoscale, saves ~10GB)
+  - Build command: `pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && pip install --no-cache-dir -r requirements.txt`
+  - Run command: `uvicorn app:app --host 0.0.0.0 --port 5000` (maps to external port 80)
   - Verified RAG Engine and sentence-transformers work correctly with CPU-only torch
 
 - ✅ **Layout Reorganization**: Improved dashboard flow and visual consistency
@@ -43,8 +45,8 @@ An intelligent system that autonomously discovers data sources from multiple ent
    - Main web dashboard with Cytoscape.js graph visualization
    - Ontology mapping engine with LLM-enhanced heuristics
    - DuckDB view management and data preview
-   - Proxy endpoint for schema inference API
    - RAG Engine integration for context-aware schema mapping
+   - Python-only architecture (no Node.js dependencies)
 
 2. **RAG Engine** (`rag_engine.py`)
    - ChromaDB vector store with persistent storage
@@ -52,11 +54,7 @@ An intelligent system that autonomously discovers data sources from multiple ent
    - Stores field-level mapping history with metadata
    - Retrieves top 5 similar mappings via cosine similarity
    - Provides historical context to LLM for improved accuracy
-
-3. **Inference Server** (`inference-server.js`, port 3000)
-   - Node.js Express server with Gemini 2.5 Pro integration
-   - Intelligent schema-to-ontology mapping via `/api/infer` endpoint
-   - Handles markdown-wrapped JSON responses from Gemini
+   - Works with CPU-only torch for reduced disk footprint
 
 ### Data Sources
 - **schemas/** directory contains sample schemas from:
