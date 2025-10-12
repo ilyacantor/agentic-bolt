@@ -7,7 +7,6 @@ google-generativeai
 fastapi
 uvicorn
 httpx
-sift-stack-py
 chromadb
 sentence-transformers
 langchain-community
