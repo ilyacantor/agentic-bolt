@@ -1,6 +1,20 @@
-modules = ["nodejs-20", "python-3.11"]
-[agent]
-expertMode = true
+modules = ["python-3.10"]
+entrypoint = "app.py"
+
+[env]
+PORT = "8080"
+
+[run]
+command = "uvicorn app:app --host 0.0.0.0 --port 8080"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["uvicorn", "app:app", "--host", "0.0.0.0", "--port"]
+build = ["bash", "-c", "pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && pip install --no-cache-dir -r requirements.txt"]
 
 [workflows]
 runButton = "Project"
@@ -25,28 +39,3 @@ waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
-
-[[ports]]
-localPort = 3000
-externalPort = 3000
-
-[[ports]]
-localPort = 5000
-externalPort = 80
-
-[[ports]]
-localPort = 8888
-externalPort = 3002
-
-[[ports]]
-localPort = 46159
-externalPort = 3000
-
-[nix]
-channel = "stable-25_05"
-packages = ["glibcLocales", "libxcrypt", "libyaml", "openssl", "rapidfuzz-cpp", "taskflow", "zip", "duckdb"]
-
-[deployment]
-deploymentTarget = "autoscale"
-run = ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000"]
-build = ["bash", "-c", "pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install -r requirements.txt"]
