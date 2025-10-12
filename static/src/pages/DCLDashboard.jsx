@@ -7,7 +7,7 @@ function DCLDashboard(){
     rag: {retrievals: [], total_mappings: 0, last_retrieval_count: 0}
   });
   const [selectedSource, setSelectedSource] = React.useState('dynamics');
-  const [isProcessing, setIsProcessing] = React.useState(false);
+  const [processState, setProcessState] = React.useState({ active: false, stage: '', progress: 0, complete: false });
   const cyRef = React.useRef(null);
 
   React.useEffect(()=>{
@@ -29,13 +29,22 @@ function DCLDashboard(){
   }
 
   async function addSource(){
-    setIsProcessing(true);
+    setProcessState({ active: true, stage: 'Connecting to data source...', progress: 20, complete: false });
+    
     try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setProcessState({ active: true, stage: 'Analyzing schema structure...', progress: 40, complete: false });
+      
       const res = await fetch(`/connect?source=${selectedSource}`);
+      setProcessState({ active: true, stage: 'Mapping fields to ontology...', progress: 70, complete: false });
+      
       await res.json();
+      setProcessState({ active: true, stage: 'Validating mappings...', progress: 90, complete: false });
+      
       await fetchState();
-    } finally {
-      setIsProcessing(false);
+      setProcessState({ active: true, stage: 'Completed successfully', progress: 100, complete: true });
+    } catch (error) {
+      setProcessState({ active: true, stage: 'Failed', progress: 0, complete: true });
     }
   }
 
@@ -45,6 +54,7 @@ function DCLDashboard(){
       cyRef.current.destroy();
       cyRef.current = null;
     }
+    setProcessState({ active: false, stage: '', progress: 0, complete: false });
     fetchState();
   }
 
@@ -246,19 +256,31 @@ function DCLDashboard(){
         {/* Right Sidebar - Previews */}
         <div className="col-span-12 lg:col-span-3 space-y-4">
           {/* Processing Indicator */}
-          {isProcessing && (
-            <div className="card border-2 border-cyan-500/40 bg-gradient-to-r from-cyan-900/20 to-blue-900/20">
-              <div className="flex items-center gap-3 mb-2">
+          {processState.active && (
+            <div className={`card border-2 ${processState.complete ? 'border-green-500/40 bg-gradient-to-r from-green-900/20 to-emerald-900/20' : 'border-cyan-500/40 bg-gradient-to-r from-cyan-900/20 to-blue-900/20'}`}>
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-cyan-500 rounded-full animate-pulse"></div>
-                  <span className="text-cyan-300 font-bold text-sm">Processing...</span>
+                  {processState.complete ? (
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  ) : (
+                    <div className="w-3 h-3 bg-cyan-500 rounded-full animate-pulse"></div>
+                  )}
+                  <span className={`${processState.complete ? 'text-green-300' : 'text-cyan-300'} font-bold text-sm`}>
+                    {processState.complete ? '✓ Complete' : 'Processing...'}
+                  </span>
                 </div>
+                <span className={`text-sm font-bold ${processState.complete ? 'text-green-400' : 'text-cyan-400'}`}>
+                  {processState.progress}%
+                </span>
               </div>
-              <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500 animate-pulse bg-[length:200%_100%]" style={{width: '100%'}}></div>
+              <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden mb-2">
+                <div 
+                  className={`h-full transition-all duration-500 ${processState.complete ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500'}`}
+                  style={{width: `${processState.progress}%`}}
+                ></div>
               </div>
-              <div className="text-xs text-slate-400 mt-2">
-                🤖 AI is analyzing schema and mapping to ontology...
+              <div className="text-xs text-slate-300 font-medium">
+                {processState.stage}
               </div>
             </div>
           )}
