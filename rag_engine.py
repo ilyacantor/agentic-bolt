@@ -27,10 +27,13 @@ class RAGEngine:
             anonymized_telemetry=False
         ))
         
-        # Get or create collection for schema mappings
+        # Get or create collection for schema mappings with cosine similarity
         self.collection = self.client.get_or_create_collection(
             name="schema_mappings",
-            metadata={"description": "Historical schema-to-ontology mappings"}
+            metadata={
+                "description": "Historical schema-to-ontology mappings",
+                "hnsw:space": "cosine"  # Use cosine similarity for better text embeddings
+            }
         )
         
         # Load embedding model (384-dim, fast, lightweight)

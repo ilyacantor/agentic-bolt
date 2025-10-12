@@ -3,7 +3,8 @@ function DCLDashboard(){
     events: [],
     graph: {nodes: [], edges: []},
     llm: {calls: 0, tokens: 0},
-    preview: {sources: {}, ontology: {}}
+    preview: {sources: {}, ontology: {}},
+    rag: {retrievals: [], total_mappings: 0, last_retrieval_count: 0}
   });
   const [selectedSource, setSelectedSource] = React.useState('dynamics');
   const cyRef = React.useRef(null);
@@ -174,6 +175,44 @@ function DCLDashboard(){
                 <span className="text-slate-400">Confidence:</span>
                 <span className="text-slate-200 font-medium">{confText}</span>
               </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-title mb-2 flex items-center gap-2">
+              <span>RAG Context</span>
+              <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">
+                {state.rag?.total_mappings || 0} stored
+              </span>
+            </div>
+            <div className="text-xs space-y-2 max-h-[300px] overflow-y-auto">
+              {!state.rag?.retrievals || state.rag.retrievals.length === 0 ? (
+                <div className="text-slate-500 italic">No context retrieved yet. Add a source to see RAG in action.</div>
+              ) : (
+                <>
+                  <div className="text-purple-300 font-medium mb-2">
+                    Retrieved {state.rag.last_retrieval_count} similar mappings:
+                  </div>
+                  {state.rag.retrievals.map((ret, i) => (
+                    <div key={i} className="bg-slate-900/50 rounded-lg p-2 border border-purple-500/20">
+                      <div className="flex justify-between items-start mb-1">
+                        <div className="text-slate-300 font-medium">{ret.source_field}</div>
+                        <div className="text-xs bg-purple-500/30 text-purple-200 px-1.5 py-0.5 rounded">
+                          {(ret.similarity * 100).toFixed(0)}%
+                        </div>
+                      </div>
+                      <div className="text-slate-400 text-[10px] mb-1">→ {ret.ontology_entity}</div>
+                      <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
+                          style={{width: `${ret.similarity * 100}%`}}
+                        ></div>
+                      </div>
+                      <div className="text-[10px] text-slate-500 mt-1">from {ret.source_system}</div>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           </div>
 

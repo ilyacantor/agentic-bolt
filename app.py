@@ -28,6 +28,7 @@ ontology = None
 LLM_CALLS = 0
 LLM_TOKENS = 0
 rag_engine = None
+RAG_CONTEXT = {"retrievals": [], "total_mappings": 0, "last_retrieval_count": 0}
 
 def log(msg: str):
     print(msg, flush=True)
@@ -144,7 +145,7 @@ def safe_llm_call(prompt: str, source_key: str, tables: Dict[str, Any]) -> Dict[
         return None
 
 def llm_propose(ontology: Dict[str, Any], source_key: str, tables: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    global rag_engine
+    global rag_engine, RAG_CONTEXT
     if not os.getenv("GEMINI_API_KEY"):
         return None
     
@@ -182,6 +183,18 @@ def llm_propose(ontology: Dict[str, Any], source_key: str, tables: Dict[str, Any
             if top_similar:
                 rag_context = rag_engine.build_context_for_llm(top_similar)
                 log(f"📚 RAG: Retrieved {len(top_similar)} similar mappings for context")
+                
+                # Store RAG retrieval data for visualization
+                RAG_CONTEXT["retrievals"] = [
+                    {
+                        "source_field": m["source_field"],
+                        "ontology_entity": m["ontology_entity"],
+                        "similarity": round(m.get("similarity", 0), 3),
+                        "source_system": m.get("source_system", "unknown")
+                    }
+                    for m in top_similar
+                ]
+                RAG_CONTEXT["last_retrieval_count"] = len(top_similar)
         except Exception as e:
             log(f"⚠️ RAG retrieval failed: {e}")
     
@@ -408,13 +421,24 @@ def index():
 
 @app.get("/state")
 def state():
+    global RAG_CONTEXT, rag_engine
+    
+    # Update total mappings count from RAG engine
+    if rag_engine:
+        try:
+            stats = rag_engine.get_stats()
+            RAG_CONTEXT["total_mappings"] = stats.get("total_mappings", 0)
+        except:
+            pass
+    
     return JSONResponse({
         "events": EVENT_LOG,
         "timeline": EVENT_LOG[-5:],
         "graph": GRAPH_STATE,
         "preview": {"sources": {}, "ontology": {}},
         "llm": {"calls": LLM_CALLS, "tokens": LLM_TOKENS},
-        "auto_ingest_unmapped": AUTO_INGEST_UNMAPPED
+        "auto_ingest_unmapped": AUTO_INGEST_UNMAPPED,
+        "rag": RAG_CONTEXT
     })
 
 @app.get("/connect")
