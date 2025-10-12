@@ -243,38 +243,44 @@ function DCLDashboard(){
 
         {/* Right Sidebar */}
         <div className="col-span-12 lg:col-span-3 space-y-4">
-          {/* Processing Indicator - Clean Design */}
-          {processState.active && (
-            <div className="rounded-lg p-4 bg-slate-900/90">
-              <div className="flex items-center gap-2 mb-2">
-                {processState.complete ? (
-                  <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">✓</div>
-                ) : (
-                  <div className="w-4 h-4 rounded-full bg-cyan-500 animate-pulse"></div>
-                )}
-                <span className={`${processState.complete ? 'text-green-400' : 'text-cyan-400'} font-semibold text-sm`}>
-                  {processState.complete ? 'Complete' : 'Processing...'}
-                </span>
-                <span className={`ml-auto text-sm font-bold ${processState.complete ? 'text-green-400' : 'text-cyan-400'}`}>
-                  {processState.progress}%
-                </span>
+          {/* Processing Indicator - Always Visible */}
+          <div className="rounded-lg p-4 bg-slate-900/90 border border-slate-800">
+            {processState.active ? (
+              <>
+                <div className="flex items-center gap-2 mb-2">
+                  {processState.complete ? (
+                    <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">✓</div>
+                  ) : (
+                    <div className="w-4 h-4 rounded-full bg-cyan-500 animate-pulse"></div>
+                  )}
+                  <span className={`${processState.complete ? 'text-green-400' : 'text-cyan-400'} font-semibold text-sm`}>
+                    {processState.complete ? 'Complete' : 'Processing...'}
+                  </span>
+                  <span className={`ml-auto text-sm font-bold ${processState.complete ? 'text-green-400' : 'text-cyan-400'}`}>
+                    {processState.progress}%
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-sm h-2 overflow-hidden mb-2">
+                  <div 
+                    className={`h-full transition-all duration-500 ${processState.complete ? 'bg-green-500' : 'bg-cyan-500'}`}
+                    style={{width: `${processState.progress}%`}}
+                  ></div>
+                </div>
+                <div className="text-xs text-slate-300">
+                  {processState.stage}
+                </div>
+              </>
+            ) : (
+              <div className="text-slate-500 text-xs text-center py-2">
+                No active processing
               </div>
-              <div className="w-full bg-slate-800 rounded-sm h-2 overflow-hidden mb-2">
-                <div 
-                  className={`h-full transition-all duration-500 ${processState.complete ? 'bg-green-500' : 'bg-cyan-500'}`}
-                  style={{width: `${processState.progress}%`}}
-                ></div>
-              </div>
-              <div className="text-xs text-slate-300">
-                {processState.stage}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Narration */}
-          <div className="card">
+          {/* Narration with Bounding Box */}
+          <div className="card border-2 border-slate-700">
             <div className="card-title mb-3">Narration</div>
-            <div className="text-xs space-y-2 max-h-[400px] overflow-y-auto">
+            <div className="text-xs space-y-2 max-h-[450px] overflow-y-auto border border-slate-800 rounded-lg p-3 bg-slate-900/50">
               {state.events.length === 0 ? (
                 <div className="text-slate-500 italic">No events yet. Add a source to begin.</div>
               ) : (

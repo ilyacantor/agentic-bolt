@@ -4,11 +4,17 @@
 An intelligent system that autonomously discovers data sources from multiple enterprise systems, uses AI to map them to a predefined ontology, validates mappings with quality checks, and automatically publishes DuckDB views. Features a real-time web dashboard with interactive data flow graphs and AI-powered schema inference.
 
 ## Recent Changes (October 12, 2025)
-- ✅ **Processing Progress Indicator**: Added animated progress bar in top right above "Source Preview" 
-  - Shows when AI is analyzing schema and mapping to ontology
-  - Pulsing cyan dot and gradient progress bar with descriptive message
-  - Automatically disappears when processing completes
-  - Provides clear visual feedback for async operations
+- ✅ **Layout Reorganization**: Improved dashboard flow and visual consistency
+  - Progress indicator always visible at top of right sidebar (shows idle/active state)
+  - Narration moved to right sidebar with bounding box and scroll bar
+  - Source/Unified Previews relocated to "Notes" section below graph in compact format
+  - RAG Learning Engine visual identity updated with teal/cyan color scheme
+
+- ✅ **Processing Progress Indicator**: Staged progress bar with persistence
+  - Shows clear stages: Connecting (20%) → Analyzing (40%) → Mapping (70%) → Validating (90%) → Complete (100%)
+  - Persists after completion with green checkmark
+  - Always visible with "No active processing" when idle
+  - Clean design without heavy borders, matching visual identity
 
 - ✅ **RAG Engine Implementation**: Added context-aware, learning-based schema mapping with historical memory
   - Uses ChromaDB + Sentence Transformers (all-MiniLM-L6-v2, 384-dim embeddings)
