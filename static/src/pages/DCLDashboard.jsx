@@ -147,15 +147,45 @@ function DCLDashboard(){
             </button>
           </div>
 
-          <div className="card">
-            <div className="card-title mb-3">Narration</div>
-            <div className="text-xs space-y-2 max-h-[300px] overflow-y-auto">
-              {state.events.length === 0 ? (
-                <div className="text-slate-500 italic">No events yet. Add a source to begin.</div>
+          {/* RAG Context Panel - PROMINENT POSITION */}
+          <div className="card border-2 border-purple-500/30 bg-gradient-to-br from-purple-900/10 to-pink-900/10">
+            <div className="card-title mb-2 flex items-center gap-2">
+              <span className="text-purple-300">🧠 RAG Learning Engine</span>
+              <span className="text-xs bg-purple-500/30 text-purple-200 px-2 py-1 rounded-full font-bold">
+                {state.rag?.total_mappings || 0} stored
+              </span>
+            </div>
+            <div className="text-xs space-y-2 max-h-[280px] overflow-y-auto">
+              {!state.rag?.retrievals || state.rag.retrievals.length === 0 ? (
+                <div className="text-purple-300/60 italic bg-purple-500/5 p-3 rounded-lg border border-purple-500/20">
+                  💡 No context retrieved yet. Connect a second source to see RAG retrieve historical mappings!
+                </div>
               ) : (
-                state.events.map((event, i) => (
-                  <div key={i} className="text-slate-300 leading-relaxed">{event}</div>
-                ))
+                <>
+                  <div className="text-purple-200 font-bold mb-2 bg-purple-500/20 px-2 py-1 rounded">
+                    🎯 Retrieved {state.rag.last_retrieval_count} similar mappings:
+                  </div>
+                  {state.rag.retrievals.map((ret, i) => (
+                    <div key={i} className="bg-slate-900/70 rounded-lg p-2.5 border border-purple-500/30 hover:border-purple-400/50 transition-all">
+                      <div className="flex justify-between items-start mb-1">
+                        <div className="text-slate-200 font-bold text-sm">{ret.source_field}</div>
+                        <div className="text-xs bg-purple-500/40 text-purple-100 px-2 py-0.5 rounded-full font-bold">
+                          {(ret.similarity * 100).toFixed(0)}%
+                        </div>
+                      </div>
+                      <div className="text-purple-300 text-[11px] mb-1.5">→ {ret.ontology_entity}</div>
+                      <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden mb-1">
+                        <div 
+                          className="bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 h-full transition-all duration-500 shadow-lg shadow-purple-500/50"
+                          style={{width: `${ret.similarity * 100}%`}}
+                        ></div>
+                      </div>
+                      <div className="text-[10px] text-slate-400 flex items-center gap-1">
+                        <span className="text-purple-400">📊</span> from {ret.source_system}
+                      </div>
+                    </div>
+                  ))}
+                </>
               )}
             </div>
           </div>
@@ -179,39 +209,14 @@ function DCLDashboard(){
           </div>
 
           <div className="card">
-            <div className="card-title mb-2 flex items-center gap-2">
-              <span>RAG Context</span>
-              <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">
-                {state.rag?.total_mappings || 0} stored
-              </span>
-            </div>
-            <div className="text-xs space-y-2 max-h-[300px] overflow-y-auto">
-              {!state.rag?.retrievals || state.rag.retrievals.length === 0 ? (
-                <div className="text-slate-500 italic">No context retrieved yet. Add a source to see RAG in action.</div>
+            <div className="card-title mb-3">Narration</div>
+            <div className="text-xs space-y-2 max-h-[180px] overflow-y-auto">
+              {state.events.length === 0 ? (
+                <div className="text-slate-500 italic">No events yet. Add a source to begin.</div>
               ) : (
-                <>
-                  <div className="text-purple-300 font-medium mb-2">
-                    Retrieved {state.rag.last_retrieval_count} similar mappings:
-                  </div>
-                  {state.rag.retrievals.map((ret, i) => (
-                    <div key={i} className="bg-slate-900/50 rounded-lg p-2 border border-purple-500/20">
-                      <div className="flex justify-between items-start mb-1">
-                        <div className="text-slate-300 font-medium">{ret.source_field}</div>
-                        <div className="text-xs bg-purple-500/30 text-purple-200 px-1.5 py-0.5 rounded">
-                          {(ret.similarity * 100).toFixed(0)}%
-                        </div>
-                      </div>
-                      <div className="text-slate-400 text-[10px] mb-1">→ {ret.ontology_entity}</div>
-                      <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                        <div 
-                          className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
-                          style={{width: `${ret.similarity * 100}%`}}
-                        ></div>
-                      </div>
-                      <div className="text-[10px] text-slate-500 mt-1">from {ret.source_system}</div>
-                    </div>
-                  ))}
-                </>
+                state.events.map((event, i) => (
+                  <div key={i} className="text-slate-300 leading-relaxed">{event}</div>
+                ))
               )}
             </div>
           </div>
