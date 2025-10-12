@@ -197,9 +197,14 @@ def llm_propose(ontology: Dict[str, Any], source_key: str, tables: Dict[str, Any
         '  "joins": [ {"left":"<table>.<col>", "right":"<table>.<col>", "reason":"why"} ]'
         "}"
     )
+    
+    # Build RAG context section properly
+    rag_section = f"{rag_context}\n\n" if rag_context else ""
+    
+    # Construct full prompt with all sections
     prompt = (
         f"{sys_prompt}\n\n"
-        f"{rag_context}\n\n" if rag_context else ""
+        f"{rag_section}"
         f"Ontology:\n{json.dumps(ontology)}\n\n"
         f"SourceKey: {source_key}\n"
         f"Tables:\n{json.dumps(tables)}\n\n"
