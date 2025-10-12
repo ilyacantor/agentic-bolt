@@ -11,6 +11,4 @@ sift-stack-py
 chromadb
 sentence-transformers
 langchain-community
-chromadb
-langchain-community
-sentence-transformers
+torch
