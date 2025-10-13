@@ -1,4 +1,13 @@
 entities:
+  # RevOps Entities
+  customer:
+    pk: customer_id
+    fields: [customer_id, name, industry, annual_revenue, created_date]
+  opportunity:
+    pk: opportunity_id
+    fields: [opportunity_id, customer_id, opportunity_name, amount, close_date, stage]
+  
+  # FinOps Entities
   aws_resource:
     pk: resource_id
     fields: [resource_id, resource_type, service_name, region, account_id, resource_tags, created_date]
