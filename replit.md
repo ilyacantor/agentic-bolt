@@ -3,6 +3,12 @@
 ## Overview
 An intelligent system that autonomously discovers data sources from multiple enterprise systems, uses AI to map them to a predefined ontology, validates mappings with quality checks, and automatically publishes DuckDB views. Features a real-time web dashboard with interactive data flow graphs and AI-powered schema inference.
 
+**Multi-Agent Architecture**: The DCL acts as a dynamic data connection layer that adapts based on selected sources AND agents. Users can select multiple data sources (Dynamics, Salesforce, SAP, NetSuite, Legacy SQL, Snowflake) and multiple domain agents (RevOps Pilot, FinOps Pilot). The system automatically:
+- Maps source fields to the unified ontology
+- Filters ontology fields based on which agents are selected
+- Shows complete flows when source data matches agent requirements
+- Shows truncated flows (partial connections) when source data cannot feed selected agents
+
 ## Recent Changes (October 13, 2025)
 - ✅ **FinOps Use Case Transformation**: Converted DCL from RevOps to FinOps domain
   - **New Ontology**: aws_resource, cloud_cost, cloud_usage, cloud_invoice entities for AWS FinOps

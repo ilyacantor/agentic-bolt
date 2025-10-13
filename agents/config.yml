@@ -1,0 +1,28 @@
+agents:
+  finops_pilot:
+    name: FinOps Pilot
+    description: AWS cost optimization and cloud resource management
+    url: https://replit.com/@ilyacantor/FinOpsPilot
+    consumes:
+      - aws_resource
+      - cloud_cost
+      - cloud_usage
+      - cloud_invoice
+    key_metrics:
+      - cpuUtilization
+      - memoryUtilization
+      - networkOut
+      - monthly_cost
+    color: "#9333ea"
+  
+  revops_pilot:
+    name: RevOps Pilot
+    description: Revenue operations and sales pipeline optimization
+    consumes:
+      - customer
+      - opportunity
+    key_metrics:
+      - annual_revenue
+      - amount
+      - close_date
+    color: "#3b82f6"
