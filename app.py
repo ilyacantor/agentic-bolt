@@ -424,16 +424,33 @@ def connect_source(source_key: str) -> Dict[str, Any]:
     previews = {"sources": {}, "ontology": {}}
     for t in tables.keys():
         previews["sources"][f"src_{source_key}_{t}"] = preview_table(con, f"src_{source_key}_{t}")
-    for ent in ["customer","transaction"]:
+    
+    # Preview ontology tables based on selected agents
+    if not agents_config:
+        agents_config = load_agents_config()
+    
+    ontology_entities = set()
+    if SELECTED_AGENTS:
+        for agent_id in SELECTED_AGENTS:
+            agent_info = agents_config.get("agents", {}).get(agent_id, {})
+            consumes = agent_info.get("consumes", [])
+            ontology_entities.update(consumes)
+    else:
+        if not ontology:
+            ontology = load_ontology()
+        ontology_entities = set(ontology.get("entities", {}).keys())
+    
+    for ent in ontology_entities:
         previews["ontology"][f"dcl_{ent}"] = preview_table(con, f"dcl_{ent}")
     return {"ok": True, "score": score.confidence, "previews": previews}
 
 def reset_demo():
-    global EVENT_LOG, GRAPH_STATE, SOURCES_ADDED, ENTITY_SOURCES, ontology, LLM_CALLS, LLM_TOKENS
+    global EVENT_LOG, GRAPH_STATE, SOURCES_ADDED, ENTITY_SOURCES, ontology, LLM_CALLS, LLM_TOKENS, SELECTED_AGENTS
     EVENT_LOG = []
     GRAPH_STATE = {"nodes": [], "edges": [], "confidence": None, "last_updated": None}
     SOURCES_ADDED = []
     ENTITY_SOURCES = {}
+    SELECTED_AGENTS = []
     LLM_CALLS = 0
     LLM_TOKENS = 0
     ontology = load_ontology()
@@ -545,6 +562,7 @@ def reset():
 
 @app.get("/preview")
 def preview(node: Optional[str] = None):
+    global ontology, agents_config, SELECTED_AGENTS
     con = duckdb.connect(DB_PATH)
     sources, ontology_tables = {}, {}
     if node:
@@ -556,7 +574,24 @@ def preview(node: Optional[str] = None):
         except Exception:
             pass
     else:
-        for ent in ["customer","transaction"]:
+        # Determine which entities to preview based on selected agents
+        if not agents_config:
+            agents_config = load_agents_config()
+        
+        ontology_entities = set()
+        if SELECTED_AGENTS:
+            # Get entities consumed by selected agents
+            for agent_id in SELECTED_AGENTS:
+                agent_info = agents_config.get("agents", {}).get(agent_id, {})
+                consumes = agent_info.get("consumes", [])
+                ontology_entities.update(consumes)
+        else:
+            # If no agents selected, show all ontology entities
+            if not ontology:
+                ontology = load_ontology()
+            ontology_entities = set(ontology.get("entities", {}).keys())
+        
+        for ent in ontology_entities:
             ontology_tables[f"dcl_{ent}"] = preview_table(con, f"dcl_{ent}")
     return JSONResponse({"sources": sources, "ontology": ontology_tables})
 
