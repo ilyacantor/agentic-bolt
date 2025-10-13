@@ -146,17 +146,12 @@ function renderSankey(state) {
     links: sankeyLinks
   };
 
-  // Create main SVG with zoom and pan capabilities
   const svg = d3.select(container)
     .append('svg')
     .attr('width', '100%')
     .attr('height', '600px');
 
   const { width, height } = svg.node().getBoundingClientRect();
-
-  // Create main group for zoom/pan
-  const mainGroup = svg.append('g')
-    .attr('class', 'main-sankey-group');
 
   const sankey = d3.sankey()
     .nodeWidth(20)
@@ -203,8 +198,7 @@ function renderSankey(state) {
     return '#0bcad9';
   };
 
-  // Render links
-  mainGroup.append('g')
+  svg.append('g')
     .attr('fill', 'none')
     .selectAll('path')
     .data(links)
@@ -257,8 +251,7 @@ function renderSankey(state) {
       }
     });
 
-  // Render nodes
-  const nodeGroups = mainGroup.append('g')
+  const nodeGroups = svg.append('g')
     .selectAll('g')
     .data(nodes)
     .join('g');
@@ -305,149 +298,10 @@ function renderSankey(state) {
 
   // Dynamic title based on agents
   const agentNames = agentNodes.map(a => a.label).join(', ') || 'Agents';
-  mainGroup.append('text')
+  svg.append('text')
     .attr('x', 10)
     .attr('y', 20)
     .attr('fill', '#94a3b8')
     .style('font-size', '10px')
     .text(`Data Sources → Tables → Unified Ontology → ${agentNames}`);
-
-  // Add zoom and pan behavior
-  const zoom = d3.zoom()
-    .scaleExtent([0.5, 3])
-    .on('zoom', (event) => {
-      mainGroup.attr('transform', event.transform);
-      updateMiniMapViewport(event.transform);
-    });
-
-  svg.call(zoom);
-
-  // Create mini-map
-  const minimapWidth = 180;
-  const minimapHeight = 120;
-  const minimapMargin = 15;
-
-  const minimap = svg.append('g')
-    .attr('class', 'minimap')
-    .attr('transform', `translate(${width - minimapWidth - minimapMargin}, ${minimapMargin})`);
-
-  // Mini-map background
-  minimap.append('rect')
-    .attr('width', minimapWidth)
-    .attr('height', minimapHeight)
-    .attr('fill', '#0f172a')
-    .attr('stroke', '#334155')
-    .attr('stroke-width', 1.5)
-    .attr('rx', 4);
-
-  // Calculate mini-map scale
-  const minimapScaleX = minimapWidth / width;
-  const minimapScaleY = minimapHeight / height;
-  const minimapScale = Math.min(minimapScaleX, minimapScaleY) * 0.9;
-
-  const minimapGroup = minimap.append('g')
-    .attr('transform', `translate(${minimapWidth / 2}, ${minimapHeight / 2}) scale(${minimapScale}) translate(${-width / 2}, ${-height / 2})`);
-
-  // Render mini-map links
-  minimapGroup.append('g')
-    .attr('fill', 'none')
-    .selectAll('path')
-    .data(links)
-    .join('path')
-    .attr('d', d3.sankeyLinkHorizontal())
-    .attr('stroke', (d, i) => {
-      const originalLink = sankeyLinks[i];
-      if (originalLink && originalLink.targetType === 'agent') {
-        return '#9333ea';
-      }
-      if (originalLink && originalLink.sourceSystem) {
-        return sourceColorMap[originalLink.sourceSystem]?.child || '#0bcad9';
-      }
-      return '#64748b';
-    })
-    .attr('stroke-width', 2)
-    .attr('stroke-opacity', 0.6);
-
-  // Render mini-map nodes
-  minimapGroup.append('g')
-    .selectAll('rect')
-    .data(nodes)
-    .join('rect')
-    .attr('x', d => d.x0)
-    .attr('y', d => d.y0)
-    .attr('height', d => d.y1 - d.y0)
-    .attr('width', d => d.x1 - d.x0)
-    .attr('fill', d => {
-      const nodeData = sankeyNodes.find(n => n.name === d.name);
-      return getNodeColor(nodeData);
-    })
-    .attr('stroke', 'none');
-
-  // Viewport indicator
-  const viewportRect = minimap.append('rect')
-    .attr('class', 'viewport-indicator')
-    .attr('fill', 'none')
-    .attr('stroke', '#06b6d4')
-    .attr('stroke-width', 2)
-    .attr('rx', 2)
-    .style('pointer-events', 'all')
-    .style('cursor', 'move');
-
-  // Function to update viewport indicator
-  function updateMiniMapViewport(transform) {
-    const scale = transform.k;
-    const translateX = transform.x;
-    const translateY = transform.y;
-
-    const viewportWidth = (width / scale) * minimapScale;
-    const viewportHeight = (height / scale) * minimapScale;
-    const viewportX = minimapWidth / 2 - (width / 2 + translateX / scale) * minimapScale;
-    const viewportY = minimapHeight / 2 - (height / 2 + translateY / scale) * minimapScale;
-
-    viewportRect
-      .attr('x', viewportX)
-      .attr('y', viewportY)
-      .attr('width', viewportWidth)
-      .attr('height', viewportHeight);
-  }
-
-  // Initialize viewport
-  updateMiniMapViewport(d3.zoomIdentity);
-
-  // Mini-map click-to-navigate
-  minimap.on('click', function(event) {
-    const [mx, my] = d3.pointer(event);
-    
-    const targetX = (mx - minimapWidth / 2) / minimapScale + width / 2;
-    const targetY = (my - minimapHeight / 2) / minimapScale + height / 2;
-    
-    const currentTransform = d3.zoomTransform(svg.node());
-    const scale = currentTransform.k;
-    
-    const newTransform = d3.zoomIdentity
-      .translate((width / 2 - targetX * scale) / scale, (height / 2 - targetY * scale) / scale)
-      .scale(scale);
-    
-    svg.transition()
-      .duration(300)
-      .call(zoom.transform, newTransform);
-  });
-
-  // Viewport drag behavior
-  const viewportDrag = d3.drag()
-    .on('drag', function(event) {
-      const currentTransform = d3.zoomTransform(svg.node());
-      const scale = currentTransform.k;
-      
-      const dx = -event.dx / minimapScale;
-      const dy = -event.dy / minimapScale;
-      
-      const newTransform = d3.zoomIdentity
-        .translate((currentTransform.x + dx) / scale, (currentTransform.y + dy) / scale)
-        .scale(scale);
-      
-      svg.call(zoom.transform, newTransform);
-    });
-
-  viewportRect.call(viewportDrag);
 }

@@ -10,16 +10,7 @@ An intelligent system that autonomously discovers data sources from multiple ent
 - Shows truncated flows (partial connections) when source data cannot feed selected agents
 
 ## Recent Changes (October 13, 2025)
-- ✅ **Mini-Map Navigation Feature** (Latest)
-  - **Visual Overview**: 180x120px mini-map in top-right corner with scaled-down Sankey diagram
-  - **Viewport Indicator**: Cyan-bordered rectangle showing current visible area
-  - **Click-to-Navigate**: Click anywhere on mini-map to center that location in main view
-  - **Drag-to-Pan**: Drag viewport indicator to pan the main graph
-  - **Zoom Integration**: D3 zoom transforms correctly composed with `/scale` compensation
-  - **Design**: Dark background (#0f172a), slate border (#334155), smooth 300ms transitions
-  - **Architect-Verified**: Accurate navigation at all zoom levels (0.5x to 3x)
-
-- ✅ **Detailed FinOps Field Implementation**
+- ✅ **Detailed FinOps Field Implementation** (Latest)
   - **Comprehensive Ontology**: Added EC2, RDS, S3, ALB-specific fields (instance_type, vcpus, memory, storage, db_engine, cpu_utilization, memory_utilization, network_in/out, db_connections, S3 get/put requests)
   - **Enhanced Heuristic Detection**: Extended pattern matching to recognize detailed FinOps metrics across resource config, utilization, and cost/billing categories
   - **Realistic Multi-Source Flow**: NetSuite CloudSpend and SAP CLOUD_INVOICES now correctly map to cloud_cost entity with serviceCategory, usageType, monthly_cost fields
