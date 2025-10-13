@@ -178,11 +178,21 @@ function renderSankey(state) {
     })
     .attr('stroke-width', d => Math.max(1, d.width))
     .attr('stroke-opacity', 0.4)
+    .style('cursor', 'pointer')
     .on('mouseover', function() {
       d3.select(this).attr('stroke-opacity', 0.7);
     })
     .on('mouseout', function() {
       d3.select(this).attr('stroke-opacity', 0.4);
+    })
+    .on('click', async (event, d) => {
+      const targetNodeData = sankeyNodes.find(n => n.name === d.target.name);
+      if (targetNodeData && targetNodeData.id && targetNodeData.type === 'ontology') {
+        const r = await fetch('/preview?node=' + encodeURIComponent(targetNodeData.id));
+        const data = await r.json();
+        const evt = new CustomEvent('sankey-node-click', { detail: data });
+        window.dispatchEvent(evt);
+      }
     });
 
   const nodeGroups = svg.append('g')
