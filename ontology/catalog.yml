@@ -4,10 +4,10 @@ entities:
     fields: [resource_id, resource_type, service_name, region, account_id, resource_tags, created_date]
   cloud_cost:
     pk: cost_id
-    fields: [cost_id, resource_id, usage_date, cost_amount, monthlyCost, currency, usage_quantity, usage_unit, billing_period]
+    fields: [cost_id, resource_id, usage_date, cost_amount, monthly_cost, currency, usage_quantity, usage_unit, billing_period]
   cloud_usage:
     pk: usage_id
-    fields: [usage_id, resource_id, cpuUtilization, memoryUtilization, networkOut, metric_name, metric_value, timestamp, account_id]
+    fields: [usage_id, resource_id, metric_name, metric_value, timestamp, account_id]
   cloud_invoice:
     pk: invoice_id
     fields: [invoice_id, account_id, invoice_date, total_amount, service_charges, discount_amount, payment_status]

@@ -91,9 +91,15 @@ An intelligent system that autonomously discovers data sources from multiple ent
 ### Ontology (FinOps)
 - **ontology/catalog.yml** - AWS FinOps ontology with entities:
   - aws_resource: Resource metadata (EC2, S3, RDS, Lambda, etc.)
-  - cloud_cost: Cost and billing data
-  - cloud_usage: Usage metrics and monitoring
+  - cloud_cost: Cost and billing data (includes monthly_cost for FinOps analytics)
+  - cloud_usage: Usage metrics (cpuUtilization, memoryUtilization, networkOut, etc.)
   - cloud_invoice: Vendor invoicing and payments
+
+### Key FinOps Metrics (consumed by FinOps Pilot)
+- **cpuUtilization**: CPU usage percentage for cost optimization
+- **memoryUtilization**: Memory usage percentage for right-sizing
+- **networkOut**: Network egress in Mbps for bandwidth analysis
+- **monthly_cost**: Monthly cost projections for budget forecasting
 
 ## User Preferences
 - **AI Provider**: Gemini API (GEMINI_API_KEY environment variable)
