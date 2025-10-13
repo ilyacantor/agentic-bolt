@@ -1,8 +1,10 @@
 function renderSankey(state) {
   const container = document.getElementById('sankey-container');
+  const logosContainer = document.getElementById('sankey-logos');
   if (!container) return;
 
   container.innerHTML = '';
+  if (logosContainer) logosContainer.innerHTML = '';
 
   const sankeyNodes = [];
   const sankeyLinks = [];
@@ -298,4 +300,48 @@ function renderSankey(state) {
     .attr('fill', '#94a3b8')
     .style('font-size', '10px')
     .text('Data Sources → Tables → Ontology → Agents/Consumers');
+
+  // Render logos aligned with source groups
+  if (logosContainer) {
+    const logoMap = {
+      dynamics: '/attached_assets/stock_images/microsoft_dynamics_3_38403e5a.jpg',
+      salesforce: '/attached_assets/stock_images/salesforce_cloud_log_3c912277.jpg',
+      sap: '/attached_assets/stock_images/sap_logo_official_br_84e581a2.jpg',
+      netsuite: null,
+      legacy_sql: null,
+      snowflake: null
+    };
+
+    const sourceParentNodes = nodes.filter(n => {
+      const nodeData = sankeyNodes.find(sn => sn.name === n.name);
+      return nodeData && nodeData.type === 'source_parent';
+    });
+
+    sourceParentNodes.forEach(node => {
+      const nodeData = sankeyNodes.find(sn => sn.name === node.name);
+      if (nodeData && logoMap[nodeData.sourceSystem]) {
+        const logoBox = document.createElement('div');
+        logoBox.style.position = 'absolute';
+        logoBox.style.top = `${node.y0}px`;
+        logoBox.style.width = '100px';
+        logoBox.style.height = '60px';
+        logoBox.style.backgroundColor = 'white';
+        logoBox.style.borderRadius = '8px';
+        logoBox.style.padding = '8px';
+        logoBox.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+        logoBox.style.display = 'flex';
+        logoBox.style.alignItems = 'center';
+        logoBox.style.justifyContent = 'center';
+
+        const logoImg = document.createElement('img');
+        logoImg.src = logoMap[nodeData.sourceSystem];
+        logoImg.style.maxWidth = '100%';
+        logoImg.style.maxHeight = '100%';
+        logoImg.style.objectFit = 'contain';
+
+        logoBox.appendChild(logoImg);
+        logosContainer.appendChild(logoBox);
+      }
+    });
+  }
 }
