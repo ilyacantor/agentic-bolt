@@ -81,12 +81,10 @@ An intelligent system that autonomously discovers data sources from multiple ent
 
 ### Data Sources (FinOps Use Case)
 - **schemas/** directory contains AWS FinOps sample schemas from:
-  - **Snowflake**: AWS_RESOURCES, AWS_COSTS (EC2, S3, RDS, Lambda billing)
-  - **Legacy SQL**: CloudResources, UsageMetrics (AWS infrastructure metrics)
-  - **NetSuite**: CloudSpend, CloudVendorContracts (AWS procurement data)
-  - **SAP**: CLOUD_INVOICES, BILLING_ITEMS (AWS vendor billing)
-  - **Dynamics CRM**: Customer data (preserved from original)
-  - **Salesforce**: Opportunity data (preserved from original)
+  - **Snowflake**: AWS_RESOURCES, AWS_COSTS (EC2, S3, RDS, Lambda billing with monthly_cost)
+  - **Legacy SQL**: CloudResources, UsageMetrics (AWS infrastructure with cpuUtilization, memoryUtilization, networkOut)
+  - **NetSuite**: CloudSpend, CloudVendorContracts (AWS procurement and spend data)
+  - **SAP**: CLOUD_INVOICES, BILLING_ITEMS (AWS vendor billing records)
 
 ### Ontology (FinOps)
 - **ontology/catalog.yml** - AWS FinOps ontology with entities:
