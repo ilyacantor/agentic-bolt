@@ -10,14 +10,20 @@ An intelligent system that autonomously discovers data sources from multiple ent
 - Shows truncated flows (partial connections) when source data cannot feed selected agents
 
 ## Recent Changes (October 13, 2025)
-- ✅ **Dynamic Sankey Flow with Smart Node Creation** (Latest)
+- ✅ **Detailed FinOps Field Implementation** (Latest)
+  - **Comprehensive Ontology**: Added EC2, RDS, S3, ALB-specific fields (instance_type, vcpus, memory, storage, db_engine, cpu_utilization, memory_utilization, network_in/out, db_connections, S3 get/put requests)
+  - **Enhanced Heuristic Detection**: Extended pattern matching to recognize detailed FinOps metrics across resource config, utilization, and cost/billing categories
+  - **Realistic Multi-Source Flow**: NetSuite CloudSpend and SAP CLOUD_INVOICES now correctly map to cloud_cost entity with serviceCategory, usageType, monthly_cost fields
+  - **Verified Results**: 6 sources → 2 ontology entities → FinOps Pilot (5 edges total)
+  - **Production-Ready**: Architect-approved implementation with comprehensive field definitions aligned to AWS FinOps use case
+
+- ✅ **Dynamic Sankey Flow with Smart Node Creation**
   - **Zero Orphaned Nodes**: Ontology nodes only appear when they receive actual data from sources
   - **Agent-Aware Heuristic Planner**: Only creates mappings to entities consumed by selected agents
   - **FinOps Pattern Detection**: Added heuristic rules for resource_id, cost (monthly_cost), usage (cpuUtilization) fields
   - **Complete Edge Flow**: Backend creates source→ontology edges, frontend creates ontology→agent edges
   - **State API Enhancement**: Added `selected_agents` to `/state` endpoint for frontend synchronization
   - **Verified Working**: Console logs confirm edges created: aws_resource→FinOps Pilot, cloud_cost→FinOps Pilot
-  - **Future Enhancement**: Detailed ontology fields to match FinOps demo schema (EC2, RDS, S3 metrics)
 
 - ✅ **Multi-Agent Architecture**: DCL now dynamically adapts based on selected sources AND agents
   - Agent selection: RevOps Pilot, FinOps Pilot (both can be selected simultaneously)
