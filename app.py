@@ -314,7 +314,10 @@ def apply_plan(con, source_key: str, plan: Dict[str, Any]) -> Scorecard:
         try:
             con.sql(f"CREATE OR REPLACE VIEW {view_name} AS SELECT {', '.join(selects)} FROM {src_table}")
             per_entity_views.setdefault(ent, []).append(view_name)
-            GRAPH_STATE["edges"].append({"source": src_table, "target": f"dcl_{ent}", "label": f"{m['source_table']} → {ent}", "type": "mapping"})
+            # Only create edge if the target ontology node exists in the graph
+            target_node_id = f"dcl_{ent}"
+            if any(n["id"] == target_node_id for n in GRAPH_STATE["nodes"]):
+                GRAPH_STATE["edges"].append({"source": src_table, "target": target_node_id, "label": f"{m['source_table']} → {ent}", "type": "mapping"})
         except Exception as e:
             blockers.append(f"{ent}: failed view {view_name}: {e}")
     for ent, views in per_entity_views.items():
