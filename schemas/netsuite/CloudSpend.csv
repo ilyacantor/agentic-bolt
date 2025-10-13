@@ -1,9 +1,16 @@
-TransactionID,VendorName,serviceCategory,monthly_cost,Currency,PurchaseDate,CostCenter,usageType,Region
-NS-CS-001,AWS,EC2-Instance,12450.00,USD,2024-03-01,Engineering,Instance-Hours,us-east-1
-NS-CS-002,AWS,S3,3280.50,USD,2024-03-01,Data Platform,GB-Month,us-east-1
-NS-CS-003,AWS,RDS,8920.75,USD,2024-03-05,Backend Services,Instance-Hours,us-west-2
-NS-CS-004,AWS,Lambda,1567.30,USD,2024-03-08,API Platform,Invocations,us-east-1
-NS-CS-005,AWS,ELB,4230.90,USD,2024-03-10,Infrastructure,LoadBalancer-Hours,us-east-1
-NS-CS-006,AWS,CloudWatch,6780.45,USD,2024-03-15,Data Science,Requests,us-east-1
-NS-CS-007,AWS,Route53,2340.60,USD,2024-03-18,SecOps,Queries,global
-NS-CS-008,AWS,CloudFront,5670.80,USD,2024-03-20,ML Platform,GB,us-east-1
+TransactionID,VendorName,VendorID,ServiceCategory,Monthly_Cost,Currency,PurchaseDate,CostCenter,UsageType,Region,PaymentTerms,InvoiceNumber,PurchaseOrderNumber,ApprovalStatus,Department
+NS-CS-1000,AWS,VND-AWS-001,S3-Storage,26151.64,USD,2025-07-15,Engineering,ProcessedBytes,us-west-2,NET30,INV-55247,PO-75557,Paid,IT
+NS-CS-1001,AWS,VND-AWS-001,S3-Storage,46497.9,USD,2025-10-10,Engineering,Requests,us-west-2,NET30,INV-59042,PO-34856,Pending,IT
+NS-CS-1002,AWS,VND-AWS-001,EC2-Instance,33378.46,USD,2025-08-15,Infrastructure,ProcessedBytes,us-east-1,NET30,INV-80850,PO-55013,Approved,R&D
+NS-CS-1003,AWS,VND-AWS-001,S3-Storage,18070.74,USD,2025-10-10,DataScience,ProcessedBytes,us-west-2,NET30,INV-42177,PO-67026,Pending,R&D
+NS-CS-1004,AWS,VND-AWS-001,ALB-LoadBalancer,13133.82,USD,2025-08-16,Engineering,GB-Month,ap-southeast-1,NET60,INV-27385,PO-10459,Approved,R&D
+NS-CS-1005,AWS,VND-AWS-001,ALB-LoadBalancer,26613.21,USD,2025-09-06,Engineering,GB-Month,eu-west-1,Prepaid,INV-76039,PO-18629,Pending,IT
+NS-CS-1006,AWS,VND-AWS-001,EC2-Instance,26036.02,USD,2025-09-22,DataScience,GB-Month,us-west-2,NET60,INV-21825,PO-25362,Pending,R&D
+NS-CS-1007,AWS,VND-AWS-001,ALB-LoadBalancer,37708.13,USD,2025-10-12,Infrastructure,Requests,ap-southeast-1,NET30,INV-64852,PO-41031,Paid,R&D
+NS-CS-1008,AWS,VND-AWS-001,RDS-Database,44983.16,USD,2025-07-17,DataScience,GB-Month,us-west-2,NET60,INV-57509,PO-75538,Pending,IT
+NS-CS-1009,AWS,VND-AWS-001,EC2-Instance,27120.79,USD,2025-10-13,Engineering,GB-Month,eu-west-1,Prepaid,INV-60327,PO-76837,Paid,R&D
+NS-CS-1010,AWS,VND-AWS-001,RDS-Database,7632.1,USD,2025-09-05,Engineering,Requests,us-west-2,NET60,INV-78203,PO-13515,Pending,Operations
+NS-CS-1011,AWS,VND-AWS-001,RDS-Database,31525.66,USD,2025-08-15,DataScience,Instance-Hours,ap-southeast-1,NET30,INV-72148,PO-79264,Pending,Operations
+NS-CS-1012,AWS,VND-AWS-001,RDS-Database,12654.96,USD,2025-07-23,DataScience,ProcessedBytes,us-west-2,NET60,INV-44235,PO-74526,Paid,Operations
+NS-CS-1013,AWS,VND-AWS-001,S3-Storage,16503.25,USD,2025-07-27,Infrastructure,ProcessedBytes,us-west-2,NET60,INV-43403,PO-52132,Pending,IT
+NS-CS-1014,AWS,VND-AWS-001,RDS-Database,46457.19,USD,2025-10-09,Engineering,ProcessedBytes,us-east-1,NET60,INV-45888,PO-90379,Paid,Operations

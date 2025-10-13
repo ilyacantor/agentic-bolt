@@ -293,16 +293,23 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
     storage_fields = ["storage","allocatedStorage","sizeGB","size_gb"]
     db_engine_fields = ["engine","db_engine","dbEngine"]
     
-    # FinOps patterns - Utilization metrics
-    cpu_util_fields = ["cpuUtilization","cpu_utilization","cpu_percent"]
-    mem_util_fields = ["memoryUtilization","memory_utilization","mem_percent"]
-    network_in_fields = ["networkIn","network_in","bytesIn"]
-    network_out_fields = ["networkOut","network_out","bytesOut"]
-    connections_fields = ["connections","db_connections","activeConnections"]
+    # FinOps patterns - Utilization metrics (enhanced for detailed fields)
+    cpu_util_fields = ["cpuUtilization","cpu_utilization","cpu_percent","CPU_UTILIZATION"]
+    mem_util_fields = ["memoryUtilization","memory_utilization","mem_percent","MEMORY_UTILIZATION"]
+    network_in_fields = ["networkIn","network_in","bytesIn","NETWORK_IN_MB","network_in_mb"]
+    network_out_fields = ["networkOut","network_out","bytesOut","NETWORK_OUT_MB","network_out_mb"]
+    connections_fields = ["connections","db_connections","activeConnections","DB_CONNECTIONS"]
+    disk_read_fields = ["disk_read_ops","diskReadOps","DISK_READ_OPS","read_iops"]
+    disk_write_fields = ["disk_write_ops","diskWriteOps","DISK_WRITE_OPS","write_iops"]
     
-    # FinOps patterns - S3 metrics
-    get_requests_fields = ["getRequests","get_requests","s3_gets"]
-    put_requests_fields = ["putRequests","put_requests","s3_puts"]
+    # FinOps patterns - S3 metrics (enhanced)
+    get_requests_fields = ["getRequests","get_requests","s3_gets","GET_REQUESTS"]
+    put_requests_fields = ["putRequests","put_requests","s3_puts","PUT_REQUESTS"]
+    
+    # FinOps patterns - RDS/Database metrics
+    read_latency_fields = ["read_latency","readLatency","READ_LATENCY_MS","read_latency_ms"]
+    write_latency_fields = ["write_latency","writeLatency","WRITE_LATENCY_MS","write_latency_ms"]
+    free_storage_fields = ["free_storage","freeStorage","FREE_STORAGE_GB","available_storage"]
     
     # FinOps patterns - Cost/Billing
     service_category_fields = ["serviceCategory","service_category","service_name","serviceName"]
@@ -328,14 +335,19 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
         storage = next((c for c in cols if c in storage_fields), None)
         db_engine = next((c for c in cols if c in db_engine_fields), None)
         
-        # FinOps: Utilization metrics
+        # FinOps: Utilization metrics (enhanced)
         cpu_util = next((c for c in cols if c in cpu_util_fields), None)
         mem_util = next((c for c in cols if c in mem_util_fields), None)
         network_in = next((c for c in cols if c in network_in_fields), None)
         network_out = next((c for c in cols if c in network_out_fields), None)
         connections = next((c for c in cols if c in connections_fields), None)
+        disk_read = next((c for c in cols if c in disk_read_fields), None)
+        disk_write = next((c for c in cols if c in disk_write_fields), None)
         get_requests = next((c for c in cols if c in get_requests_fields), None)
         put_requests = next((c for c in cols if c in put_requests_fields), None)
+        read_latency = next((c for c in cols if c in read_latency_fields), None)
+        write_latency = next((c for c in cols if c in write_latency_fields), None)
+        free_storage = next((c for c in cols if c in free_storage_fields), None)
         
         # FinOps: Cost/Billing
         service_category = next((c for c in cols if c in service_category_fields), None)
@@ -374,16 +386,22 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
             if fields:
                 mappings.append({"entity":"cloud_cost","source_table": f"{source_key}_{tname}", "fields": fields})
         
-        # FinOps mappings - cloud_usage (utilization metrics)
-        if (cpu_util or mem_util or network_in or network_out or connections or get_requests) and "cloud_usage" in available_entities:
+        # FinOps mappings - cloud_usage (utilization metrics - enhanced with detailed metrics)
+        if (cpu_util or mem_util or network_in or network_out or connections or disk_read or disk_write or 
+            get_requests or read_latency or write_latency or free_storage) and "cloud_usage" in available_entities:
             fields = []
             if cpu_util: fields.append({"source": cpu_util, "onto_field": "cpu_utilization", "confidence": 0.9})
             if mem_util: fields.append({"source": mem_util, "onto_field": "memory_utilization", "confidence": 0.9})
             if network_in: fields.append({"source": network_in, "onto_field": "network_in", "confidence": 0.85})
             if network_out: fields.append({"source": network_out, "onto_field": "network_out", "confidence": 0.85})
             if connections: fields.append({"source": connections, "onto_field": "db_connections", "confidence": 0.85})
+            if disk_read: fields.append({"source": disk_read, "onto_field": "disk_read_ops", "confidence": 0.85})
+            if disk_write: fields.append({"source": disk_write, "onto_field": "disk_write_ops", "confidence": 0.85})
             if get_requests: fields.append({"source": get_requests, "onto_field": "get_requests", "confidence": 0.85})
             if put_requests: fields.append({"source": put_requests, "onto_field": "put_requests", "confidence": 0.85})
+            if read_latency: fields.append({"source": read_latency, "onto_field": "read_latency_ms", "confidence": 0.85})
+            if write_latency: fields.append({"source": write_latency, "onto_field": "write_latency_ms", "confidence": 0.85})
+            if free_storage: fields.append({"source": free_storage, "onto_field": "free_storage_gb", "confidence": 0.85})
             if fields:
                 mappings.append({"entity":"cloud_usage","source_table": f"{source_key}_{tname}", "fields": fields})
     # naive joins on shared key names

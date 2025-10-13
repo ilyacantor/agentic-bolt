@@ -63,17 +63,34 @@ entities:
       - memory_utilization  # percentage
       - network_in  # MB
       - network_out  # MB
+      - disk_read_ops  # IOPS
+      - disk_write_ops  # IOPS
+      - network_packets_in
+      - network_packets_out
       # RDS metrics
       - db_connections
-      - read_latency  # ms
-      - write_latency  # ms
+      - read_latency_ms  # milliseconds
+      - write_latency_ms  # milliseconds
+      - read_throughput_mb  # MB/s
+      - write_throughput_mb  # MB/s
+      - free_storage_gb  # GB
+      - disk_queue_depth
       # S3 metrics
       - get_requests
       - put_requests
+      - delete_requests
+      - list_requests
+      - bytes_downloaded
+      - bytes_uploaded
       - data_transfer_out  # GB
       # ALB metrics
       - request_count
+      - active_connections
+      - new_connections
       - target_response_time  # ms
+      - http_2xx_count
+      - http_4xx_count
+      - http_5xx_count
       - healthy_targets
       # Common fields
       - timestamp
