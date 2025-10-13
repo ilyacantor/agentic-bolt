@@ -59,7 +59,8 @@ function renderSankey(state) {
       sankeyLinks.push({
         source: nodeIndexMap[parentNodeId],
         target: nodeIndexMap[table.id],
-        value: 1
+        value: 1,
+        sourceSystem: sourceSystem
       });
       nodeIndex++;
     });
@@ -86,10 +87,21 @@ function renderSankey(state) {
     }
     
     if (nodeIndexMap[e.source] !== undefined && nodeIndexMap[e.target] !== undefined) {
+      const sourceNode = state.graph.nodes.find(n => n.id === e.source);
+      let linkSourceSystem = null;
+      
+      if (sourceNode?.type === 'source') {
+        const match = sourceNode.id.match(/^src_([^_]+)_(.+)$/);
+        if (match) {
+          linkSourceSystem = match[1];
+        }
+      }
+      
       sankeyLinks.push({
         source: nodeIndexMap[e.source],
         target: nodeIndexMap[e.target],
-        value: 1
+        value: 1,
+        sourceSystem: linkSourceSystem
       });
     }
   });
@@ -140,13 +152,30 @@ function renderSankey(state) {
     return typeColorMap[nodeData.type] || '#64748b';
   };
 
+  const getLinkColor = (linkData) => {
+    const originalLink = sankeyLinks.find((l, i) => {
+      return links[i] === linkData;
+    });
+    
+    if (originalLink && originalLink.sourceSystem) {
+      return sourceColorMap[originalLink.sourceSystem]?.child || '#0bcad9';
+    }
+    return '#0bcad9';
+  };
+
   svg.append('g')
     .attr('fill', 'none')
     .selectAll('path')
     .data(links)
     .join('path')
     .attr('d', d3.sankeyLinkHorizontal())
-    .attr('stroke', '#0bcad9')
+    .attr('stroke', (d, i) => {
+      const originalLink = sankeyLinks[i];
+      if (originalLink && originalLink.sourceSystem) {
+        return sourceColorMap[originalLink.sourceSystem]?.child || '#0bcad9';
+      }
+      return '#64748b';
+    })
     .attr('stroke-width', d => Math.max(1, d.width))
     .attr('stroke-opacity', 0.4)
     .on('mouseover', function() {
