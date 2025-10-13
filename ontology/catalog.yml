@@ -1,7 +1,13 @@
 entities:
-  customer:
-    pk: customer_id
-    fields: [customer_id, name, email, city, country, created_at]
-  transaction:
-    pk: transaction_id
-    fields: [transaction_id, customer_id, amount, order_date]
+  aws_resource:
+    pk: resource_id
+    fields: [resource_id, resource_type, service_name, region, account_id, resource_tags, created_date]
+  cloud_cost:
+    pk: cost_id
+    fields: [cost_id, resource_id, usage_date, cost_amount, currency, usage_quantity, usage_unit, billing_period]
+  cloud_usage:
+    pk: usage_id
+    fields: [usage_id, resource_id, metric_name, metric_value, timestamp, account_id]
+  cloud_invoice:
+    pk: invoice_id
+    fields: [invoice_id, account_id, invoice_date, total_amount, service_charges, discount_amount, payment_status]
