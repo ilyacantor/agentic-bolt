@@ -1,12 +1,11 @@
 """
 RAG Engine for DCL Schema Mapping
-Uses Qdrant Cloud + Sentence Transformers for context retrieval
+Uses Pinecone + Sentence Transformers for context retrieval
 """
 
 import os
 import json
-from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, Range
+from pinecone import Pinecone, ServerlessSpec
 from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -15,28 +14,24 @@ import hashlib
 class RAGEngine:
     """
     Retrieval-Augmented Generation engine for schema mapping.
-    Stores historical mappings in Qdrant Cloud and retrieves similar examples to guide LLM.
+    Stores historical mappings in Pinecone and retrieves similar examples to guide LLM.
     """
     
-    def __init__(self, qdrant_url: Optional[str] = None, qdrant_api_key: Optional[str] = None):
-        """Initialize RAG engine with Qdrant Cloud and embedding model."""
-        # Get Qdrant credentials from environment if not provided
-        self.qdrant_url = qdrant_url or os.environ.get("QDRANT_URL")
-        self.qdrant_api_key = qdrant_api_key or os.environ.get("QDRANT_API_KEY")
+    def __init__(self, pinecone_api_key: Optional[str] = None):
+        """Initialize RAG engine with Pinecone and embedding model."""
+        # Get Pinecone API key from environment if not provided
+        self.pinecone_api_key = pinecone_api_key or os.environ.get("PINECONE_API_KEY")
         
-        if not self.qdrant_url or not self.qdrant_api_key:
+        if not self.pinecone_api_key:
             raise ValueError(
-                "Qdrant credentials not found. Please set QDRANT_URL and QDRANT_API_KEY environment variables."
+                "Pinecone API key not found. Please set PINECONE_API_KEY environment variable."
             )
         
-        # Initialize Qdrant client
-        self.client = QdrantClient(
-            url=self.qdrant_url,
-            api_key=self.qdrant_api_key,
-        )
+        # Initialize Pinecone client
+        self.pc = Pinecone(api_key=self.pinecone_api_key)
         
-        # Collection name
-        self.collection_name = "schema_mappings"
+        # Index name
+        self.index_name = "schema-mappings"
         
         # Load embedding model (384-dim, fast, lightweight)
         print("🔄 Loading embedding model (all-MiniLM-L6-v2)...")
@@ -44,25 +39,34 @@ class RAGEngine:
         self.embedding_dim = 384
         print("✅ RAG Engine initialized")
         
-        # Create collection if it doesn't exist
-        self._ensure_collection()
+        # Create or connect to index
+        self._ensure_index()
     
-    def _ensure_collection(self):
-        """Create collection if it doesn't exist."""
+    def _ensure_index(self):
+        """Create index if it doesn't exist."""
         try:
-            # Try to get collection info
-            self.client.get_collection(self.collection_name)
-            print(f"✅ Connected to existing collection: {self.collection_name}")
-        except:
-            # Collection doesn't exist, create it
-            self.client.create_collection(
-                collection_name=self.collection_name,
-                vectors_config=VectorParams(
-                    size=self.embedding_dim,
-                    distance=Distance.COSINE
+            # Check if index exists
+            if self.index_name not in self.pc.list_indexes().names():
+                # Create index with serverless spec (free tier)
+                self.pc.create_index(
+                    name=self.index_name,
+                    dimension=self.embedding_dim,
+                    metric='cosine',
+                    spec=ServerlessSpec(
+                        cloud='aws',
+                        region='us-east-1'
+                    )
                 )
-            )
-            print(f"✅ Created new collection: {self.collection_name}")
+                print(f"✅ Created new index: {self.index_name}")
+            else:
+                print(f"✅ Connected to existing index: {self.index_name}")
+            
+            # Get index
+            self.index = self.pc.Index(self.index_name)
+        except Exception as e:
+            print(f"⚠️  Error with index: {e}")
+            # If index exists but had error, try to connect anyway
+            self.index = self.pc.Index(self.index_name)
     
     def _create_field_signature(self, field_name: str, field_type: str, 
                                  source_system: str = "") -> str:
@@ -89,12 +93,11 @@ Confidence: {mapping.get('confidence', 0.0)}
         """.strip()
         return doc
     
-    def _create_point_id(self, source_system: str, source_field: str) -> str:
-        """Create a unique point ID from source system and field."""
-        # Use hash to create numeric ID for Qdrant
+    def _create_vector_id(self, source_system: str, source_field: str) -> str:
+        """Create a unique vector ID from source system and field."""
         text = f"{source_system}_{source_field}_{int(datetime.now().timestamp())}"
-        # Convert to integer hash
-        return str(abs(hash(text)) % (10 ** 10))
+        # Create hash for unique ID
+        return hashlib.md5(text.encode()).hexdigest()[:16]
     
     def store_mapping(self, 
                      source_field: str,
@@ -108,10 +111,10 @@ Confidence: {mapping.get('confidence', 0.0)}
         Store a successful mapping in the vector database.
         
         Returns:
-            Point ID of stored mapping
+            Vector ID of stored mapping
         """
         # Create unique ID
-        point_id = self._create_point_id(source_system, source_field)
+        vector_id = self._create_vector_id(source_system, source_field)
         
         # Create mapping data
         mapping = {
@@ -131,21 +134,17 @@ Confidence: {mapping.get('confidence', 0.0)}
         # Generate embedding
         embedding = self.model.encode(document).tolist()
         
-        # Create point for Qdrant
-        point = PointStruct(
-            id=point_id,
-            vector=embedding,
-            payload=mapping
-        )
-        
-        # Upsert to Qdrant
-        self.client.upsert(
-            collection_name=self.collection_name,
-            points=[point]
+        # Upsert to Pinecone
+        self.index.upsert(
+            vectors=[{
+                "id": vector_id,
+                "values": embedding,
+                "metadata": mapping
+            }]
         )
         
         print(f"📝 Stored mapping: {source_field} → {ontology_entity}")
-        return point_id
+        return vector_id
     
     def retrieve_similar_mappings(self,
                                    field_name: str,
@@ -169,9 +168,9 @@ Confidence: {mapping.get('confidence', 0.0)}
         # Create query
         query = self._create_field_signature(field_name, field_type, source_system)
         
-        # Check if collection has any documents
-        collection_info = self.client.get_collection(self.collection_name)
-        if collection_info.points_count == 0:
+        # Check if index has any vectors
+        stats = self.index.describe_index_stats()
+        if stats.total_vector_count == 0:
             print("ℹ️  No historical mappings in vector store yet")
             return []
         
@@ -181,29 +180,22 @@ Confidence: {mapping.get('confidence', 0.0)}
         # Build filter for minimum confidence
         query_filter = None
         if min_confidence > 0:
-            query_filter = Filter(
-                must=[
-                    FieldCondition(
-                        key="confidence",
-                        range=Range(gte=min_confidence)
-                    )
-                ]
-            )
+            query_filter = {"confidence": {"$gte": min_confidence}}
         
-        # Search Qdrant
-        results = self.client.search(
-            collection_name=self.collection_name,
-            query_vector=query_embedding,
-            limit=top_k,
-            query_filter=query_filter
+        # Query Pinecone
+        results = self.index.query(
+            vector=query_embedding,
+            top_k=top_k,
+            include_metadata=True,
+            filter=query_filter
         )
         
         # Format results
         similar_mappings = []
-        for result in results:
+        for match in results.matches:
             similar_mappings.append({
-                **result.payload,
-                "similarity": round(result.score, 3)
+                **match.metadata,
+                "similarity": round(match.score, 3)
             })
         
         print(f"🔍 Found {len(similar_mappings)} similar mappings for '{field_name}'")
@@ -274,11 +266,11 @@ Confidence: {mapping.get('confidence', 0.0)}
     
     def get_stats(self) -> Dict[str, Any]:
         """Get statistics about the vector store."""
-        collection_info = self.client.get_collection(self.collection_name)
+        stats = self.index.describe_index_stats()
         return {
-            "total_mappings": collection_info.points_count,
-            "collection_name": self.collection_name,
+            "total_mappings": stats.total_vector_count,
+            "index_name": self.index_name,
             "embedding_model": "all-MiniLM-L6-v2",
             "embedding_dimension": self.embedding_dim,
-            "vector_db": "Qdrant Cloud"
+            "vector_db": "Pinecone"
         }

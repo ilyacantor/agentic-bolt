@@ -7,5 +7,5 @@ google-generativeai
 fastapi
 uvicorn
 httpx
-qdrant-client
+pinecone-client
 sentence-transformers
