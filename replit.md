@@ -4,6 +4,16 @@
 An intelligent system that autonomously discovers data sources from multiple enterprise systems, uses AI to map them to a predefined ontology, validates mappings with quality checks, and automatically publishes DuckDB views. Features a real-time web dashboard with interactive data flow graphs and AI-powered schema inference.
 
 ## Recent Changes (October 13, 2025)
+- ✅ **FinOps Use Case Transformation**: Converted DCL from RevOps to FinOps domain
+  - **New Ontology**: aws_resource, cloud_cost, cloud_usage, cloud_invoice entities for AWS FinOps
+  - **Snowflake**: AWS_RESOURCES and AWS_COSTS tables with EC2, S3, RDS, Lambda, EKS billing data
+  - **Legacy SQL**: CloudResources and UsageMetrics tables with AWS infrastructure metrics
+  - **NetSuite**: CloudSpend and CloudVendorContracts with AWS procurement/spend data
+  - **SAP**: CLOUD_INVOICES and BILLING_ITEMS with AWS vendor billing records
+  - **Sankey Visualization**: Now shows complete flow: Sources → Ontology → FinOps Pilot Agent
+  - **Agent Integration**: FinOps Pilot displayed as purple consumer node on right side
+  - **End-to-End Flow**: Demonstrates DCL aligning multi-source AWS data to unified ontology consumed by domain agent
+
 - ✅ **Pinecone Inference API Integration**: Fully cloud-based RAG with zero local ML dependencies
   - **FINAL FIX for deployment disk quota**: Removed ALL heavy ML packages (sentence-transformers, torch)
   - Now uses Pinecone Inference API for embeddings - NO local model downloads needed
@@ -69,17 +79,21 @@ An intelligent system that autonomously discovers data sources from multiple ent
    - Provides historical context to LLM for improved accuracy
    - 100% cloud-based - NO local ML model downloads
 
-### Data Sources
-- **schemas/** directory contains sample schemas from:
-  - Dynamics CRM
-  - Salesforce
-  - SAP ERP
-  - NetSuite
-  - Legacy SQL Server
-  - Snowflake
+### Data Sources (FinOps Use Case)
+- **schemas/** directory contains AWS FinOps sample schemas from:
+  - **Snowflake**: AWS_RESOURCES, AWS_COSTS (EC2, S3, RDS, Lambda billing)
+  - **Legacy SQL**: CloudResources, UsageMetrics (AWS infrastructure metrics)
+  - **NetSuite**: CloudSpend, CloudVendorContracts (AWS procurement data)
+  - **SAP**: CLOUD_INVOICES, BILLING_ITEMS (AWS vendor billing)
+  - **Dynamics CRM**: Customer data (preserved from original)
+  - **Salesforce**: Opportunity data (preserved from original)
 
-### Ontology
-- **ontology/catalog.yml** - Predefined enterprise ontology with entity definitions
+### Ontology (FinOps)
+- **ontology/catalog.yml** - AWS FinOps ontology with entities:
+  - aws_resource: Resource metadata (EC2, S3, RDS, Lambda, etc.)
+  - cloud_cost: Cost and billing data
+  - cloud_usage: Usage metrics and monitoring
+  - cloud_invoice: Vendor invoicing and payments
 
 ## User Preferences
 - **AI Provider**: Gemini API (GEMINI_API_KEY environment variable)
