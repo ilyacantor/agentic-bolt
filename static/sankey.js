@@ -1,10 +1,8 @@
 function renderSankey(state) {
   const container = document.getElementById('sankey-container');
-  const logosContainer = document.getElementById('sankey-logos');
   if (!container) return;
 
   container.innerHTML = '';
-  if (logosContainer) logosContainer.innerHTML = '';
 
   const sankeyNodes = [];
   const sankeyLinks = [];
@@ -249,40 +247,6 @@ function renderSankey(state) {
       }
     });
 
-  // Add icons for source parent nodes
-  const sourceIcons = {
-    dynamics: 'M12 2L2 7v10l10 5 10-5V7L12 2zm0 18.5l-8-4V8.5l8 4v8zm8-4l-8 4v-8l8-4v8z',
-    salesforce: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z',
-    sap: 'M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z',
-    netsuite: 'M12 2L2 7v10l10 5 10-5V7L12 2zm0 18.5l-8-4V8.5l8 4v8zm8-4l-8 4v-8l8-4v8z',
-    legacy_sql: 'M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z',
-    snowflake: 'M12 2l2 3.5-2 3.5-2-3.5L12 2zm0 20l-2-3.5 2-3.5 2 3.5-2 3.5zm10-10l-3.5-2 3.5-2 3.5 2-3.5 2zm-20 0l3.5 2-3.5 2-3.5-2 3.5-2z'
-  };
-
-  nodeGroups.each(function(d) {
-    const nodeData = sankeyNodes.find(n => n.name === d.name);
-    if (nodeData && nodeData.type === 'source_parent' && nodeData.sourceSystem) {
-      const iconPath = sourceIcons[nodeData.sourceSystem];
-      if (iconPath) {
-        const iconSize = 20;
-        const iconX = d.x0 - iconSize - 8;
-        const iconY = (d.y1 + d.y0) / 2 - iconSize / 2;
-        
-        d3.select(this)
-          .append('svg')
-          .attr('x', iconX)
-          .attr('y', iconY)
-          .attr('width', iconSize)
-          .attr('height', iconSize)
-          .attr('viewBox', '0 0 24 24')
-          .append('path')
-          .attr('d', iconPath)
-          .attr('fill', sourceColorMap[nodeData.sourceSystem]?.parent || '#3b82f6')
-          .attr('opacity', 0.8);
-      }
-    }
-  });
-
   nodeGroups
     .append('text')
     .attr('x', d => d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6)
@@ -300,48 +264,4 @@ function renderSankey(state) {
     .attr('fill', '#94a3b8')
     .style('font-size', '10px')
     .text('Data Sources → Tables → Ontology → Agents/Consumers');
-
-  // Render logos aligned with source groups
-  if (logosContainer) {
-    const logoMap = {
-      dynamics: '/attached_assets/stock_images/microsoft_dynamics_3_38403e5a.jpg',
-      salesforce: '/attached_assets/stock_images/salesforce_cloud_log_3c912277.jpg',
-      sap: '/attached_assets/stock_images/sap_logo_official_br_84e581a2.jpg',
-      netsuite: null,
-      legacy_sql: null,
-      snowflake: null
-    };
-
-    const sourceParentNodes = nodes.filter(n => {
-      const nodeData = sankeyNodes.find(sn => sn.name === n.name);
-      return nodeData && nodeData.type === 'source_parent';
-    });
-
-    sourceParentNodes.forEach(node => {
-      const nodeData = sankeyNodes.find(sn => sn.name === node.name);
-      if (nodeData && logoMap[nodeData.sourceSystem]) {
-        const logoBox = document.createElement('div');
-        logoBox.style.position = 'absolute';
-        logoBox.style.top = `${node.y0}px`;
-        logoBox.style.width = '100px';
-        logoBox.style.height = '60px';
-        logoBox.style.backgroundColor = 'white';
-        logoBox.style.borderRadius = '8px';
-        logoBox.style.padding = '8px';
-        logoBox.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-        logoBox.style.display = 'flex';
-        logoBox.style.alignItems = 'center';
-        logoBox.style.justifyContent = 'center';
-
-        const logoImg = document.createElement('img');
-        logoImg.src = logoMap[nodeData.sourceSystem];
-        logoImg.style.maxWidth = '100%';
-        logoImg.style.maxHeight = '100%';
-        logoImg.style.objectFit = 'contain';
-
-        logoBox.appendChild(logoImg);
-        logosContainer.appendChild(logoBox);
-      }
-    });
-  }
 }

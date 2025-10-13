@@ -295,12 +295,10 @@ function DCLDashboard(){
             style={{ display: viewType === 'cytoscape' ? 'block' : 'none' }}
           ></div>
           <div 
-            className="rounded-xl bg-slate-900/50 border border-slate-800 h-[600px] flex"
-            style={{ display: viewType === 'sankey' ? 'flex' : 'none' }}
-          >
-            <div id="sankey-logos" className="flex-shrink-0 w-32 flex flex-col gap-4 p-4 relative"></div>
-            <div id="sankey-container" className="flex-1"></div>
-          </div>
+            id="sankey-container" 
+            className="rounded-xl bg-slate-900/50 border border-slate-800 h-[600px]"
+            style={{ display: viewType === 'sankey' ? 'block' : 'none' }}
+          ></div>
         </div>
 
         {/* Right Sidebar */}
