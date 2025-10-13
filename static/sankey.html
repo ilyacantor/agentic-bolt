@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DCL Sankey Visualization</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://unpkg.com/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+  <style>
+    body { background:#0d1117; color:#e6edf3; font-family:Inter, sans-serif; margin:0; padding:1rem; }
+    h2 { color:#0bcad9; text-align:center; margin-bottom:20px; }
+    svg { width:100%; height:600px; }
+  </style>
+</head>
+<body>
+  <h2>Agentic Data Connect — Multi-Source Mapping Flow</h2>
+  <svg id="chart"></svg>
+
+  <script>
+    // static demo data (you can later have this auto-load from Pinecone)
+    const data = {
+      nodes: [
+        { name: "Dynamics" }, { name: "NetSuite" }, { name: "SAP" },
+        { name: "DCL Mapper" },
+        { name: "RevOps Agent" }, { name: "FinOps Agent" }
+      ],
+      links: [
+        { source: 0, target: 3, value: 4 },
+        { source: 1, target: 3, value: 3 },
+        { source: 2, target: 3, value: 2 },
+        { source: 3, target: 4, value: 2 },
+        { source: 3, target: 5, value: 3 }
+      ]
+    };
+
+    const svg = d3.select("#chart");
+    const { width, height } = svg.node().getBoundingClientRect();
+
+    const sankey = d3.sankey()
+      .nodeWidth(20)
+      .nodePadding(30)
+      .extent([[1, 1], [width - 1, height - 6]]);
+
+    const { nodes, links } = sankey({
+      nodes: data.nodes.map(d => Object.assign({}, d)),
+      links: data.links.map(d => Object.assign({}, d))
+    });
+
+    svg.append("g")
+      .attr("fill", "none")
+      .selectAll("path")
+      .data(links)
+      .join("path")
+      .attr("d", d3.sankeyLinkHorizontal())
+      .attr("stroke", "#0bcad9")
+      .attr("stroke-width", d => Math.max(1, d.width))
+      .attr("stroke-opacity", 0.5);
+
+    svg.append("g")
+      .selectAll("rect")
+      .data(nodes)
+      .join("rect")
+      .attr("x", d => d.x0)
+      .attr("y", d => d.y0)
+      .attr("height", d => d.y1 - d.y0)
+      .attr("width", d => d.x1 - d.x0)
+      .attr("fill", (d,i) => ["#0bcad9","#FFB74D","#81C784","#BA68C8","#29B6F6","#FF8A65"][i]);
+
+    svg.append("g")
+      .style("font", "12px sans-serif")
+      .selectAll("text")
+      .data(nodes)
+      .join("text")
+      .attr("x", d => d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6)
+      .attr("y", d => (d.y1 + d.y0) / 2)
+      .attr("dy", "0.35em")
+      .attr("text-anchor", d => d.x0 < width / 2 ? "start" : "end")
+      .text(d => d.name);
+  </script>
+</body>
+</html>
