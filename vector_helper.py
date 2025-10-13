@@ -3,7 +3,7 @@ Simple vector storage helper using Pinecone RAG Engine
 """
 
 from rag_engine import RAGEngine
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 # Global RAG engine instance
 _rag_engine = None
@@ -15,7 +15,7 @@ def _get_engine():
         _rag_engine = RAGEngine()
     return _rag_engine
 
-def store_text(doc_id: str, text: str, metadata: Dict = None):
+def store_text(doc_id: str, text: str, metadata: Optional[Dict] = None):
     """
     Store text in the vector database.
     
