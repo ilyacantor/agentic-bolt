@@ -4,28 +4,93 @@ function renderSankey(state) {
 
   container.innerHTML = '';
 
-  const nodeTypeMap = {};
-  state.graph.nodes.forEach(n => {
-    nodeTypeMap[n.id] = n.type;
-  });
-
-  const filteredEdges = state.graph.edges.filter(e => {
-    const sourceType = nodeTypeMap[e.source];
-    const targetType = nodeTypeMap[e.target];
-    return !(sourceType === 'source' && targetType === 'source');
-  });
-
+  const sankeyNodes = [];
+  const sankeyLinks = [];
   const nodeIndexMap = {};
-  const sankeyNodes = state.graph.nodes.map((n, i) => {
-    nodeIndexMap[n.id] = i;
-    return { name: n.label };
+  let nodeIndex = 0;
+
+  const sourceGroups = {};
+  const ontologyNodes = [];
+  const otherNodes = [];
+
+  state.graph.nodes.forEach(n => {
+    if (n.type === 'source') {
+      const match = n.id.match(/^src_([^_]+)_(.+)$/);
+      if (match) {
+        const sourceSystem = match[1];
+        const tableName = match[2];
+        if (!sourceGroups[sourceSystem]) {
+          sourceGroups[sourceSystem] = [];
+        }
+        sourceGroups[sourceSystem].push({
+          id: n.id,
+          label: n.label,
+          tableName: tableName,
+          type: n.type
+        });
+      }
+    } else if (n.type === 'ontology') {
+      ontologyNodes.push(n);
+    } else {
+      otherNodes.push(n);
+    }
   });
 
-  const sankeyLinks = filteredEdges.map(e => ({
-    source: nodeIndexMap[e.source],
-    target: nodeIndexMap[e.target],
-    value: 1
-  }));
+  Object.keys(sourceGroups).forEach(sourceSystem => {
+    const parentNodeName = sourceSystem.charAt(0).toUpperCase() + sourceSystem.slice(1).replace(/_/g, ' ');
+    const parentNodeId = `parent_${sourceSystem}`;
+    nodeIndexMap[parentNodeId] = nodeIndex;
+    sankeyNodes.push({ 
+      name: parentNodeName, 
+      type: 'source_parent',
+      id: parentNodeId
+    });
+    nodeIndex++;
+
+    sourceGroups[sourceSystem].forEach(table => {
+      nodeIndexMap[table.id] = nodeIndex;
+      sankeyNodes.push({ 
+        name: table.tableName, 
+        type: 'source',
+        id: table.id
+      });
+      sankeyLinks.push({
+        source: nodeIndexMap[parentNodeId],
+        target: nodeIndexMap[table.id],
+        value: 1
+      });
+      nodeIndex++;
+    });
+  });
+
+  ontologyNodes.forEach(n => {
+    nodeIndexMap[n.id] = nodeIndex;
+    sankeyNodes.push({ name: n.label, type: n.type, id: n.id });
+    nodeIndex++;
+  });
+
+  otherNodes.forEach(n => {
+    nodeIndexMap[n.id] = nodeIndex;
+    sankeyNodes.push({ name: n.label, type: n.type, id: n.id });
+    nodeIndex++;
+  });
+
+  state.graph.edges.forEach(e => {
+    const sourceType = state.graph.nodes.find(n => n.id === e.source)?.type;
+    const targetType = state.graph.nodes.find(n => n.id === e.target)?.type;
+    
+    if (sourceType === 'source' && targetType === 'source') {
+      return;
+    }
+    
+    if (nodeIndexMap[e.source] !== undefined && nodeIndexMap[e.target] !== undefined) {
+      sankeyLinks.push({
+        source: nodeIndexMap[e.source],
+        target: nodeIndexMap[e.target],
+        value: 1
+      });
+    }
+  });
 
   const data = {
     nodes: sankeyNodes,
@@ -50,15 +115,15 @@ function renderSankey(state) {
   });
 
   const colorMap = {
+    source_parent: '#1e40af',
     source: '#2563eb',
     ontology: '#16a34a',
     agent: '#9333ea',
     consumer: '#475569'
   };
 
-  const getNodeColor = (nodeName) => {
-    const node = state.graph.nodes.find(n => n.label === nodeName);
-    return node ? colorMap[node.type] || '#64748b' : '#64748b';
+  const getNodeColor = (nodeData) => {
+    return colorMap[nodeData.type] || '#64748b';
   };
 
   svg.append('g')
@@ -88,7 +153,10 @@ function renderSankey(state) {
     .attr('y', d => d.y0)
     .attr('height', d => d.y1 - d.y0)
     .attr('width', d => d.x1 - d.x0)
-    .attr('fill', d => getNodeColor(d.name))
+    .attr('fill', d => {
+      const nodeData = sankeyNodes.find(n => n.name === d.name);
+      return getNodeColor(nodeData);
+    })
     .attr('stroke', '#1e293b')
     .attr('stroke-width', 1)
     .style('cursor', 'pointer')
@@ -99,9 +167,9 @@ function renderSankey(state) {
       d3.select(this).attr('opacity', 1);
     })
     .on('click', async (event, d) => {
-      const node = state.graph.nodes.find(n => n.label === d.name);
-      if (node) {
-        const r = await fetch('/preview?node=' + encodeURIComponent(node.id));
+      const nodeData = sankeyNodes.find(n => n.name === d.name);
+      if (nodeData && nodeData.id && !nodeData.id.startsWith('parent_')) {
+        const r = await fetch('/preview?node=' + encodeURIComponent(nodeData.id));
         const data = await r.json();
         const evt = new CustomEvent('sankey-node-click', { detail: data });
         window.dispatchEvent(evt);
@@ -124,5 +192,5 @@ function renderSankey(state) {
     .attr('y', 20)
     .attr('fill', '#94a3b8')
     .style('font-size', '10px')
-    .text('Data Sources → Ontology → Agents/Consumers');
+    .text('Data Sources → Tables → Ontology → Agents/Consumers');
 }
