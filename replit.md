@@ -10,6 +10,15 @@ An intelligent system that autonomously discovers data sources from multiple ent
 - Shows truncated flows (partial connections) when source data cannot feed selected agents
 
 ## Recent Changes (October 13, 2025)
+- ✅ **Multi-Agent Architecture**: DCL now dynamically adapts based on selected sources AND agents
+  - Agent selection: RevOps Pilot, FinOps Pilot (both can be selected simultaneously)
+  - Source selection: Dynamics, Salesforce, SAP, NetSuite, Snowflake, Legacy SQL (multi-select)
+  - Dynamic ontology filtering: Only shows entities consumed by selected agents
+  - Agent nodes appear on right side of Sankey flow (purple nodes)
+  - Truncated flows: When source data doesn't match agent requirements, ontology appears but no connection to agent
+  - Agent config: `agents/config.yml` defines which ontology entities each agent consumes
+
+## Previous Changes (October 13, 2025)
 - ✅ **FinOps Use Case Transformation**: Converted DCL from RevOps to FinOps domain
   - **New Ontology**: aws_resource, cloud_cost, cloud_usage, cloud_invoice entities for AWS FinOps
   - **Snowflake**: AWS_RESOURCES and AWS_COSTS tables with EC2, S3, RDS, Lambda, EKS billing data
