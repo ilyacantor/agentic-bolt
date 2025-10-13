@@ -391,7 +391,7 @@ def preview_table(con, name: str, limit: int = 6) -> List[Dict[str,Any]]:
         return []
 
 def connect_source(source_key: str) -> Dict[str, Any]:
-    global ontology
+    global ontology, agents_config
     if ontology is None:
         ontology = load_ontology()
     schema_dir = os.path.join(SCHEMAS_DIR, source_key)
