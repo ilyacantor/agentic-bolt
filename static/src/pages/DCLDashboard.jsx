@@ -42,13 +42,13 @@ function DCLDashboard(){
   async function fetchState(){
     const res = await fetch('/state');
     const data = await res.json();
-    setState(prev => ({
-      ...data,
-      preview: {
-        ...data.preview,
-        connectionInfo: prev.preview.connectionInfo
-      }
-    }));
+    setState(prev => {
+      const hasConnectionInfo = prev.preview.connectionInfo !== null && prev.preview.connectionInfo !== undefined;
+      return {
+        ...data,
+        preview: hasConnectionInfo ? prev.preview : data.preview
+      };
+    });
   }
 
   async function addSource(){
