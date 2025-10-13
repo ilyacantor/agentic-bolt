@@ -40,7 +40,6 @@ function renderSankey(state) {
   const { width, height } = svg.node().getBoundingClientRect();
 
   const sankey = d3.sankey()
-    .nodeId(d => d.name)
     .nodeWidth(20)
     .nodePadding(30)
     .extent([[1, 1], [width - 1, height - 6]]);
