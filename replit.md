@@ -4,16 +4,15 @@
 An intelligent system that autonomously discovers data sources from multiple enterprise systems, uses AI to map them to a predefined ontology, validates mappings with quality checks, and automatically publishes DuckDB views. Features a real-time web dashboard with interactive data flow graphs and AI-powered schema inference.
 
 ## Recent Changes (October 13, 2025)
-- ✅ **Pinecone Cloud Migration**: Migrated RAG Engine from local ChromaDB to Pinecone cloud vector database
-  - Resolved disk quota issues by removing heavy local vector DB dependencies
-  - Removed chromadb, qdrant-client from requirements.txt
-  - Added lightweight pinecone package for cloud-based vector storage
-  - Refactored rag_engine.py to use Pinecone Serverless index (free tier, us-east-1)
-  - Kept sentence-transformers for local embeddings (all-MiniLM-L6-v2, 384-dim)
-  - Uses PINECONE_API_KEY from Replit secrets for authentication
-  - Index name: "schema-mappings" with cosine similarity metric
-  - API endpoint `/rag/stats` confirms Pinecone integration
-  - Development and production fully functional with cloud RAG
+- ✅ **Pinecone Inference API Integration**: Fully cloud-based RAG with zero local ML dependencies
+  - **FINAL FIX for deployment disk quota**: Removed ALL heavy ML packages (sentence-transformers, torch)
+  - Now uses Pinecone Inference API for embeddings - NO local model downloads needed
+  - Embedding model: multilingual-e5-large (1024-dim, hosted by Pinecone)
+  - Index: "schema-mappings-e5" with cosine similarity
+  - Deployment target: Reserved VM (sufficient disk space for standard Python packages)
+  - Lightweight requirements.txt: Only 9 packages (~50MB total vs 500MB+ before)
+  - Development and production fully functional with cloud embeddings
+  - Readiness check ensures Pinecone index is ready before operations
 
 ## Previous Changes (October 12, 2025)
 - ✅ **Autoscale Deployment Optimization**: Optimized for Autoscale deployment with efficient dependency installation
@@ -39,7 +38,7 @@ An intelligent system that autonomously discovers data sources from multiple ent
   - Clean design without heavy borders, matching visual identity
 
 - ✅ **RAG Engine Implementation**: Added context-aware, learning-based schema mapping with historical memory
-  - Uses Pinecone cloud vector DB + Sentence Transformers (all-MiniLM-L6-v2, 384-dim embeddings)
+  - Uses Pinecone Inference API for cloud embeddings (multilingual-e5-large, 1024-dim)
   - Retrieves top 5 similar mappings as context for LLM inference
   - Automatically stores successful mappings for future reference
   - Cloud-based persistence with Pinecone Serverless (cosine similarity search)
@@ -63,12 +62,12 @@ An intelligent system that autonomously discovers data sources from multiple ent
    - Python-only architecture (no Node.js dependencies)
 
 2. **RAG Engine** (`rag_engine.py`)
-   - Pinecone cloud vector database (Serverless, us-east-1)
-   - Sentence Transformers embeddings (all-MiniLM-L6-v2, 384 dimensions)
+   - Pinecone Inference API for cloud embeddings (multilingual-e5-large, 1024-dim)
+   - Pinecone Serverless vector database (us-east-1, free tier)
    - Stores field-level mapping history with metadata
    - Retrieves top 5 similar mappings via cosine similarity
    - Provides historical context to LLM for improved accuracy
-   - Cloud-based storage eliminates local disk usage
+   - 100% cloud-based - NO local ML model downloads
 
 ### Data Sources
 - **schemas/** directory contains sample schemas from:
@@ -90,7 +89,7 @@ An intelligent system that autonomously discovers data sources from multiple ent
 ## Technical Details
 
 ### RAG Workflow
-1. **Field Embedding**: For each source field, generate 384-dim embedding using Sentence Transformers
+1. **Field Embedding**: For each source field, generate 1024-dim embedding using Pinecone Inference API (multilingual-e5-large)
 2. **Context Retrieval**: Search Pinecone for top 5 most similar historical mappings (cosine similarity)
 3. **Enhanced Prompting**: Inject retrieved mappings as context into LLM prompt
 4. **Mapping Inference**: LLM generates ontology mappings with improved accuracy
@@ -102,7 +101,8 @@ An intelligent system that autonomously discovers data sources from multiple ent
 - **ES Modules**: package.json configured with `"type": "module"` for Node.js
 - **Join Edges**: Filtered from visualization (type='join') but tracked internally
 - **Auto-Ingest Mode**: Toggle between Strict Mode (curated only) and Inclusive Mode (auto-connect unmapped sources to gray "Unclassified" node)
-- **Cloud Vector Store**: Pinecone Serverless index (schema-mappings) in us-east-1 region
+- **Cloud Vector Store**: Pinecone Serverless index (schema-mappings-e5) in us-east-1 region
+- **Cloud Embeddings**: Pinecone Inference API - NO local ML models, NO heavy dependencies
 
 ## Environment Variables
 - `GEMINI_API_KEY` - Required for AI-powered schema inference

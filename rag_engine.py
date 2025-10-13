@@ -1,12 +1,11 @@
 """
 RAG Engine for DCL Schema Mapping
-Uses Pinecone + Sentence Transformers for context retrieval
+Uses Pinecone Inference API for cloud-based embeddings
 """
 
 import os
 import json
 from pinecone import Pinecone, ServerlessSpec
-from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import hashlib
@@ -15,10 +14,11 @@ class RAGEngine:
     """
     Retrieval-Augmented Generation engine for schema mapping.
     Stores historical mappings in Pinecone and retrieves similar examples to guide LLM.
+    Uses Pinecone Inference API for embeddings (no local ML models).
     """
     
     def __init__(self, pinecone_api_key: Optional[str] = None):
-        """Initialize RAG engine with Pinecone and embedding model."""
+        """Initialize RAG engine with Pinecone cloud embeddings."""
         # Get Pinecone API key from environment if not provided
         self.pinecone_api_key = pinecone_api_key or os.environ.get("PINECONE_API_KEY")
         
@@ -30,14 +30,12 @@ class RAGEngine:
         # Initialize Pinecone client
         self.pc = Pinecone(api_key=self.pinecone_api_key)
         
-        # Index name
-        self.index_name = "schema-mappings"
+        # Index name and embedding model  
+        self.index_name = "schema-mappings-e5"  # New index for cloud embeddings
+        self.embedding_model = "multilingual-e5-large"  # Pinecone hosted model
+        self.embedding_dim = 1024  # multilingual-e5-large dimension
         
-        # Load embedding model (384-dim, fast, lightweight)
-        print("🔄 Loading embedding model (all-MiniLM-L6-v2)...")
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
-        self.embedding_dim = 384
-        print("✅ RAG Engine initialized")
+        print(f"✅ RAG Engine initialized with Pinecone Inference ({self.embedding_model})")
         
         # Create or connect to index
         self._ensure_index()
@@ -122,6 +120,24 @@ Confidence: {mapping.get('confidence', 0.0)}
         # Create hash for unique ID
         return hashlib.md5(text.encode()).hexdigest()[:16]
     
+    def _generate_embedding(self, text: str, input_type: str = "passage") -> List[float]:
+        """
+        Generate embedding using Pinecone Inference API.
+        
+        Args:
+            text: Text to embed
+            input_type: "passage" for documents, "query" for search queries
+            
+        Returns:
+            Embedding vector as list of floats
+        """
+        response = self.pc.inference.embed(
+            model=self.embedding_model,
+            inputs=[text],
+            parameters={"input_type": input_type, "truncate": "END"}
+        )
+        return response.data[0].values
+    
     def store_mapping(self, 
                      source_field: str,
                      source_type: str,
@@ -154,8 +170,8 @@ Confidence: {mapping.get('confidence', 0.0)}
         # Create document for embedding
         document = self._create_mapping_document(mapping)
         
-        # Generate embedding
-        embedding = self.model.encode(document).tolist()
+        # Generate embedding using Pinecone Inference API
+        embedding = self._generate_embedding(document, input_type="passage")
         
         # Upsert to Pinecone
         self.index.upsert(
@@ -197,8 +213,8 @@ Confidence: {mapping.get('confidence', 0.0)}
             print("ℹ️  No historical mappings in vector store yet")
             return []
         
-        # Generate query embedding
-        query_embedding = self.model.encode(query).tolist()
+        # Generate query embedding using Pinecone Inference API
+        query_embedding = self._generate_embedding(query, input_type="query")
         
         # Build filter for minimum confidence
         query_filter = None
@@ -293,7 +309,7 @@ Confidence: {mapping.get('confidence', 0.0)}
         return {
             "total_mappings": stats.total_vector_count,
             "index_name": self.index_name,
-            "embedding_model": "all-MiniLM-L6-v2",
+            "embedding_model": self.embedding_model,
             "embedding_dimension": self.embedding_dim,
-            "vector_db": "Pinecone"
+            "vector_db": "Pinecone Inference"
         }
