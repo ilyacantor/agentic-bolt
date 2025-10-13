@@ -425,7 +425,7 @@ async def startup_event():
     """Initialize RAG engine on startup."""
     global rag_engine
     try:
-        rag_engine = RAGEngine(persist_dir="./chroma_db")
+        rag_engine = RAGEngine()
         log("✅ RAG Engine initialized successfully")
     except Exception as e:
         log(f"⚠️ RAG Engine initialization failed: {e}. Continuing without RAG.")
