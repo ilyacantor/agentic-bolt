@@ -8,6 +8,7 @@ function DCLDashboard(){
   });
   const [selectedSource, setSelectedSource] = React.useState('dynamics');
   const [processState, setProcessState] = React.useState({ active: false, stage: '', progress: 0, complete: false });
+  const [viewType, setViewType] = React.useState('cytoscape');
   const cyRef = React.useRef(null);
 
   React.useEffect(()=>{
@@ -18,9 +19,21 @@ function DCLDashboard(){
 
   React.useEffect(()=>{
     if(state.graph.nodes.length > 0){
-      renderGraph();
+      if(viewType === 'cytoscape'){
+        renderGraph();
+      } else {
+        renderSankey(state);
+      }
     }
-  },[state.graph]);
+  },[state.graph, viewType]);
+
+  React.useEffect(() => {
+    const handleSankeyNodeClick = (e) => {
+      setState(prev => ({...prev, preview: e.detail}));
+    };
+    window.addEventListener('sankey-node-click', handleSankeyNodeClick);
+    return () => window.removeEventListener('sankey-node-click', handleSankeyNodeClick);
+  }, []);
 
   async function fetchState(){
     const res = await fetch('/state');
@@ -234,11 +247,44 @@ function DCLDashboard(){
         <div className="col-span-12 lg:col-span-6 card">
           <div className="flex items-center justify-between mb-3">
             <div className="card-title">Data Flow Graph</div>
-            <div className="text-xs text-slate-400">
-              {state.graph.nodes.length} nodes, {state.graph.edges.length} edges
+            <div className="flex items-center gap-2">
+              <div className="flex bg-slate-800 rounded-lg p-1">
+                <button
+                  onClick={() => setViewType('cytoscape')}
+                  className={`px-3 py-1 text-xs rounded transition-all ${
+                    viewType === 'cytoscape' 
+                      ? 'bg-cyan-600 text-white' 
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Graph
+                </button>
+                <button
+                  onClick={() => setViewType('sankey')}
+                  className={`px-3 py-1 text-xs rounded transition-all ${
+                    viewType === 'sankey' 
+                      ? 'bg-cyan-600 text-white' 
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Sankey
+                </button>
+              </div>
+              <div className="text-xs text-slate-400">
+                {state.graph.nodes.length} nodes, {state.graph.edges.length} edges
+              </div>
             </div>
           </div>
-          <div id="cy-container" className="rounded-xl bg-slate-900/50 border border-slate-800 h-[600px]"></div>
+          <div 
+            id="cy-container" 
+            className="rounded-xl bg-slate-900/50 border border-slate-800 h-[600px]"
+            style={{ display: viewType === 'cytoscape' ? 'block' : 'none' }}
+          ></div>
+          <div 
+            id="sankey-container" 
+            className="rounded-xl bg-slate-900/50 border border-slate-800 h-[600px]"
+            style={{ display: viewType === 'sankey' ? 'block' : 'none' }}
+          ></div>
         </div>
 
         {/* Right Sidebar */}
