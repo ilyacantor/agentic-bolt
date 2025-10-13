@@ -43,7 +43,8 @@ function renderSankey(state) {
     sankeyNodes.push({ 
       name: parentNodeName, 
       type: 'source_parent',
-      id: parentNodeId
+      id: parentNodeId,
+      sourceSystem: sourceSystem
     });
     nodeIndex++;
 
@@ -52,7 +53,8 @@ function renderSankey(state) {
       sankeyNodes.push({ 
         name: table.tableName, 
         type: 'source',
-        id: table.id
+        id: table.id,
+        sourceSystem: sourceSystem
       });
       sankeyLinks.push({
         source: nodeIndexMap[parentNodeId],
@@ -114,16 +116,28 @@ function renderSankey(state) {
     links: data.links.map(d => Object.assign({}, d))
   });
 
-  const colorMap = {
-    source_parent: '#1e40af',
-    source: '#2563eb',
+  const sourceColorMap = {
+    dynamics: { parent: '#3b82f6', child: '#60a5fa' },
+    salesforce: { parent: '#8b5cf6', child: '#a78bfa' },
+    sap: { parent: '#10b981', child: '#34d399' },
+    netsuite: { parent: '#f59e0b', child: '#fbbf24' },
+    legacy_sql: { parent: '#ef4444', child: '#f87171' },
+    snowflake: { parent: '#06b6d4', child: '#22d3ee' }
+  };
+
+  const typeColorMap = {
     ontology: '#16a34a',
     agent: '#9333ea',
     consumer: '#475569'
   };
 
   const getNodeColor = (nodeData) => {
-    return colorMap[nodeData.type] || '#64748b';
+    if (nodeData.type === 'source_parent' && nodeData.sourceSystem) {
+      return sourceColorMap[nodeData.sourceSystem]?.parent || '#1e40af';
+    } else if (nodeData.type === 'source' && nodeData.sourceSystem) {
+      return sourceColorMap[nodeData.sourceSystem]?.child || '#2563eb';
+    }
+    return typeColorMap[nodeData.type] || '#64748b';
   };
 
   svg.append('g')
