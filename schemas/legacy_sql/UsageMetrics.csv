@@ -1,0 +1,9 @@
+MetricID,ResourceID,MetricName,MetricValue,Unit,Timestamp
+M-001,LG-R-001,CPUUtilization,65.4,percent,2024-03-15 10:00:00
+M-002,LG-R-002,StorageUsed,2847.5,gb,2024-03-15 10:00:00
+M-003,LG-R-003,DatabaseConnections,42,count,2024-03-15 10:15:00
+M-004,LG-R-004,Invocations,125000,count,2024-03-15 11:00:00
+M-005,LG-R-005,NetworkBytes,8947234,bytes,2024-03-15 12:00:00
+M-006,LG-R-006,QueriesExecuted,1523,count,2024-03-15 13:00:00
+M-007,LG-R-001,MemoryUsed,78.2,percent,2024-03-15 14:00:00
+M-008,LG-R-007,CacheHitRate,92.3,percent,2024-03-15 15:00:00
