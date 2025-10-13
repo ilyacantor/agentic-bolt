@@ -1,0 +1,92 @@
+cy = cytoscape({
+  container: document.getElementById('cy'),
+  elements: [],
+  style: [
+    {
+      selector: 'node',
+      style: {
+        'background-color': '#1f3b59',
+        'label': 'data(label)',
+        'color': '#e6eef5',
+        'font-size': 14,
+        'text-valign': 'center',
+        'text-halign': 'center',
+        'shape': 'round-rectangle',
+        'padding': '10px',
+        'width': 'label',
+        'height': 'label',
+        'border-width': 1,
+        'border-color': '#2a4868'
+      }
+    },
+    {
+      selector: 'node[type="ontology"]',
+      style: {
+        'background-color': '#1e5a3d',
+        'border-color': '#2c8a5b',
+        'font-size': 15,
+        'font-weight': 'bold'
+      }
+    },
+    {
+      selector: 'edge',
+      style: {
+        'curve-style': 'straight',
+        'line-color': '#4a6a8c',
+        'width': 2,
+        'target-arrow-shape': 'triangle',
+        'target-arrow-color': '#4a6a8c',
+        'arrow-scale': 1.2
+      }
+    }
+  ],
+  layout: { name: 'preset' } // manual positioning
+});
+
+// Disable zooming & fix viewport
+cy.userZoomingEnabled(false);
+cy.userPanningEnabled(false);
+cy.zoom(1);
+cy.center();
+
+// Grid positioning function
+function getGridPosition(nodeType, index) {
+  const xSource = 100;
+  const xOntology = 500;
+  const yStart = 100;
+  const ySpacing = 120;
+  return {
+    x: nodeType === "source" ? xSource : xOntology,
+    y: yStart + index * ySpacing
+  };
+}
+
+// Add nodes + edges
+function addSourceMapping(sourceId, sourceLabel, ontologyId, ontologyLabel, rowIndex) {
+  cy.add({
+    group: "nodes",
+    data: { id: sourceId, label: sourceLabel, type: "source" },
+    position: getGridPosition("source", rowIndex),
+    locked: true
+  });
+
+  cy.add({
+    group: "nodes",
+    data: { id: ontologyId, label: ontologyLabel, type: "ontology" },
+    position: getGridPosition("ontology", rowIndex),
+    locked: true
+  });
+
+  cy.add({
+    group: "edges",
+    data: { id: `${sourceId}_${ontologyId}`, source: sourceId, target: ontologyId }
+  });
+}
+
+// Example: Salesforce Accounts → Unified Customers
+addSourceMapping("sf_account", "Account (Salesforce)", "unified_customer", "Customer (Unified)", 0);
+addSourceMapping("sf_contact", "Contact (Salesforce)", "unified_customer", "Customer (Unified)", 1);
+addSourceMapping("sf_oppty", "Opportunity (Salesforce)", "unified_transaction", "Transaction (Unified)", 2);
+
+// Center once at the end
+cy.fit();

@@ -1,0 +1,200 @@
+echo "⚙️ Installing animated Agentic Connection viz..." && cat > addAnimatedAgenticViz.mjs <<'EOF'
+import fs from "fs";
+import path from "path";
+const has = (p)=>fs.existsSync(p);
+const JS_SERVER = "server.js";
+const TS_SERVER = path.join("server","index.ts");
+const PUBLIC_DIR = "public";
+const HTML_FILE = path.join(PUBLIC_DIR,"agentic-connection.html");
+
+// 1) Ensure /public exists
+if (!has(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+
+// 2) Write animated HTML (SVG + CSS + tiny JS)
+const html = `<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Agentic Connection • FinOps ↔ LLM/RAG ↔ DCL</title>
+<style>
+  :root{--c1:#08c6d1;--c2:#ff7a1a;--bg:#0b1020;--fg:#e9eef5;--mut:#9aa3b2;}
+  html,body{height:100%}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,Segoe UI,Inter,sans-serif;}
+  .wrap{max-width:1100px;margin:40px auto;padding:20px}
+  h1{margin:0 0 8px;font-weight:700;letter-spacing:.2px}
+  p.lead{margin:0 0 18px;color:var(--mut)}
+  .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0 0}
+  .pill{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03)}
+  svg{width:100%;height:auto;display:block;margin-top:8px}
+  /* Node styles */
+  .node rect{rx:14;fill:#0f172a;stroke:#1f2a44;stroke-width:1.2}
+  .node text{font-size:12px;fill:#dbe4f3}
+  .node .title{font-weight:700;font-size:13px}
+  /* Pulses */
+  .pulse{filter:drop-shadow(0 0 8px var(--c1))}
+  .pulse circle{fill:transparent;stroke:var(--c1);stroke-width:2;animation:pulse 2.4s ease-out infinite}
+  @keyframes pulse{0%{r:3;opacity:1}100%{r:20;opacity:0}}
+  /* Flowing links */
+  .flow{stroke:url(#grad);stroke-width:2.2;fill:none;stroke-dasharray:6 10;animation:dash 1.4s linear infinite}
+  @keyframes dash{to{stroke-dashoffset:-320}}
+  .ok{color:#63f7b6}.warn{color:#ffd166}.err{color:#ff6b6b}
+</style>
+</head><body>
+  <div class="wrap">
+    <h1>FinOps Autopilot • Agentic Connection</h1>
+    <p class="lead">Live schematic showing <b>FinOps Agent</b> connected upward to <b>LLM</b> and <b>RAG</b>, and downward to the <b>DCL</b> and underlying <b>Sources</b>. Arrows animate to indicate flow; nodes pulse when the DCL endpoint responds.</p>
+    <div class="card">
+      <div id="status" class="pill">Status: checking…</div>
+      <div class="legend">
+        <div class="pill">Flow = animated dashes</div>
+        <div class="pill">Pulse = endpoint alive</div>
+        <div class="pill">DCL: <code>/api/unified_data</code></div>
+      </div>
+
+      <svg viewBox="0 0 1000 640" aria-label="Agentic Architecture">
+        <defs>
+          <linearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="var(--c1)"/>
+            <stop offset="100%" stop-color="var(--c2)"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Rows (top to bottom): UI, Agent, LLM/RAG, DCL, Sources -->
+        <!-- UI -->
+        <g class="node" transform="translate(160,40)">
+          <rect width="680" height="70"/>
+          <text x="20" y="28" class="title">USER / UI</text>
+          <text x="20" y="50">FinOps Dashboard · “Ask FinOps”</text>
+        </g>
+
+        <!-- Agent -->
+        <g class="node" transform="translate(220,140)">
+          <rect width="560" height="90"/>
+          <text x="20" y="32" class="title">FINOPS AGENT</text>
+          <text x="20" y="56">KPI & anomalies · Recommendations · Orchestrator · Actuator APIs</text>
+          <g id="agentPulse" class="pulse" transform="translate(540,45)"><circle r="3"/></g>
+        </g>
+
+        <!-- LLM -->
+        <g class="node" transform="translate(120,270)">
+          <rect width="320" height="90"/>
+          <text x="20" y="32" class="title">LLM INTEGRATION</text>
+          <text x="20" y="56">Prompt builder · Deterministic planner · GPT/Claude API</text>
+        </g>
+
+        <!-- RAG -->
+        <g class="node" transform="translate(560,270)">
+          <rect width="320" height="90"/>
+          <text x="20" y="32" class="title">RAG ENGINE</text>
+          <text x="20" y="56">Vector store · Context retrieval · Fine-tuned datasets</text>
+        </g>
+
+        <!-- DCL -->
+        <g class="node" transform="translate(160,410)">
+          <rect width="680" height="90"/>
+          <text x="20" y="32" class="title">DATA CONNECTIVITY LAYER (DCL / Nexus)</text>
+          <text x="20" y="56">Connectors · Ontology/Normalization · Unified API /api/unified_data</text>
+          <g id="dclPulse" class="pulse" transform="translate(640,45)"><circle r="3"/></g>
+        </g>
+
+        <!-- Sources -->
+        <g class="node" transform="translate(110,540)">
+          <rect width="780" height="70"/>
+          <text x="20" y="28" class="title">SOURCE SYSTEMS / DATA STORES</text>
+          <text x="20" y="50">AWS · GCP · Azure · ERP · CRM · DBs</text>
+        </g>
+
+        <!-- Flows -->
+        <!-- UI -> Agent -->
+        <path class="flow" d="M500,110 C500,125 500,135 500,140"/>
+        <!-- Agent -> LLM -->
+        <path class="flow" d="M500,230 C420,250 350,250 280,270"/>
+        <!-- Agent -> RAG -->
+        <path class="flow" d="M500,230 C580,250 650,250 720,270"/>
+        <!-- LLM -> DCL -->
+        <path class="flow" d="M280,360 C350,390 420,400 500,410"/>
+        <!-- RAG -> DCL -->
+        <path class="flow" d="M720,360 C650,390 580,400 500,410"/>
+        <!-- DCL -> Sources -->
+        <path class="flow" d="M500,500 C500,515 500,525 500,540"/>
+      </svg>
+    </div>
+  </div>
+
+<script>
+(async function(){
+  const statusEl = document.getElementById('status');
+  // Try to ping DCL (same origin /api/unified_data). If it 404s, still animate but mark as offline.
+  async function ping(){
+    try{
+      const r = await fetch('/api/unified_data', { method:'GET' });
+      if(r.ok){
+        statusEl.innerHTML = 'Status: <span class="ok">DCL online</span> · Flow animated';
+        return true;
+      }else{
+        statusEl.innerHTML = 'Status: <span class="warn">DCL reachable but returned '+r.status+'</span>';
+        return false;
+      }
+    }catch(e){
+      statusEl.innerHTML = 'Status: <span class="err">DCL offline</span> · Using demo animation';
+      return false;
+    }
+  }
+  // Pulse stronger when online
+  function setPulse(online){
+    const agent = document.getElementById('agentPulse');
+    const dcl = document.getElementById('dclPulse');
+    agent.style.filter = online ? 'drop-shadow(0 0 12px var(--c2))' : 'drop-shadow(0 0 6px var(--c1))';
+    dcl.style.filter   = online ? 'drop-shadow(0 0 12px #63f7b6)' : 'drop-shadow(0 0 6px var(--c1))';
+  }
+  setPulse(await ping());
+  // Re-check every 20s
+  setInterval(async()=>setPulse(await ping()), 20000);
+})();
+</script>
+</body></html>`;
+fs.writeFileSync(HTML_FILE, html, "utf-8");
+
+// 3) Inject route into Express server (JS or TS)
+function injectRouteInFile(file, isTS=false){
+  let src = fs.readFileSync(file,"utf-8");
+  if (src.includes("/agentic-connection")) return false;
+
+  // Ensure 'path' and 'express.static' context exists; if not, add path import.
+  if (!src.includes("const path")) {
+    src = `const path = require('path');\n` + src;
+  }
+  const insertAt = src.lastIndexOf("app.listen");
+  const route = `\napp.get('/agentic-connection', (req,res)=>{\n  res.sendFile(path.join(__dirname,'public','agentic-connection.html'));\n});\n`;
+  const patched = src.slice(0, insertAt) + route + src.slice(insertAt);
+  fs.writeFileSync(file, patched, "utf-8");
+  return true;
+}
+
+let injected = false;
+if (has(JS_SERVER)) injected = injectRouteInFile(JS_SERVER,false);
+if (!injected && has(TS_SERVER)) {
+  // TypeScript variant: use import * as path from 'path' and ts syntax if needed
+  let ts = fs.readFileSync(TS_SERVER,"utf-8");
+  if (!ts.includes("/agentic-connection")){
+    if (!ts.match(/from ['"]path['"]/)) {
+      ts = `import * as path from 'path';\n` + ts;
+    }
+    const insertAt = ts.lastIndexOf("app.listen");
+    const routeTS = `\napp.get('/agentic-connection', (req,res)=>{\n  res.sendFile(path.join(__dirname,'..','public','agentic-connection.html'));\n});\n`;
+    const patched = ts.slice(0, insertAt) + routeTS + ts.slice(insertAt);
+    fs.writeFileSync(TS_SERVER, patched, "utf-8");
+    injected = true;
+  }
+}
+
+console.log(injected ? "✅ Added /agentic-connection route" : "ℹ️ Route already present or server file not found");
+
+// 4) Helper function file
+fs.writeFileSync("showAgenticConnection.js",
+`export function showAgenticConnection(){\n  const url = process.env.REPLIT_DB_URL ? '/agentic-connection' : 'http://localhost:3000/agentic-connection';\n  console.log('🌐 Agentic viz at:', url);\n}\n`,
+"utf-8");
+
+console.log("🎉 Animated Agentic Connection visualization installed.");
+EOF
+
+node addAnimatedAgenticViz.mjs

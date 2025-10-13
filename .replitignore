@@ -1,0 +1,26 @@
+# Development cache and build artifacts
+.pythonlibs/
+.cache/
+.local/
+__pycache__/
+*.pyc
+*.pyo
+
+# Development files
+.git/
+.replit
+replit.nix
+
+# Large assets not needed in production
+attached_assets/
+AgenticDataConnect_review_patched.zip
+AgenticDataConnect/
+dcl_agency_demo/
+
+# Development database
+registry.duckdb
+registry.duckdb.wal
+
+# Logs
+logs/
+*.log

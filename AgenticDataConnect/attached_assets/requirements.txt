@@ -1,0 +1,6 @@
+duckdb
+pandas
+pyyaml
+google-generativeai
+fastapi
+uvicorn

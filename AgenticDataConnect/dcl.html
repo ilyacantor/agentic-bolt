@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DCL Visualizer</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+  <script src="https://unpkg.com/cytoscape-cose-bilkent/cytoscape-cose-bilkent.js"></script>
+  <script src="https://unpkg.com/3d-force-graph"></script>
+  <script src="https://unpkg.com/three/build/three.min.js"></script>
+  <script src="https://unpkg.com/three-spritetext/dist/three-spritetext.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>DCL Visualizer</h1>
+    <div class="card">
+      <button onclick="show2D()">2D Mode</button>
+      <button onclick="show3D()">3D Mode</button>
+    </div>
+    <div id="cy"></div>
+    <div id="graph3d" style="display:none;"></div>
+    <div id="preview_sources" class="card"></div>
+    <div id="preview_ontology" class="card"></div>
+  </div>
+  <script src="api.js"></script>
+  <script src="schema.js"></script>
+  <script src="graph.js"></script>
+  <script src="graph3d.js"></script>
+</body>
+</html>

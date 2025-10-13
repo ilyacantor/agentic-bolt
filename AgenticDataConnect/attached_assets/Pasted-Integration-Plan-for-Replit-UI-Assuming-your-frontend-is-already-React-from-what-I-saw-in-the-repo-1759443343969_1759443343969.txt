@@ -1,0 +1,122 @@
+Integration Plan for Replit UI
+
+Assuming your frontend is already React (from what I saw in the repo):
+
+Drop this component (SchemaInference) into your main interface.
+
+Place it either:
+
+in its own tab/section (labeled “Demo Mode: Invent Schema”), or
+
+as a collapsible panel on the side.
+
+Wire it to the existing /api/infer backend (already working with Gemini).
+
+Minimal Component (for your Replit UI)
+import React, { useState } from "react";
+
+function SchemaInference() {
+  const [fields, setFields] = useState([{ name: "", type: "" }]);
+  const [mappings, setMappings] = useState(null);
+
+  const addField = () => {
+    if (fields.length < 5) setFields([...fields, { name: "", type: "" }]);
+  };
+
+  const handleChange = (i, key, value) => {
+    const copy = [...fields];
+    copy[i][key] = value;
+    setFields(copy);
+  };
+
+  const infer = async () => {
+    const res = await fetch("/api/infer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fields }),
+    });
+    const data = await res.json();
+    setMappings(data.mappings);
+  };
+
+  return (
+    <div style={{ padding: "20px", border: "1px solid #ddd", margin: "20px" }}>
+      <h3>Invent Schema (Demo Mode)</h3>
+      {fields.map((f, i) => (
+        <div key={i} style={{ marginBottom: "8px" }}>
+          <input
+            placeholder="Field name"
+            value={f.name}
+            onChange={(e) => handleChange(i, "name", e.target.value)}
+            style={{ marginRight: "10px" }}
+          />
+          <select
+            value={f.type}
+            onChange={(e) => handleChange(i, "type", e.target.value)}
+          >
+            <option value="">Select type</option>
+            <option>Text</option>
+            <option>Number</option>
+            <option>DateTime</option>
+            <option>Currency</option>
+          </select>
+        </div>
+      ))}
+      <button onClick={addField}>+ Add Field</button>
+      <button onClick={infer} style={{ marginLeft: "10px" }}>
+        Infer Ontology
+      </button>
+
+      {mappings && (
+        <table border="1" style={{ marginTop: "20px", width: "100%" }}>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Type</th>
+              <th>Suggested Mapping</th>
+              <th>Transformation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {mappings.map((m, i) => (
+              <tr key={i}>
+                <td>{m.name}</td>
+                <td>{m.type}</td>
+                <td>{m.suggested_mapping}</td>
+                <td>{m.transformation}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+export default SchemaInference;
+
+How to hook it in Replit
+
+If you already have App.js or similar as the entry:
+
+import SchemaInference from "./SchemaInference";
+
+function App() {
+  return (
+    <div>
+      {/* existing GUI code */}
+      <SchemaInference />
+    </div>
+  );
+}
+
+export default App;
+
+
+This way:
+
+Normal graph still loads.
+
+New “Invent Schema” box shows up.
+
+Only when user clicks Go → table appears.

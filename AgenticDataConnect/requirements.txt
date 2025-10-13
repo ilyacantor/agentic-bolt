@@ -1,0 +1,10 @@
+duckdb
+pandas
+pyyaml
+rapidfuzz
+pydantic
+google-generativeai
+fastapi
+uvicorn
+httpx
+sift-stack-py

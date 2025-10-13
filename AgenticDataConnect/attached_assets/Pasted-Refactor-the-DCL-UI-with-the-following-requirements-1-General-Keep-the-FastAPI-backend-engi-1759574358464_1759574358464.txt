@@ -1,0 +1,68 @@
+Refactor the DCL UI with the following requirements:
+
+1. General
+- Keep the FastAPI backend (engine) untouched.
+- Keep api.js and schema.js as-is.
+- Replace graph.js and styles.css with the new versions below.
+- Update dcl.html to include both 2D and 3D modes, toggle buttons, and container divs.
+
+2. Styles (styles.css)
+Use a light theme:
+- Page background: #f8fafc
+- Graph container background: #ffffff
+- Default text: #111827 (dark slate)
+- Subtle box-shadows and rounded corners for UI cards
+
+3. 2D Mode (Cytoscape, graph.js)
+- Layout: cose-bilkent (force-directed, animated)
+- Nodes:
+  • Sources: blue (#2563eb) round-rect with white text
+  • Ontology: green (#16a34a) round-rect with white text
+  • Agents: purple (#9333ea) ellipse, pulsing glow
+  • Consumers: slate (#475569) square
+- Edges:
+  • Default: slate (#94a3b8), curved, arrow
+  • Mapping: purple dashed (#9333ea)
+  • Color edges by confidence: >80% green, 60–80% yellow, <60% red
+- Hover: highlight border yellow (#facc15)
+- Click node: fetch /preview, update preview tables
+- Animate agents (purple nodes) with CSS pulse or Cytoscape animation
+
+4. 3D Mode (graph3d.js)
+- Use 3d-force-graph (via https://unpkg.com/3d-force-graph)
+- Nodes: colored sprites with labels (same color scheme as 2D)
+- Edges: curved with arrowheads, confidence-colored
+- Add animated data particles moving along edges (bright yellow spheres)
+- Agents (purple) have a pulsing glow
+- Click node: fetch /preview, update preview tables
+- Camera: orbit/zoom/pan enabled
+
+5. dcl.html
+- Add two containers:
+   <div id="cy" style="width:100%; height:600px;"></div>
+   <div id="graph3d" style="width:100%; height:600px; display:none;"></div>
+- Add buttons to toggle modes:
+   <button onclick="show2D()">2D Mode</button>
+   <button onclick="show3D()">3D Mode</button>
+- Include 3d-force-graph via:
+   <script src="https://unpkg.com/3d-force-graph"></script>
+
+6. Implement toggle functions in graph.js:
+function show2D() {
+  document.getElementById('cy').style.display='block';
+  document.getElementById('graph3d').style.display='none';
+  renderGraph();
+}
+function show3D() {
+  document.getElementById('cy').style.display='none';
+  document.getElementById('graph3d').style.display='block';
+  renderGraph3D();
+}
+
+7. Deliverables
+- New styles.css with light theme
+- New graph.js implementing 2D mode (Cytoscape)
+- New graph3d.js implementing 3D mode with animated data flow
+- Updated dcl.html with containers, buttons, and script includes
+
+Goal: a modern DCL visualizer with light theme, business-ready 2D graph, and immersive 3D wow-factor view (animated data flowing, pulsing agents, confidence-colored edges).

@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Salesforce CRM",
+    "status": "Active",
+    "lastSync": "2024-07-26 10:30 AM"
+  },
+  {
+    "name": "SAP ERP",
+    "status": "Active",
+    "lastSync": "2024-07-26 09:40 AM"
+  },
+  {
+    "name": "Snowflake DWH",
+    "status": "Active",
+    "lastSync": "2024-07-26 09:20 AM"
+  },
+  {
+    "name": "MongoDB Atlas",
+    "status": "Inactive",
+    "lastSync": "2024-07-25 04:00 PM"
+  },
+  {
+    "name": "Google Analytics",
+    "status": "Pending",
+    "lastSync": "2024-07-25 12:10 PM"
+  }
+]

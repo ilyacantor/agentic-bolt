@@ -1,6 +1,20 @@
-modules = ["python-3.11"]
-[agent]
-expertMode = true
+modules = ["python-3.10"]
+entrypoint = "app.py"
+
+[env]
+PORT = "8080"
+
+[run]
+command = "uvicorn app:app --host 0.0.0.0 --port 8080"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[deployment]
+deploymentTarget = "vm"
+run = ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000"]
+build = ["pip", "install", "--no-cache-dir", "-r", "requirements.txt"]
 
 [workflows]
 runButton = "Project"
@@ -18,30 +32,13 @@ args = "DCL Web Dashboard"
 name = "DCL Web Dashboard"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "uvicorn app:app --host 0.0.0.0 --port 5000 --reload"
 waitForPort = 5000
 
-[workflows.workflow.metadata]
-outputType = "webview"
-
-[[ports]]
-localPort = 3000
-externalPort = 3000
-
-[[ports]]
-localPort = 5000
-externalPort = 80
-
-[[ports]]
-localPort = 46159
-externalPort = 3000
-
-[nix]
-channel = "stable-25_05"
-packages = ["glibcLocales", "libxcrypt", "libyaml", "openssl", "rapidfuzz-cpp", "taskflow"]
-
-[deployment]
-deploymentTarget = "autoscale"
-run = ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000"]
+[agent]
+expertMode = true
