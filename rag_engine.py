@@ -1,45 +1,68 @@
 """
 RAG Engine for DCL Schema Mapping
-Uses ChromaDB + Sentence Transformers for context retrieval
+Uses Qdrant Cloud + Sentence Transformers for context retrieval
 """
 
 import os
 import json
-import chromadb
-from chromadb.config import Settings
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, Range
 from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+import hashlib
 
 class RAGEngine:
     """
     Retrieval-Augmented Generation engine for schema mapping.
-    Stores historical mappings and retrieves similar examples to guide LLM.
+    Stores historical mappings in Qdrant Cloud and retrieves similar examples to guide LLM.
     """
     
-    def __init__(self, persist_dir: str = "./chroma_db"):
-        """Initialize RAG engine with ChromaDB and embedding model."""
-        self.persist_dir = persist_dir
+    def __init__(self, qdrant_url: Optional[str] = None, qdrant_api_key: Optional[str] = None):
+        """Initialize RAG engine with Qdrant Cloud and embedding model."""
+        # Get Qdrant credentials from environment if not provided
+        self.qdrant_url = qdrant_url or os.environ.get("QDRANT_URL")
+        self.qdrant_api_key = qdrant_api_key or os.environ.get("QDRANT_API_KEY")
         
-        # Initialize ChromaDB client
-        self.client = chromadb.Client(Settings(
-            persist_directory=persist_dir,
-            anonymized_telemetry=False
-        ))
+        if not self.qdrant_url or not self.qdrant_api_key:
+            raise ValueError(
+                "Qdrant credentials not found. Please set QDRANT_URL and QDRANT_API_KEY environment variables."
+            )
         
-        # Get or create collection for schema mappings with cosine similarity
-        self.collection = self.client.get_or_create_collection(
-            name="schema_mappings",
-            metadata={
-                "description": "Historical schema-to-ontology mappings",
-                "hnsw:space": "cosine"  # Use cosine similarity for better text embeddings
-            }
+        # Initialize Qdrant client
+        self.client = QdrantClient(
+            url=self.qdrant_url,
+            api_key=self.qdrant_api_key,
         )
+        
+        # Collection name
+        self.collection_name = "schema_mappings"
         
         # Load embedding model (384-dim, fast, lightweight)
         print("🔄 Loading embedding model (all-MiniLM-L6-v2)...")
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.embedding_dim = 384
         print("✅ RAG Engine initialized")
+        
+        # Create collection if it doesn't exist
+        self._ensure_collection()
+    
+    def _ensure_collection(self):
+        """Create collection if it doesn't exist."""
+        try:
+            # Try to get collection info
+            self.client.get_collection(self.collection_name)
+            print(f"✅ Connected to existing collection: {self.collection_name}")
+        except:
+            # Collection doesn't exist, create it
+            self.client.create_collection(
+                collection_name=self.collection_name,
+                vectors_config=VectorParams(
+                    size=self.embedding_dim,
+                    distance=Distance.COSINE
+                )
+            )
+            print(f"✅ Created new collection: {self.collection_name}")
     
     def _create_field_signature(self, field_name: str, field_type: str, 
                                  source_system: str = "") -> str:
@@ -66,6 +89,13 @@ Confidence: {mapping.get('confidence', 0.0)}
         """.strip()
         return doc
     
+    def _create_point_id(self, source_system: str, source_field: str) -> str:
+        """Create a unique point ID from source system and field."""
+        # Use hash to create numeric ID for Qdrant
+        text = f"{source_system}_{source_field}_{int(datetime.now().timestamp())}"
+        # Convert to integer hash
+        return str(abs(hash(text)) % (10 ** 10))
+    
     def store_mapping(self, 
                      source_field: str,
                      source_type: str,
@@ -78,10 +108,10 @@ Confidence: {mapping.get('confidence', 0.0)}
         Store a successful mapping in the vector database.
         
         Returns:
-            Document ID of stored mapping
+            Point ID of stored mapping
         """
         # Create unique ID
-        doc_id = f"{source_system}_{source_field}_{int(datetime.now().timestamp())}"
+        point_id = self._create_point_id(source_system, source_field)
         
         # Create mapping data
         mapping = {
@@ -98,15 +128,24 @@ Confidence: {mapping.get('confidence', 0.0)}
         # Create document for embedding
         document = self._create_mapping_document(mapping)
         
-        # Add to ChromaDB
-        self.collection.add(
-            ids=[doc_id],
-            documents=[document],
-            metadatas=[mapping]
+        # Generate embedding
+        embedding = self.model.encode(document).tolist()
+        
+        # Create point for Qdrant
+        point = PointStruct(
+            id=point_id,
+            vector=embedding,
+            payload=mapping
+        )
+        
+        # Upsert to Qdrant
+        self.client.upsert(
+            collection_name=self.collection_name,
+            points=[point]
         )
         
         print(f"📝 Stored mapping: {source_field} → {ontology_entity}")
-        return doc_id
+        return point_id
     
     def retrieve_similar_mappings(self,
                                    field_name: str,
@@ -131,26 +170,41 @@ Confidence: {mapping.get('confidence', 0.0)}
         query = self._create_field_signature(field_name, field_type, source_system)
         
         # Check if collection has any documents
-        if self.collection.count() == 0:
+        collection_info = self.client.get_collection(self.collection_name)
+        if collection_info.points_count == 0:
             print("ℹ️  No historical mappings in vector store yet")
             return []
         
-        # Query ChromaDB
-        results = self.collection.query(
-            query_texts=[query],
-            n_results=min(top_k, self.collection.count()),
-            where={"confidence": {"$gte": min_confidence}} if min_confidence > 0 else None
+        # Generate query embedding
+        query_embedding = self.model.encode(query).tolist()
+        
+        # Build filter for minimum confidence
+        query_filter = None
+        if min_confidence > 0:
+            query_filter = Filter(
+                must=[
+                    FieldCondition(
+                        key="confidence",
+                        range=Range(gte=min_confidence)
+                    )
+                ]
+            )
+        
+        # Search Qdrant
+        results = self.client.search(
+            collection_name=self.collection_name,
+            query_vector=query_embedding,
+            limit=top_k,
+            query_filter=query_filter
         )
         
         # Format results
         similar_mappings = []
-        if results['metadatas'] and results['metadatas'][0]:
-            for i, metadata in enumerate(results['metadatas'][0]):
-                similarity = 1 - results['distances'][0][i]  # Convert distance to similarity
-                similar_mappings.append({
-                    **metadata,
-                    "similarity": round(similarity, 3)
-                })
+        for result in results:
+            similar_mappings.append({
+                **result.payload,
+                "similarity": round(result.score, 3)
+            })
         
         print(f"🔍 Found {len(similar_mappings)} similar mappings for '{field_name}'")
         return similar_mappings
@@ -220,9 +274,11 @@ Confidence: {mapping.get('confidence', 0.0)}
     
     def get_stats(self) -> Dict[str, Any]:
         """Get statistics about the vector store."""
+        collection_info = self.client.get_collection(self.collection_name)
         return {
-            "total_mappings": self.collection.count(),
-            "collection_name": self.collection.name,
+            "total_mappings": collection_info.points_count,
+            "collection_name": self.collection_name,
             "embedding_model": "all-MiniLM-L6-v2",
-            "embedding_dimension": 384
+            "embedding_dimension": self.embedding_dim,
+            "vector_db": "Qdrant Cloud"
         }
