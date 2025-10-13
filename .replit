@@ -14,7 +14,7 @@ externalPort = 80
 [deployment]
 deploymentTarget = "vm"
 run = ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000"]
-build = ["pip", "install", "--no-cache-dir", "-r", "requirements.txt"]
+build = ["sh", "-c", "rm -rf ~/.pythonlibs ~/.cache/pip ~/.cache/huggingface && pip install --no-cache-dir -r requirements.txt"]
 
 [workflows]
 runButton = "Project"
