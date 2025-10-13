@@ -1,0 +1,89 @@
+1. AWS Resources (aws_resources table)
+EC2 Instances:
+resourceId: i-{nanoid} (unique instance ID)
+resourceType: 'EC2'
+region: 'us-east-1', 'us-west-2'
+currentConfig: JSON with:
+instanceType: 'm5.2xlarge', 't3.large', 'c5.4xlarge'
+vcpus: 2, 8, 16
+memory: '8 GiB', '32 GiB'
+storage: 'EBS-optimized'
+utilizationMetrics: JSON with:
+cpuUtilization: 12.1% - 85.3%
+memoryUtilization: 18.5% - 75.8%
+networkIn: 256.1 - 1024.5 MB
+networkOut: 512.3 - 2048.1 MB
+monthlyCost: 67320 - 501120 (scaled by 1000)
+tags: JSON with:
+Environment: 'production', 'development'
+Team: 'backend', 'frontend', 'data'
+Project: 'web-api', 'web-ui', 'analytics'
+lastAnalyzed: Current timestamp
+RDS Instances:
+resourceId: db-{nanoid} (unique database ID)
+resourceType: 'RDS'
+region: 'us-east-1', 'us-west-2'
+currentConfig: JSON with:
+engine: 'mysql', 'postgres'
+instanceClass: 'db.r5.xlarge', 'db.t3.medium'
+allocatedStorage: 100 - 500 GB
+storageType: 'gp2'
+utilizationMetrics: JSON with:
+cpuUtilization: 15.8% - 45.2%
+connections: 12 - 125
+readLatency: 0.001 - 0.002 ms
+writeLatency: 0.003 - 0.005 ms
+monthlyCost: 89250 - 412500 (scaled by 1000)
+tags: Same structure as EC2
+S3 Buckets:
+resourceId: bucket-{nanoid} (unique bucket ID)
+resourceType: 'S3'
+region: 'us-east-1'
+currentConfig: JSON with:
+storageClass: 'STANDARD'
+sizeGB: 450 - 2500 GB
+objectCount: 25000 - 125000
+versioning: true/false
+utilizationMetrics: JSON with:
+getRequests: 50000 - 500000
+putRequests: 1000 - 5000
+dataTransferOut: 100.5 - 1500.2 GB
+monthlyCost: 23670 - 57380 (scaled by 1000)
+tags: Same structure as EC2
+Application Load Balancers:
+resourceId: alb-{nanoid} (unique ALB ID)
+resourceType: 'ALB'
+region: 'us-east-1'
+currentConfig: JSON with:
+type: 'application'
+scheme: 'internet-facing'
+targets: 3
+utilizationMetrics: JSON with:
+requestCount: 2500000
+targetResponseTime: 0.045 ms
+healthyTargets: 3
+monthlyCost: 22500 (scaled by 1000)
+tags: Same structure as EC2
+2. Cost Reports (cost_reports table)
+reportDate: First day of month (past 6 months)
+serviceCategory:
+'EC2-Instance', 'RDS', 'S3', 'ELB', 'CloudWatch'
+'Route53', 'CloudFront', 'Lambda', 'EBS', 'Data Transfer'
+cost: Base cost with ±20% variation, scaled by 1000
+usage: Numeric value based on service
+usageType:
+'Instance-Hours', 'GB-Month', 'LoadBalancer-Hours'
+'Requests', 'Queries', 'Invocations', 'GB'
+region: 'us-east-1', 'us-west-2', 'eu-west-1'
+Base Costs (monthly):
+
+EC2: $814.00
+RDS: $501.75
+S3: $81.05
+ELB: $22.50
+CloudWatch: $15.25
+Route53: $12.00
+CloudFront: $45.30
+Lambda: $8.75
+EBS: $125.40
+Data Transfer: $89.60

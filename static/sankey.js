@@ -117,27 +117,20 @@ function renderSankey(state) {
   // Connect ontology nodes to their consumer agents based on agent consumption metadata
   // Only create links when an agent actually consumes that specific entity
   const agentConsumption = state.agent_consumption || {};
-  console.log('[Sankey] Agent consumption:', agentConsumption);
-  console.log('[Sankey] Agent nodes:', agentNodes.map(n => n.id));
-  console.log('[Sankey] Ontology nodes:', ontologyNodes.map(n => n.id));
   
   agentNodes.forEach(agentNode => {
     // Extract agent_id from node id (format: agent_revops_pilot -> revops_pilot)
     const agentId = agentNode.id.replace('agent_', '');
     const consumedEntities = agentConsumption[agentId] || [];
-    console.log(`[Sankey] Agent ${agentId} consumes:`, consumedEntities);
     
     ontologyNodes.forEach(ontNode => {
       // Extract entity name from ontology node id (format: dcl_customer -> customer)
       const entityName = ontNode.id.replace('dcl_', '');
-      const shouldConnect = consumedEntities.includes(entityName);
-      console.log(`[Sankey] Check ${ontNode.id} (${entityName}) -> ${agentNode.id}: ${shouldConnect}`);
       
       // Only create link if this agent consumes this entity
       if (consumedEntities.includes(entityName) && 
           nodeIndexMap[ontNode.id] !== undefined && 
           nodeIndexMap[agentNode.id] !== undefined) {
-        console.log(`[Sankey] Creating link: ${ontNode.id} -> ${agentNode.id}`);
         sankeyLinks.push({
           source: nodeIndexMap[ontNode.id],
           target: nodeIndexMap[agentNode.id],
