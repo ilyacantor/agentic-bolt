@@ -419,6 +419,7 @@ async def serve_jsx_nocache(filepath: str):
     return JSONResponse({"error": "Not found"}, status_code=404)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/attached_assets", StaticFiles(directory="attached_assets"), name="attached_assets")
 
 @app.on_event("startup")
 async def startup_event():
