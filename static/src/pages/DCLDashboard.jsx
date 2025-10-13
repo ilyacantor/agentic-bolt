@@ -42,7 +42,13 @@ function DCLDashboard(){
   async function fetchState(){
     const res = await fetch('/state');
     const data = await res.json();
-    setState(data);
+    setState(prev => ({
+      ...data,
+      preview: {
+        ...data.preview,
+        connectionInfo: prev.preview.connectionInfo
+      }
+    }));
   }
 
   async function addSource(){
@@ -72,6 +78,10 @@ function DCLDashboard(){
       cyRef.current = null;
     }
     setProcessState({ active: false, stage: '', progress: 0, complete: false });
+    setState(prev => ({
+      ...prev,
+      preview: {sources: {}, ontology: {}, connectionInfo: null}
+    }));
     fetchState();
   }
 

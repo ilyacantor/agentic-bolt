@@ -189,13 +189,26 @@ function renderSankey(state) {
       const sourceNodeData = sankeyNodes.find(n => n.name === d.source.name);
       const targetNodeData = sankeyNodes.find(n => n.name === d.target.name);
       if (targetNodeData && targetNodeData.id && targetNodeData.type === 'ontology') {
-        const r = await fetch('/preview?node=' + encodeURIComponent(targetNodeData.id));
-        const data = await r.json();
-        data.connectionInfo = {
-          from: sourceNodeData?.name || 'Unknown',
-          to: targetNodeData?.name || 'Unknown'
+        const combinedData = {
+          sources: {},
+          ontology: {},
+          connectionInfo: {
+            from: sourceNodeData?.name || 'Unknown',
+            to: targetNodeData?.name || 'Unknown'
+          }
         };
-        const evt = new CustomEvent('sankey-node-click', { detail: data });
+        
+        if (sourceNodeData && sourceNodeData.id && sourceNodeData.type === 'source') {
+          const sourceRes = await fetch('/preview?node=' + encodeURIComponent(sourceNodeData.id));
+          const sourceData = await sourceRes.json();
+          combinedData.sources = sourceData.sources || {};
+        }
+        
+        const targetRes = await fetch('/preview?node=' + encodeURIComponent(targetNodeData.id));
+        const targetData = await targetRes.json();
+        combinedData.ontology = targetData.ontology || {};
+        
+        const evt = new CustomEvent('sankey-node-click', { detail: combinedData });
         window.dispatchEvent(evt);
       }
     });
