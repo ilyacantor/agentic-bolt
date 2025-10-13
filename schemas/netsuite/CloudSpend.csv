@@ -1,9 +1,9 @@
-TransactionID,VendorName,ServiceCategory,Amount,Currency,PurchaseDate,CostCenter
-NS-CS-001,AWS,Compute Services,12450.00,USD,2024-03-01,Engineering
-NS-CS-002,AWS,Storage Services,3280.50,USD,2024-03-01,Data Platform
-NS-CS-003,AWS,Database Services,8920.75,USD,2024-03-05,Backend Services
-NS-CS-004,AWS,Serverless Services,1567.30,USD,2024-03-08,API Platform
-NS-CS-005,AWS,Network Services,4230.90,USD,2024-03-10,Infrastructure
-NS-CS-006,AWS,Analytics Services,6780.45,USD,2024-03-15,Data Science
-NS-CS-007,AWS,Security Services,2340.60,USD,2024-03-18,SecOps
-NS-CS-008,AWS,AI/ML Services,5670.80,USD,2024-03-20,ML Platform
+TransactionID,VendorName,serviceCategory,monthly_cost,Currency,PurchaseDate,CostCenter,usageType,Region
+NS-CS-001,AWS,EC2-Instance,12450.00,USD,2024-03-01,Engineering,Instance-Hours,us-east-1
+NS-CS-002,AWS,S3,3280.50,USD,2024-03-01,Data Platform,GB-Month,us-east-1
+NS-CS-003,AWS,RDS,8920.75,USD,2024-03-05,Backend Services,Instance-Hours,us-west-2
+NS-CS-004,AWS,Lambda,1567.30,USD,2024-03-08,API Platform,Invocations,us-east-1
+NS-CS-005,AWS,ELB,4230.90,USD,2024-03-10,Infrastructure,LoadBalancer-Hours,us-east-1
+NS-CS-006,AWS,CloudWatch,6780.45,USD,2024-03-15,Data Science,Requests,us-east-1
+NS-CS-007,AWS,Route53,2340.60,USD,2024-03-18,SecOps,Queries,global
+NS-CS-008,AWS,CloudFront,5670.80,USD,2024-03-20,ML Platform,GB,us-east-1

@@ -281,22 +281,65 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
     email_fields = ["email","emailaddress1","Email","EMAIL"]
     amount_fields = ["amount","Amount","NETWR","TotalAmount","estimatedvalue","AMOUNT"]
     date_fields = ["createdon","CreatedDate","CloseDate","ERDAT","ORDER_DATE","tranDate","created_at","CREATED_AT","OrderDate","ORDER_DATE"]
-    # FinOps patterns
-    resource_fields = ["resource_id","resourceId","ResourceId","resource_name","resourceName"]
-    cost_fields = ["cost","monthly_cost","monthlyCost","spend","price","billing_amount"]
-    usage_fields = ["cpuUtilization","memoryUtilization","networkOut","usage","utilization"]
+    
+    # FinOps patterns - Core identifiers
+    resource_fields = ["resource_id","resourceId","ResourceId","instance_id","instanceId"]
+    cost_fields = ["cost","monthly_cost","monthlyCost","spend","price","billing_amount","totalCost"]
+    
+    # FinOps patterns - Resource config (EC2, RDS, S3)
+    instance_type_fields = ["instance_type","instanceType","instanceClass"]
+    vcpu_fields = ["vcpus","vCPUs","cpu_count"]
+    memory_fields = ["memory","memoryGiB","ram"]
+    storage_fields = ["storage","allocatedStorage","sizeGB","size_gb"]
+    db_engine_fields = ["engine","db_engine","dbEngine"]
+    
+    # FinOps patterns - Utilization metrics
+    cpu_util_fields = ["cpuUtilization","cpu_utilization","cpu_percent"]
+    mem_util_fields = ["memoryUtilization","memory_utilization","mem_percent"]
+    network_in_fields = ["networkIn","network_in","bytesIn"]
+    network_out_fields = ["networkOut","network_out","bytesOut"]
+    connections_fields = ["connections","db_connections","activeConnections"]
+    
+    # FinOps patterns - S3 metrics
+    get_requests_fields = ["getRequests","get_requests","s3_gets"]
+    put_requests_fields = ["putRequests","put_requests","s3_puts"]
+    
+    # FinOps patterns - Cost/Billing
+    service_category_fields = ["serviceCategory","service_category","service_name","serviceName"]
+    usage_type_fields = ["usageType","usage_type","usage_unit"]
     
     for tname, info in tables.items():
         cols = list(info["schema"].keys())
+        
         # RevOps: customer entity
         cust = next((c for c in cols if c in key_fields or c.lower() in ["customer_id","cust_id","id","accountid","account_id"]), None)
         email = next((c for c in cols if c in email_fields or "email" in c.lower()), None)
         amount = next((c for c in cols if c in amount_fields or "amount" in c.lower() or "price" in c.lower()), None)
         datec = next((c for c in cols if c in date_fields or "date" in c.lower()), None)
-        # FinOps: aws_resource, cloud_cost, cloud_usage
-        resource = next((c for c in cols if c in resource_fields or "resource" in c.lower()), None)
+        
+        # FinOps: Core identifiers
+        resource = next((c for c in cols if c in resource_fields or "resource_id" in c.lower() or "instance_id" in c.lower()), None)
         cost = next((c for c in cols if c in cost_fields or "cost" in c.lower()), None)
-        usage = next((c for c in cols if c in usage_fields or "utilization" in c.lower()), None)
+        
+        # FinOps: Resource config
+        instance_type = next((c for c in cols if c in instance_type_fields), None)
+        vcpus = next((c for c in cols if c in vcpu_fields), None)
+        memory = next((c for c in cols if c in memory_fields), None)
+        storage = next((c for c in cols if c in storage_fields), None)
+        db_engine = next((c for c in cols if c in db_engine_fields), None)
+        
+        # FinOps: Utilization metrics
+        cpu_util = next((c for c in cols if c in cpu_util_fields), None)
+        mem_util = next((c for c in cols if c in mem_util_fields), None)
+        network_in = next((c for c in cols if c in network_in_fields), None)
+        network_out = next((c for c in cols if c in network_out_fields), None)
+        connections = next((c for c in cols if c in connections_fields), None)
+        get_requests = next((c for c in cols if c in get_requests_fields), None)
+        put_requests = next((c for c in cols if c in put_requests_fields), None)
+        
+        # FinOps: Cost/Billing
+        service_category = next((c for c in cols if c in service_category_fields), None)
+        usage_type = next((c for c in cols if c in usage_type_fields), None)
         
         # RevOps mappings
         if (cust or email) and "customer" in available_entities:
@@ -310,16 +353,39 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
             if datec: fields.append({"source": datec, "onto_field": "order_date", "confidence": 0.8})
             mappings.append({"entity":"transaction","source_table": f"{source_key}_{tname}", "fields": fields})
         
-        # FinOps mappings
-        if resource and "aws_resource" in available_entities:
-            fields = [{"source": resource, "onto_field": "resource_id", "confidence": 0.85}]
-            mappings.append({"entity":"aws_resource","source_table": f"{source_key}_{tname}", "fields": fields})
-        if cost and "cloud_cost" in available_entities:
-            fields = [{"source": cost, "onto_field": "monthly_cost", "confidence": 0.85}]
-            mappings.append({"entity":"cloud_cost","source_table": f"{source_key}_{tname}", "fields": fields})
-        if usage and "cloud_usage" in available_entities:
-            fields = [{"source": usage, "onto_field": "cpuUtilization", "confidence": 0.80}]
-            mappings.append({"entity":"cloud_usage","source_table": f"{source_key}_{tname}", "fields": fields})
+        # FinOps mappings - aws_resource (config fields)
+        if (resource or instance_type or vcpus or db_engine) and "aws_resource" in available_entities:
+            fields = []
+            if resource: fields.append({"source": resource, "onto_field": "resource_id", "confidence": 0.9})
+            if instance_type: fields.append({"source": instance_type, "onto_field": "instance_type", "confidence": 0.85})
+            if vcpus: fields.append({"source": vcpus, "onto_field": "vcpus", "confidence": 0.85})
+            if memory: fields.append({"source": memory, "onto_field": "memory", "confidence": 0.85})
+            if storage: fields.append({"source": storage, "onto_field": "allocated_storage", "confidence": 0.85})
+            if db_engine: fields.append({"source": db_engine, "onto_field": "db_engine", "confidence": 0.85})
+            if fields:
+                mappings.append({"entity":"aws_resource","source_table": f"{source_key}_{tname}", "fields": fields})
+        
+        # FinOps mappings - cloud_cost (billing fields)
+        if (cost or service_category or usage_type) and "cloud_cost" in available_entities:
+            fields = []
+            if cost: fields.append({"source": cost, "onto_field": "monthly_cost", "confidence": 0.9})
+            if service_category: fields.append({"source": service_category, "onto_field": "service_category", "confidence": 0.85})
+            if usage_type: fields.append({"source": usage_type, "onto_field": "usage_type", "confidence": 0.85})
+            if fields:
+                mappings.append({"entity":"cloud_cost","source_table": f"{source_key}_{tname}", "fields": fields})
+        
+        # FinOps mappings - cloud_usage (utilization metrics)
+        if (cpu_util or mem_util or network_in or network_out or connections or get_requests) and "cloud_usage" in available_entities:
+            fields = []
+            if cpu_util: fields.append({"source": cpu_util, "onto_field": "cpu_utilization", "confidence": 0.9})
+            if mem_util: fields.append({"source": mem_util, "onto_field": "memory_utilization", "confidence": 0.9})
+            if network_in: fields.append({"source": network_in, "onto_field": "network_in", "confidence": 0.85})
+            if network_out: fields.append({"source": network_out, "onto_field": "network_out", "confidence": 0.85})
+            if connections: fields.append({"source": connections, "onto_field": "db_connections", "confidence": 0.85})
+            if get_requests: fields.append({"source": get_requests, "onto_field": "get_requests", "confidence": 0.85})
+            if put_requests: fields.append({"source": put_requests, "onto_field": "put_requests", "confidence": 0.85})
+            if fields:
+                mappings.append({"entity":"cloud_usage","source_table": f"{source_key}_{tname}", "fields": fields})
     # naive joins on shared key names
     name_to_tables = {}
     for t, info in tables.items():

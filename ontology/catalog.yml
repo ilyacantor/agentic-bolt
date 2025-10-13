@@ -10,13 +10,74 @@ entities:
   # FinOps Entities
   aws_resource:
     pk: resource_id
-    fields: [resource_id, resource_type, service_name, region, account_id, resource_tags, created_date]
+    fields: 
+      # Core resource info
+      - resource_id
+      - resource_type  # EC2, RDS, S3, ALB, Lambda, EKS
+      - region
+      - account_id
+      # EC2 specific config
+      - instance_type  # m5.2xlarge, t3.large, c5.4xlarge
+      - vcpus
+      - memory
+      - storage_type  # EBS-optimized
+      # RDS specific config
+      - db_engine  # mysql, postgres
+      - instance_class  # db.r5.xlarge, db.t3.medium
+      - allocated_storage
+      # S3 specific config
+      - storage_class  # STANDARD
+      - size_gb
+      - object_count
+      - versioning_enabled
+      # ALB specific config
+      - load_balancer_type  # application
+      - scheme  # internet-facing
+      - target_count
+      # Common metadata
+      - resource_tags
+      - created_date
+      - last_analyzed
   cloud_cost:
     pk: cost_id
-    fields: [cost_id, resource_id, usage_date, cost_amount, monthly_cost, currency, usage_quantity, usage_unit, billing_period]
+    fields: 
+      - cost_id
+      - resource_id
+      - service_category  # EC2-Instance, RDS, S3, ELB, CloudWatch, Route53, CloudFront, Lambda, EBS, Data Transfer
+      - usage_date
+      - monthly_cost
+      - cost_amount
+      - currency
+      - usage_quantity
+      - usage_type  # Instance-Hours, GB-Month, LoadBalancer-Hours, Requests, Queries, Invocations, GB
+      - billing_period
+      - region
   cloud_usage:
     pk: usage_id
-    fields: [usage_id, resource_id, metric_name, metric_value, timestamp, account_id]
+    fields: 
+      - usage_id
+      - resource_id
+      - metric_name
+      # EC2 utilization metrics
+      - cpu_utilization  # percentage
+      - memory_utilization  # percentage
+      - network_in  # MB
+      - network_out  # MB
+      # RDS metrics
+      - db_connections
+      - read_latency  # ms
+      - write_latency  # ms
+      # S3 metrics
+      - get_requests
+      - put_requests
+      - data_transfer_out  # GB
+      # ALB metrics
+      - request_count
+      - target_response_time  # ms
+      - healthy_targets
+      # Common fields
+      - timestamp
+      - account_id
   cloud_invoice:
     pk: invoice_id
     fields: [invoice_id, account_id, invoice_date, total_amount, service_charges, discount_amount, payment_status]
