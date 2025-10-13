@@ -425,8 +425,8 @@ function renderSankey(state) {
     const scale = currentTransform.k;
     
     const newTransform = d3.zoomIdentity
-      .scale(scale)
-      .translate(-targetX * scale + width / 2, -targetY * scale + height / 2);
+      .translate((width / 2 - targetX * scale) / scale, (height / 2 - targetY * scale) / scale)
+      .scale(scale);
     
     svg.transition()
       .duration(300)
@@ -439,12 +439,12 @@ function renderSankey(state) {
       const currentTransform = d3.zoomTransform(svg.node());
       const scale = currentTransform.k;
       
-      const dx = -event.dx / minimapScale * scale;
-      const dy = -event.dy / minimapScale * scale;
+      const dx = -event.dx / minimapScale;
+      const dy = -event.dy / minimapScale;
       
       const newTransform = d3.zoomIdentity
-        .scale(scale)
-        .translate(currentTransform.x + dx, currentTransform.y + dy);
+        .translate((currentTransform.x + dx) / scale, (currentTransform.y + dy) / scale)
+        .scale(scale);
       
       svg.call(zoom.transform, newTransform);
     });
