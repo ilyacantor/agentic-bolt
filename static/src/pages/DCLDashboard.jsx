@@ -6,7 +6,8 @@ function DCLDashboard(){
     preview: {sources: {}, ontology: {}, connectionInfo: null},
     rag: {retrievals: [], total_mappings: 0, last_retrieval_count: 0}
   });
-  const [selectedSource, setSelectedSource] = React.useState('dynamics');
+  const [selectedSources, setSelectedSources] = React.useState([]);
+  const [selectedAgents, setSelectedAgents] = React.useState(['finops_pilot']);
   const [processState, setProcessState] = React.useState({ active: false, stage: '', progress: 0, complete: false });
   const [viewType, setViewType] = React.useState('cytoscape');
   const cyRef = React.useRef(null);
@@ -51,14 +52,25 @@ function DCLDashboard(){
     });
   }
 
-  async function addSource(){
-    setProcessState({ active: true, stage: 'Connecting to data source...', progress: 20, complete: false });
+  async function connectSources(){
+    if (selectedSources.length === 0) {
+      alert('Please select at least one data source');
+      return;
+    }
+    if (selectedAgents.length === 0) {
+      alert('Please select at least one agent');
+      return;
+    }
+    
+    setProcessState({ active: true, stage: 'Connecting to data sources...', progress: 20, complete: false });
     
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
       setProcessState({ active: true, stage: 'Analyzing schema structure...', progress: 40, complete: false });
       
-      const res = await fetch(`/connect?source=${selectedSource}`);
+      const sourcesParam = selectedSources.join(',');
+      const agentsParam = selectedAgents.join(',');
+      const res = await fetch(`/connect?sources=${sourcesParam}&agents=${agentsParam}`);
       setProcessState({ active: true, stage: 'Mapping fields to ontology...', progress: 70, complete: false });
       
       await res.json();
@@ -69,6 +81,18 @@ function DCLDashboard(){
     } catch (error) {
       setProcessState({ active: true, stage: 'Failed', progress: 0, complete: true });
     }
+  }
+
+  function toggleSource(value) {
+    setSelectedSources(prev => 
+      prev.includes(value) ? prev.filter(s => s !== value) : [...prev, value]
+    );
+  }
+
+  function toggleAgent(value) {
+    setSelectedAgents(prev => 
+      prev.includes(value) ? prev.filter(a => a !== value) : [...prev, value]
+    );
   }
 
   async function resetDemo(){
@@ -159,12 +183,17 @@ function DCLDashboard(){
   }
 
   const sources = [
-    {name: 'Dynamics CRM', value: 'dynamics'},
-    {name: 'Salesforce', value: 'salesforce'},
-    {name: 'SAP ERP', value: 'sap'},
-    {name: 'NetSuite', value: 'netsuite'},
-    {name: 'Legacy SQL Server', value: 'legacy_sql'},
-    {name: 'Snowflake', value: 'snowflake'}
+    {name: 'Dynamics CRM', value: 'dynamics', type: 'crm'},
+    {name: 'Salesforce', value: 'salesforce', type: 'crm'},
+    {name: 'SAP ERP', value: 'sap', type: 'erp'},
+    {name: 'NetSuite', value: 'netsuite', type: 'erp'},
+    {name: 'Legacy SQL Server', value: 'legacy_sql', type: 'database'},
+    {name: 'Snowflake', value: 'snowflake', type: 'warehouse'}
+  ];
+
+  const agents = [
+    {name: 'RevOps Pilot', value: 'revops_pilot', description: 'Revenue operations & sales pipeline', color: '#3b82f6'},
+    {name: 'FinOps Pilot', value: 'finops_pilot', description: 'AWS cost optimization & cloud resources', color: '#9333ea'}
   ];
 
   const confidence = state.graph.confidence;
@@ -177,18 +206,54 @@ function DCLDashboard(){
         {/* Left Sidebar - Connectors */}
         <div className="col-span-12 lg:col-span-3 space-y-4">
           <div className="card">
-            <div className="card-title mb-3">Add Data Source</div>
-            <select 
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm mb-3"
-              value={selectedSource}
-              onChange={e => setSelectedSource(e.target.value)}
-            >
-              {sources.map(s => <option key={s.value} value={s.value}>{s.name}</option>)}
-            </select>
-            <button onClick={addSource} className="w-full bg-brand-500 hover:bg-brand-600 rounded-lg py-2 text-sm font-medium">
-              Connect Source
-            </button>
+            <div className="card-title mb-3">Data Sources</div>
+            <div className="space-y-2 mb-3">
+              {sources.map(s => (
+                <label key={s.value} className="flex items-center gap-2 cursor-pointer group">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedSources.includes(s.value)}
+                    onChange={() => toggleSource(s.value)}
+                    className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500"
+                  />
+                  <span className="text-sm text-slate-300 group-hover:text-slate-100">{s.name}</span>
+                  <span className="ml-auto text-[10px] text-slate-500 uppercase">{s.type}</span>
+                </label>
+              ))}
+            </div>
           </div>
+
+          <div className="card">
+            <div className="card-title mb-3">Target Agents</div>
+            <div className="space-y-2 mb-3">
+              {agents.map(a => (
+                <label key={a.value} className="flex items-start gap-2 cursor-pointer group">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedAgents.includes(a.value)}
+                    onChange={() => toggleAgent(a.value)}
+                    className="w-4 h-4 mt-0.5 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500"
+                  />
+                  <div className="flex-1">
+                    <div className="text-sm text-slate-300 group-hover:text-slate-100 font-medium">{a.name}</div>
+                    <div className="text-[10px] text-slate-500">{a.description}</div>
+                  </div>
+                  <div 
+                    className="w-3 h-3 rounded-full mt-1" 
+                    style={{backgroundColor: a.color}}
+                  ></div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <button 
+            onClick={connectSources} 
+            className="w-full bg-brand-500 hover:bg-brand-600 rounded-lg py-2 text-sm font-medium disabled:opacity-50"
+            disabled={selectedSources.length === 0 || selectedAgents.length === 0}
+          >
+            Connect & Map
+          </button>
 
           {/* RAG Learning Engine - Updated Visual Identity */}
           <div className="rounded-lg p-4 bg-gradient-to-br from-teal-950 to-cyan-950 border border-teal-700/30">
