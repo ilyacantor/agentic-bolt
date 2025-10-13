@@ -1,0 +1,9 @@
+COST_ID,RESOURCE_ID,DATE,COST_USD,USAGE_QTY,USAGE_TYPE,BILLING_MONTH
+c-sn-001,r-sn-001,2024-03-15,245.67,720,instance-hours,2024-03
+c-sn-002,r-sn-002,2024-03-15,89.32,1500,gb-storage,2024-03
+c-sn-003,r-sn-003,2024-03-15,312.45,720,db-hours,2024-03
+c-sn-004,r-sn-004,2024-03-16,12.89,5000000,invocations,2024-03
+c-sn-005,r-sn-005,2024-03-16,567.23,720,cluster-hours,2024-03
+c-sn-006,r-sn-006,2024-03-17,78.90,2500,gb-transfer,2024-03
+c-sn-007,r-sn-007,2024-03-18,156.44,100,write-capacity,2024-03
+c-sn-008,r-sn-001,2024-03-20,248.12,744,instance-hours,2024-03

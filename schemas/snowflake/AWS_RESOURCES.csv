@@ -1,0 +1,8 @@
+RESOURCE_ID,RESOURCE_TYPE,SERVICE,AWS_REGION,ACCOUNT_NUM,TAGS,PROVISION_DATE
+r-sn-001,ec2-instance,EC2,us-east-1,123456789012,env:prod|team:platform,2024-01-05 10:30:00
+r-sn-002,s3-bucket,S3,us-west-2,123456789012,env:prod|team:data,2024-01-12 14:20:00
+r-sn-003,rds-instance,RDS,eu-west-1,123456789012,env:staging|team:backend,2024-01-18 09:15:00
+r-sn-004,lambda-function,Lambda,us-east-1,987654321098,env:prod|team:api,2024-02-03 11:45:00
+r-sn-005,eks-cluster,EKS,us-west-2,987654321098,env:prod|team:platform,2024-02-15 16:00:00
+r-sn-006,cloudfront-dist,CloudFront,global,123456789012,env:prod|team:web,2024-03-01 08:30:00
+r-sn-007,dynamodb-table,DynamoDB,us-east-1,123456789012,env:prod|team:data,2024-03-10 13:22:00
