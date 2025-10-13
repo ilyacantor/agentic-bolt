@@ -368,9 +368,15 @@ function DCLDashboard(){
                       {state.preview.connectionInfo && (
                         <div className="mb-3 p-2 bg-teal-900/30 border border-teal-700/50 rounded">
                           <div className="text-sm font-semibold text-teal-300 mb-1">Data Flow Connection</div>
-                          <div className="text-xs text-slate-300">
+                          <div className="text-xs text-slate-300 flex items-center">
+                            <svg className="w-3.5 h-3.5 mr-1 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                            </svg>
                             <span className="font-medium text-blue-400">{state.preview.connectionInfo.from}</span>
                             <span className="mx-2 text-slate-500">→</span>
+                            <svg className="w-3.5 h-3.5 mr-1 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
                             <span className="font-medium text-green-400">{state.preview.connectionInfo.to}</span>
                           </div>
                         </div>
@@ -418,9 +424,15 @@ function DCLDashboard(){
                       {state.preview.connectionInfo && (
                         <div className="mb-3 p-2 bg-teal-900/30 border border-teal-700/50 rounded">
                           <div className="text-sm font-semibold text-teal-300 mb-1">Data Flow Connection</div>
-                          <div className="text-xs text-slate-300">
+                          <div className="text-xs text-slate-300 flex items-center">
+                            <svg className="w-3.5 h-3.5 mr-1 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                            </svg>
                             <span className="font-medium text-blue-400">{state.preview.connectionInfo.from}</span>
                             <span className="mx-2 text-slate-500">→</span>
+                            <svg className="w-3.5 h-3.5 mr-1 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
                             <span className="font-medium text-green-400">{state.preview.connectionInfo.to}</span>
                           </div>
                         </div>
