@@ -1,6 +1,0 @@
-opportunityid,name,estimatedvalue,customerid,closeprobability
-O001,Renewal - Acme,50000,A001,85
-O002,New Logo - Contoso,120000,A002,60
-O003,Expansion - Northwind,35000,A003,70
-O004,Upgrade - BlueOcean,42000,A004,65
-O005,Cross-sell - Globex,28000,A005,55

@@ -1,6 +1,0 @@
-accountid,name,address1_city,telephone1,createdon
-A001,Acme Corporation,Seattle,+1-206-555-0101,2024-01-05 09:00:00
-A002,Contoso Ltd,London,+44-20-7946-0958,2024-02-12 11:30:00
-A003,Northwind Traders,Chicago,+1-312-555-0199,2024-03-22 14:45:00
-A004,BlueOcean BV,Amsterdam,+31-20-555-7788,2024-03-30 08:15:00
-A005,Globex SA,Paris,+33-1-44-55-66-77,2024-04-18 16:20:00
