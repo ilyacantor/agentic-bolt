@@ -3,17 +3,27 @@
 ## Overview
 An intelligent system that autonomously discovers data sources from multiple enterprise systems, uses AI to map them to a predefined ontology, validates mappings with quality checks, and automatically publishes DuckDB views. Features a real-time web dashboard with interactive data flow graphs and AI-powered schema inference.
 
-## Recent Changes (October 12, 2025)
+## Recent Changes (October 13, 2025)
+- ✅ **Pinecone Cloud Migration**: Migrated RAG Engine from local ChromaDB to Pinecone cloud vector database
+  - Resolved disk quota issues by removing heavy local vector DB dependencies
+  - Removed chromadb, qdrant-client from requirements.txt
+  - Added lightweight pinecone package for cloud-based vector storage
+  - Refactored rag_engine.py to use Pinecone Serverless index (free tier, us-east-1)
+  - Kept sentence-transformers for local embeddings (all-MiniLM-L6-v2, 384-dim)
+  - Uses PINECONE_API_KEY from Replit secrets for authentication
+  - Index name: "schema-mappings" with cosine similarity metric
+  - API endpoint `/rag/stats` confirms Pinecone integration
+  - Development and production fully functional with cloud RAG
+
+## Previous Changes (October 12, 2025)
 - ✅ **Autoscale Deployment Optimization**: Optimized for Autoscale deployment with efficient dependency installation
-  - Removed duplicate dependencies from requirements.txt (chromadb, sentence-transformers, langchain-community were listed twice)
+  - Removed duplicate dependencies from requirements.txt
   - Removed unused sift-stack-py dependency
   - Added CPU-only torch/torchvision to requirements.txt with `--extra-index-url https://download.pytorch.org/whl/cpu` (saves ~10GB over CUDA)
   - Critical fix: Used `--extra-index-url` (not `--index-url`) to preserve PyPI access while adding PyTorch CPU index
   - Simplified build command to single installation with cache cleanup: `pip install --no-cache-dir -r requirements.txt && rm -rf ~/.cache/pip`
   - Run command: `uvicorn app:app --host 0.0.0.0` (Autoscale automatically maps to port 80)
   - Deployment target: `autoscale` (serverless, scales to zero when idle)
-  - All dependencies installed successfully with CPU-only torch (184MB vs 888MB+594MB CUDA)
-  - RAG Engine, ChromaDB, and sentence-transformers working correctly in development
   - Production-ready configuration verified by architect review
 
 - ✅ **Layout Reorganization**: Improved dashboard flow and visual consistency
@@ -29,10 +39,10 @@ An intelligent system that autonomously discovers data sources from multiple ent
   - Clean design without heavy borders, matching visual identity
 
 - ✅ **RAG Engine Implementation**: Added context-aware, learning-based schema mapping with historical memory
-  - Uses ChromaDB + Sentence Transformers (all-MiniLM-L6-v2, 384-dim embeddings)
+  - Uses Pinecone cloud vector DB + Sentence Transformers (all-MiniLM-L6-v2, 384-dim embeddings)
   - Retrieves top 5 similar mappings as context for LLM inference
   - Automatically stores successful mappings for future reference
-  - Persists to ./chroma_db directory with cosine similarity search
+  - Cloud-based persistence with Pinecone Serverless (cosine similarity search)
   - Fixed critical prompt construction bug that broke LLM workflow when RAG context existed
   - Visual RAG panel in left sidebar shows retrieved mappings with similarity scores
 
@@ -53,12 +63,12 @@ An intelligent system that autonomously discovers data sources from multiple ent
    - Python-only architecture (no Node.js dependencies)
 
 2. **RAG Engine** (`rag_engine.py`)
-   - ChromaDB vector store with persistent storage
+   - Pinecone cloud vector database (Serverless, us-east-1)
    - Sentence Transformers embeddings (all-MiniLM-L6-v2, 384 dimensions)
    - Stores field-level mapping history with metadata
    - Retrieves top 5 similar mappings via cosine similarity
    - Provides historical context to LLM for improved accuracy
-   - Works with CPU-only torch for reduced disk footprint
+   - Cloud-based storage eliminates local disk usage
 
 ### Data Sources
 - **schemas/** directory contains sample schemas from:
@@ -81,21 +91,22 @@ An intelligent system that autonomously discovers data sources from multiple ent
 
 ### RAG Workflow
 1. **Field Embedding**: For each source field, generate 384-dim embedding using Sentence Transformers
-2. **Context Retrieval**: Search ChromaDB for top 5 most similar historical mappings (cosine similarity)
+2. **Context Retrieval**: Search Pinecone for top 5 most similar historical mappings (cosine similarity)
 3. **Enhanced Prompting**: Inject retrieved mappings as context into LLM prompt
 4. **Mapping Inference**: LLM generates ontology mappings with improved accuracy
-5. **Storage**: Successful mappings stored in vector database for future reference
-6. **API Endpoint**: `/rag/stats` shows total mappings, collection info, and embedding model
+5. **Storage**: Successful mappings stored in Pinecone cloud for future reference
+6. **API Endpoint**: `/rag/stats` shows total mappings, index info, and embedding model
 
 ### Other Technical Details
 - **Gemini Response Handling**: Strip markdown code blocks with `.replace(/```json\n?|\n?```/g, '')`
 - **ES Modules**: package.json configured with `"type": "module"` for Node.js
 - **Join Edges**: Filtered from visualization (type='join') but tracked internally
 - **Auto-Ingest Mode**: Toggle between Strict Mode (curated only) and Inclusive Mode (auto-connect unmapped sources to gray "Unclassified" node)
-- **Persistent Vector Store**: ChromaDB data stored in ./chroma_db directory (gitignored)
+- **Cloud Vector Store**: Pinecone Serverless index (schema-mappings) in us-east-1 region
 
 ## Environment Variables
 - `GEMINI_API_KEY` - Required for AI-powered schema inference
+- `PINECONE_API_KEY` - Required for RAG Engine cloud vector storage
 - `GITHUB_TOKEN` - Stored in Replit secrets for repository access
 
 ## Repository
