@@ -72,22 +72,19 @@ function renderSankey(state) {
     nodeIndex++;
   });
 
-  otherNodes.forEach(n => {
+  // Add agent nodes from graph state
+  const agentNodes = state.graph.nodes.filter(n => n.type === 'agent');
+  agentNodes.forEach(n => {
     nodeIndexMap[n.id] = nodeIndex;
     sankeyNodes.push({ name: n.label, type: n.type, id: n.id });
     nodeIndex++;
   });
 
-  // Add FinOps Pilot agent as consumer node
-  const agentNodeId = 'agent_finops_pilot';
-  nodeIndexMap[agentNodeId] = nodeIndex;
-  sankeyNodes.push({ 
-    name: 'FinOps Pilot', 
-    type: 'agent', 
-    id: agentNodeId,
-    description: 'AI Agent consuming AWS cost data'
+  otherNodes.forEach(n => {
+    nodeIndexMap[n.id] = nodeIndex;
+    sankeyNodes.push({ name: n.label, type: n.type, id: n.id });
+    nodeIndex++;
   });
-  nodeIndex++;
 
   state.graph.edges.forEach(e => {
     const sourceType = state.graph.nodes.find(n => n.id === e.source)?.type;
@@ -117,16 +114,19 @@ function renderSankey(state) {
     }
   });
 
-  // Connect all ontology nodes to FinOps Pilot agent
-  ontologyNodes.forEach(n => {
-    if (nodeIndexMap[n.id] !== undefined && nodeIndexMap[agentNodeId] !== undefined) {
-      sankeyLinks.push({
-        source: nodeIndexMap[n.id],
-        target: nodeIndexMap[agentNodeId],
-        value: 1,
-        targetType: 'agent'
-      });
-    }
+  // Connect ontology nodes to their consumer agents
+  // This creates the flow from unified ontology to domain agents
+  agentNodes.forEach(agentNode => {
+    ontologyNodes.forEach(ontNode => {
+      if (nodeIndexMap[ontNode.id] !== undefined && nodeIndexMap[agentNode.id] !== undefined) {
+        sankeyLinks.push({
+          source: nodeIndexMap[ontNode.id],
+          target: nodeIndexMap[agentNode.id],
+          value: 1,
+          targetType: 'agent'
+        });
+      }
+    });
   });
 
   const data = {
@@ -284,10 +284,12 @@ function renderSankey(state) {
     .style('font-weight', '500')
     .text(d => d.name);
 
+  // Dynamic title based on agents
+  const agentNames = agentNodes.map(a => a.label).join(', ') || 'Agents';
   svg.append('text')
     .attr('x', 10)
     .attr('y', 20)
     .attr('fill', '#94a3b8')
     .style('font-size', '10px')
-    .text('Data Sources → Tables → Unified Ontology → FinOps Pilot Agent');
+    .text(`Data Sources → Tables → Unified Ontology → ${agentNames}`);
 }

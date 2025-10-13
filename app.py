@@ -10,6 +10,7 @@ from rag_engine import RAGEngine
 
 DB_PATH = "registry.duckdb"
 ONTOLOGY_PATH = "ontology/catalog.yml"
+AGENTS_CONFIG_PATH = "agents/config.yml"
 SCHEMAS_DIR = "schemas"
 CONF_THRESHOLD = 0.70
 AUTO_PUBLISH_PARTIAL = True
@@ -25,6 +26,8 @@ SOURCES_ADDED: List[str] = []
 ENTITY_SOURCES: Dict[str, List[str]] = {}
 AUTO_INGEST_UNMAPPED = False
 ontology = None
+agents_config = None
+SELECTED_AGENTS: List[str] = []
 LLM_CALLS = 0
 LLM_TOKENS = 0
 rag_engine = None
@@ -40,6 +43,14 @@ def log(msg: str):
 def load_ontology():
     with open(ONTOLOGY_PATH, "r") as f:
         return yaml.safe_load(f)
+
+def load_agents_config():
+    try:
+        with open(AGENTS_CONFIG_PATH, "r") as f:
+            return yaml.safe_load(f)
+    except FileNotFoundError:
+        log(f"⚠️ Agents config not found at {AGENTS_CONFIG_PATH}")
+        return {"agents": {}}
 
 def infer_types(df: pd.DataFrame) -> Dict[str, str]:
     mapping = {}
@@ -325,13 +336,45 @@ def apply_plan(con, source_key: str, plan: Dict[str, Any]) -> Scorecard:
     return Scorecard(confidence=conf, blockers=blockers, issues=issues, joins=joins)
 
 def add_graph_nodes_for_source(source_key: str, tables: Dict[str, Any]):
+    global ontology, agents_config, SELECTED_AGENTS
+    
+    # Add source nodes
     for t in tables.keys():
         node_id = f"src_{source_key}_{t}"
         label = f"{t} ({source_key.title()})"
         GRAPH_STATE["nodes"].append({"id": node_id, "label": label, "type": "source"})
-    for ent in ["customer","transaction"]:
+    
+    # Determine which ontology entities to show based on selected agents
+    if not agents_config:
+        agents_config = load_agents_config()
+    
+    ontology_entities = set()
+    if SELECTED_AGENTS:
+        # Get entities consumed by selected agents
+        for agent_id in SELECTED_AGENTS:
+            agent_info = agents_config.get("agents", {}).get(agent_id, {})
+            consumes = agent_info.get("consumes", [])
+            ontology_entities.update(consumes)
+    else:
+        # If no agents selected, show all ontology entities
+        if not ontology:
+            ontology = load_ontology()
+        ontology_entities = set(ontology.get("entities", {}).keys())
+    
+    # Add ontology nodes for entities consumed by selected agents
+    for ent in ontology_entities:
         if not any(n["id"] == f"dcl_{ent}" for n in GRAPH_STATE["nodes"]):
-            GRAPH_STATE["nodes"].append({"id": f"dcl_{ent}", "label": f"{ent.title()} (Unified)", "type": "ontology"})
+            GRAPH_STATE["nodes"].append({"id": f"dcl_{ent}", "label": f"{ent.replace('_', ' ').title()} (Unified)", "type": "ontology"})
+    
+    # Add agent nodes to graph
+    for agent_id in SELECTED_AGENTS:
+        agent_info = agents_config.get("agents", {}).get(agent_id, {})
+        if not any(n["id"] == f"agent_{agent_id}" for n in GRAPH_STATE["nodes"]):
+            GRAPH_STATE["nodes"].append({
+                "id": f"agent_{agent_id}",
+                "label": agent_info.get("name", agent_id.title()),
+                "type": "agent"
+            })
 
 def preview_table(con, name: str, limit: int = 6) -> List[Dict[str,Any]]:
     try:
@@ -476,9 +519,24 @@ def state():
     })
 
 @app.get("/connect")
-def connect(source: str = Query(..., regex="^(dynamics|salesforce|sap|netsuite|legacy_sql|snowflake)$")):
-    res = connect_source(source)
-    return JSONResponse(res)
+def connect(sources: str = Query(...), agents: str = Query(...)):
+    source_list = [s.strip() for s in sources.split(',') if s.strip()]
+    agent_list = [a.strip() for a in agents.split(',') if a.strip()]
+    
+    if not source_list:
+        return JSONResponse({"error": "No sources provided"}, status_code=400)
+    if not agent_list:
+        return JSONResponse({"error": "No agents provided"}, status_code=400)
+    
+    # Store selected agents globally
+    global SELECTED_AGENTS
+    SELECTED_AGENTS = agent_list
+    
+    # Connect each source
+    for source in source_list:
+        connect_source(source)
+    
+    return JSONResponse({"ok": True, "sources": source_list, "agents": agent_list})
 
 @app.get("/reset")
 def reset():
