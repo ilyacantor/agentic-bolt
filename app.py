@@ -515,7 +515,7 @@ def index():
 
 @app.get("/state")
 def state():
-    global RAG_CONTEXT, rag_engine
+    global RAG_CONTEXT, rag_engine, agents_config
     
     # Update total mappings count from RAG engine
     if rag_engine:
@@ -525,6 +525,14 @@ def state():
         except:
             pass
     
+    # Include agent consumption metadata for frontend
+    if not agents_config:
+        agents_config = load_agents_config()
+    
+    agent_consumption = {}
+    for agent_id, agent_info in agents_config.get("agents", {}).items():
+        agent_consumption[agent_id] = agent_info.get("consumes", [])
+    
     return JSONResponse({
         "events": EVENT_LOG,
         "timeline": EVENT_LOG[-5:],
@@ -532,7 +540,8 @@ def state():
         "preview": {"sources": {}, "ontology": {}},
         "llm": {"calls": LLM_CALLS, "tokens": LLM_TOKENS},
         "auto_ingest_unmapped": AUTO_INGEST_UNMAPPED,
-        "rag": RAG_CONTEXT
+        "rag": RAG_CONTEXT,
+        "agent_consumption": agent_consumption
     })
 
 @app.get("/connect")

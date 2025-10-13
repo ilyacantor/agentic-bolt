@@ -114,11 +114,23 @@ function renderSankey(state) {
     }
   });
 
-  // Connect ontology nodes to their consumer agents
-  // This creates the flow from unified ontology to domain agents
+  // Connect ontology nodes to their consumer agents based on agent consumption metadata
+  // Only create links when an agent actually consumes that specific entity
+  const agentConsumption = state.agent_consumption || {};
+  
   agentNodes.forEach(agentNode => {
+    // Extract agent_id from node id (format: agent_revops_pilot -> revops_pilot)
+    const agentId = agentNode.id.replace('agent_', '');
+    const consumedEntities = agentConsumption[agentId] || [];
+    
     ontologyNodes.forEach(ontNode => {
-      if (nodeIndexMap[ontNode.id] !== undefined && nodeIndexMap[agentNode.id] !== undefined) {
+      // Extract entity name from ontology node id (format: dcl_customer -> customer)
+      const entityName = ontNode.id.replace('dcl_', '');
+      
+      // Only create link if this agent consumes this entity
+      if (consumedEntities.includes(entityName) && 
+          nodeIndexMap[ontNode.id] !== undefined && 
+          nodeIndexMap[agentNode.id] !== undefined) {
         sankeyLinks.push({
           source: nodeIndexMap[ontNode.id],
           target: nodeIndexMap[agentNode.id],
