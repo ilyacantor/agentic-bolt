@@ -186,10 +186,15 @@ function renderSankey(state) {
       d3.select(this).attr('stroke-opacity', 0.4);
     })
     .on('click', async (event, d) => {
+      const sourceNodeData = sankeyNodes.find(n => n.name === d.source.name);
       const targetNodeData = sankeyNodes.find(n => n.name === d.target.name);
       if (targetNodeData && targetNodeData.id && targetNodeData.type === 'ontology') {
         const r = await fetch('/preview?node=' + encodeURIComponent(targetNodeData.id));
         const data = await r.json();
+        data.connectionInfo = {
+          from: sourceNodeData?.name || 'Unknown',
+          to: targetNodeData?.name || 'Unknown'
+        };
         const evt = new CustomEvent('sankey-node-click', { detail: data });
         window.dispatchEvent(evt);
       }

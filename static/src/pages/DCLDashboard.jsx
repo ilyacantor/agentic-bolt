@@ -3,7 +3,7 @@ function DCLDashboard(){
     events: [],
     graph: {nodes: [], edges: []},
     llm: {calls: 0, tokens: 0},
-    preview: {sources: {}, ontology: {}},
+    preview: {sources: {}, ontology: {}, connectionInfo: null},
     rag: {retrievals: [], total_mappings: 0, last_retrieval_count: 0}
   });
   const [selectedSource, setSelectedSource] = React.useState('dynamics');
@@ -386,35 +386,47 @@ function DCLDashboard(){
                 <div className="text-[10px] text-slate-400 font-medium mb-1">Unified Preview</div>
                 <div className="text-[9px] max-h-[120px] overflow-y-auto">
                   {Object.keys(state.preview.ontology).length === 0 ? (
-                    <div className="text-slate-600 italic">Click a unified node</div>
+                    <div className="text-slate-600 italic">Click a connection or unified node</div>
                   ) : (
-                    Object.entries(state.preview.ontology).map(([name, rows]) => (
-                      <div key={name} className="mb-2">
-                        <div className="text-slate-400 font-medium mb-0.5">{name}</div>
-                        {rows && rows.length > 0 && (
-                          <div className="bg-slate-900/30 rounded p-1 overflow-x-auto">
-                            <table className="w-full text-[8px]">
-                              <thead>
-                                <tr className="border-b border-slate-800">
-                                  {Object.keys(rows[0]).map(col => (
-                                    <th key={col} className="text-left py-0.5 px-0.5 text-slate-500">{col}</th>
-                                  ))}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {rows.slice(0, 2).map((row, i) => (
-                                  <tr key={i}>
-                                    {Object.values(row).map((val, j) => (
-                                      <td key={j} className="py-0.5 px-0.5 text-slate-400">{val !== null ? String(val).substring(0, 15) : ''}</td>
+                    <>
+                      {state.preview.connectionInfo && (
+                        <div className="mb-3 p-2 bg-teal-900/30 border border-teal-700/50 rounded">
+                          <div className="text-sm font-semibold text-teal-300 mb-1">Data Flow Connection</div>
+                          <div className="text-xs text-slate-300">
+                            <span className="font-medium text-blue-400">{state.preview.connectionInfo.from}</span>
+                            <span className="mx-2 text-slate-500">→</span>
+                            <span className="font-medium text-green-400">{state.preview.connectionInfo.to}</span>
+                          </div>
+                        </div>
+                      )}
+                      {Object.entries(state.preview.ontology).map(([name, rows]) => (
+                        <div key={name} className="mb-2">
+                          <div className="text-slate-400 font-medium mb-0.5">{name}</div>
+                          {rows && rows.length > 0 && (
+                            <div className="bg-slate-900/30 rounded p-1 overflow-x-auto">
+                              <table className="w-full text-[8px]">
+                                <thead>
+                                  <tr className="border-b border-slate-800">
+                                    {Object.keys(rows[0]).map(col => (
+                                      <th key={col} className="text-left py-0.5 px-0.5 text-slate-500">{col}</th>
                                     ))}
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
-                    ))
+                                </thead>
+                                <tbody>
+                                  {rows.slice(0, 2).map((row, i) => (
+                                    <tr key={i}>
+                                      {Object.values(row).map((val, j) => (
+                                        <td key={j} className="py-0.5 px-0.5 text-slate-400">{val !== null ? String(val).substring(0, 15) : ''}</td>
+                                      ))}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </>
                   )}
                 </div>
               </div>
