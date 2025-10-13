@@ -78,6 +78,17 @@ function renderSankey(state) {
     nodeIndex++;
   });
 
+  // Add FinOps Pilot agent as consumer node
+  const agentNodeId = 'agent_finops_pilot';
+  nodeIndexMap[agentNodeId] = nodeIndex;
+  sankeyNodes.push({ 
+    name: 'FinOps Pilot', 
+    type: 'agent', 
+    id: agentNodeId,
+    description: 'AI Agent consuming AWS cost data'
+  });
+  nodeIndex++;
+
   state.graph.edges.forEach(e => {
     const sourceType = state.graph.nodes.find(n => n.id === e.source)?.type;
     const targetType = state.graph.nodes.find(n => n.id === e.target)?.type;
@@ -102,6 +113,18 @@ function renderSankey(state) {
         target: nodeIndexMap[e.target],
         value: 1,
         sourceSystem: linkSourceSystem
+      });
+    }
+  });
+
+  // Connect all ontology nodes to FinOps Pilot agent
+  ontologyNodes.forEach(n => {
+    if (nodeIndexMap[n.id] !== undefined && nodeIndexMap[agentNodeId] !== undefined) {
+      sankeyLinks.push({
+        source: nodeIndexMap[n.id],
+        target: nodeIndexMap[agentNodeId],
+        value: 1,
+        targetType: 'agent'
       });
     }
   });
@@ -171,13 +194,16 @@ function renderSankey(state) {
     .attr('d', d3.sankeyLinkHorizontal())
     .attr('stroke', (d, i) => {
       const originalLink = sankeyLinks[i];
+      if (originalLink && originalLink.targetType === 'agent') {
+        return '#9333ea';  // Purple for agent connections
+      }
       if (originalLink && originalLink.sourceSystem) {
         return sourceColorMap[originalLink.sourceSystem]?.child || '#0bcad9';
       }
       return '#64748b';
     })
     .attr('stroke-width', d => Math.max(1, d.width))
-    .attr('stroke-opacity', 0.4)
+    .attr('stroke-opacity', 0.5)
     .style('cursor', 'pointer')
     .on('mouseover', function() {
       d3.select(this).attr('stroke-opacity', 0.7);
@@ -263,5 +289,5 @@ function renderSankey(state) {
     .attr('y', 20)
     .attr('fill', '#94a3b8')
     .style('font-size', '10px')
-    .text('Data Sources → Tables → Ontology → Agents/Consumers');
+    .text('Data Sources → Tables → Unified Ontology → FinOps Pilot Agent');
 }
