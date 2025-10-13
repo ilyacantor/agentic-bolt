@@ -260,27 +260,66 @@ def llm_propose(ontology: Dict[str, Any], source_key: str, tables: Dict[str, Any
     return result
 
 def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, Any]) -> Dict[str, Any]:
+    global SELECTED_AGENTS, agents_config
+    
+    # Get available ontology entities based on selected agents
+    if not agents_config:
+        agents_config = load_agents_config()
+    
+    available_entities = set()
+    if SELECTED_AGENTS:
+        for agent_id in SELECTED_AGENTS:
+            agent_info = agents_config.get("agents", {}).get(agent_id, {})
+            consumes = agent_info.get("consumes", [])
+            available_entities.update(consumes)
+    else:
+        available_entities = set(ontology.get("entities", {}).keys())
+    
     mappings, joins = [], []
+    # RevOps patterns
     key_fields = ["accountid","AccountId","KUNNR","CustomerID","CUST_ID","entityId","customerid","parentcustomerid","Id","CUST_ID"]
     email_fields = ["email","emailaddress1","Email","EMAIL"]
     amount_fields = ["amount","Amount","NETWR","TotalAmount","estimatedvalue","AMOUNT"]
     date_fields = ["createdon","CreatedDate","CloseDate","ERDAT","ORDER_DATE","tranDate","created_at","CREATED_AT","OrderDate","ORDER_DATE"]
+    # FinOps patterns
+    resource_fields = ["resource_id","resourceId","ResourceId","resource_name","resourceName"]
+    cost_fields = ["cost","monthly_cost","monthlyCost","spend","price","billing_amount"]
+    usage_fields = ["cpuUtilization","memoryUtilization","networkOut","usage","utilization"]
+    
     for tname, info in tables.items():
         cols = list(info["schema"].keys())
+        # RevOps: customer entity
         cust = next((c for c in cols if c in key_fields or c.lower() in ["customer_id","cust_id","id","accountid","account_id"]), None)
         email = next((c for c in cols if c in email_fields or "email" in c.lower()), None)
         amount = next((c for c in cols if c in amount_fields or "amount" in c.lower() or "price" in c.lower()), None)
         datec = next((c for c in cols if c in date_fields or "date" in c.lower()), None)
-        if cust or email:
+        # FinOps: aws_resource, cloud_cost, cloud_usage
+        resource = next((c for c in cols if c in resource_fields or "resource" in c.lower()), None)
+        cost = next((c for c in cols if c in cost_fields or "cost" in c.lower()), None)
+        usage = next((c for c in cols if c in usage_fields or "utilization" in c.lower()), None)
+        
+        # RevOps mappings
+        if (cust or email) and "customer" in available_entities:
             fields = []
             if cust: fields.append({"source": cust, "onto_field": "customer_id", "confidence": 0.85})
             if email: fields.append({"source": email, "onto_field": "email", "confidence": 0.8})
             mappings.append({"entity":"customer","source_table": f"{source_key}_{tname}", "fields": fields})
-        if amount or datec:
+        if (amount or datec) and "transaction" in available_entities:
             fields = []
             if amount: fields.append({"source": amount, "onto_field": "amount", "confidence": 0.82})
             if datec: fields.append({"source": datec, "onto_field": "order_date", "confidence": 0.8})
             mappings.append({"entity":"transaction","source_table": f"{source_key}_{tname}", "fields": fields})
+        
+        # FinOps mappings
+        if resource and "aws_resource" in available_entities:
+            fields = [{"source": resource, "onto_field": "resource_id", "confidence": 0.85}]
+            mappings.append({"entity":"aws_resource","source_table": f"{source_key}_{tname}", "fields": fields})
+        if cost and "cloud_cost" in available_entities:
+            fields = [{"source": cost, "onto_field": "monthly_cost", "confidence": 0.85}]
+            mappings.append({"entity":"cloud_cost","source_table": f"{source_key}_{tname}", "fields": fields})
+        if usage and "cloud_usage" in available_entities:
+            fields = [{"source": usage, "onto_field": "cpuUtilization", "confidence": 0.80}]
+            mappings.append({"entity":"cloud_usage","source_table": f"{source_key}_{tname}", "fields": fields})
     # naive joins on shared key names
     name_to_tables = {}
     for t, info in tables.items():
