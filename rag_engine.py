@@ -43,7 +43,9 @@ class RAGEngine:
         self._ensure_index()
     
     def _ensure_index(self):
-        """Create index if it doesn't exist."""
+        """Create index if it doesn't exist and wait for it to be ready."""
+        import time
+        
         try:
             # Check if index exists
             if self.index_name not in self.pc.list_indexes().names():
@@ -57,15 +59,36 @@ class RAGEngine:
                         region='us-east-1'
                     )
                 )
-                print(f"✅ Created new index: {self.index_name}")
+                print(f"🔄 Created new index: {self.index_name}, waiting for readiness...")
+                
+                # Wait for index to be ready
+                max_wait = 60
+                wait_time = 0
+                while wait_time < max_wait:
+                    desc = self.pc.describe_index(self.index_name)
+                    if desc.status.get('ready', False):
+                        print(f"✅ Index {self.index_name} is ready")
+                        break
+                    time.sleep(2)
+                    wait_time += 2
+                    if wait_time % 10 == 0:
+                        print(f"   Still waiting... ({wait_time}s)")
+                
+                if wait_time >= max_wait:
+                    error_msg = f"Pinecone index '{self.index_name}' did not become ready within {max_wait}s. Cannot proceed with unready index."
+                    print(f"❌ {error_msg}")
+                    raise RuntimeError(error_msg)
             else:
                 print(f"✅ Connected to existing index: {self.index_name}")
             
             # Get index
             self.index = self.pc.Index(self.index_name)
+        except RuntimeError:
+            # Re-raise readiness timeout errors - do not proceed with unready index
+            raise
         except Exception as e:
             print(f"⚠️  Error with index: {e}")
-            # If index exists but had error, try to connect anyway
+            # For other errors, try to connect anyway (index might exist but had temporary issue)
             self.index = self.pc.Index(self.index_name)
     
     def _create_field_signature(self, field_name: str, field_type: str, 
