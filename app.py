@@ -353,10 +353,18 @@ def apply_plan(con, source_key: str, plan: Dict[str, Any]) -> Scorecard:
         try:
             con.sql(f"CREATE OR REPLACE VIEW {view_name} AS SELECT {', '.join(selects)} FROM {src_table}")
             per_entity_views.setdefault(ent, []).append(view_name)
-            # Only create edge if the target ontology node exists in the graph
+            
+            # Create ontology node if it doesn't exist yet (only when we have actual data mapping to it)
             target_node_id = f"dcl_{ent}"
-            if any(n["id"] == target_node_id for n in GRAPH_STATE["nodes"]):
-                GRAPH_STATE["edges"].append({"source": src_table, "target": target_node_id, "label": f"{m['source_table']} → {ent}", "type": "mapping"})
+            if not any(n["id"] == target_node_id for n in GRAPH_STATE["nodes"]):
+                GRAPH_STATE["nodes"].append({
+                    "id": target_node_id,
+                    "label": f"{ent.replace('_', ' ').title()} (Unified)",
+                    "type": "ontology"
+                })
+            
+            # Create edge from source to ontology
+            GRAPH_STATE["edges"].append({"source": src_table, "target": target_node_id, "label": f"{m['source_table']} → {ent}", "type": "mapping"})
         except Exception as e:
             blockers.append(f"{ent}: failed view {view_name}: {e}")
     for ent, views in per_entity_views.items():
@@ -386,29 +394,13 @@ def add_graph_nodes_for_source(source_key: str, tables: Dict[str, Any]):
         label = f"{t} ({source_key.title()})"
         GRAPH_STATE["nodes"].append({"id": node_id, "label": label, "type": "source"})
     
-    # Determine which ontology entities to show based on selected agents
-    if not agents_config:
-        agents_config = load_agents_config()
-    
-    ontology_entities = set()
-    if SELECTED_AGENTS:
-        # Get entities consumed by selected agents
-        for agent_id in SELECTED_AGENTS:
-            agent_info = agents_config.get("agents", {}).get(agent_id, {})
-            consumes = agent_info.get("consumes", [])
-            ontology_entities.update(consumes)
-    else:
-        # If no agents selected, show all ontology entities
-        if not ontology:
-            ontology = load_ontology()
-        ontology_entities = set(ontology.get("entities", {}).keys())
-    
-    # Add ontology nodes for entities consumed by selected agents
-    for ent in ontology_entities:
-        if not any(n["id"] == f"dcl_{ent}" for n in GRAPH_STATE["nodes"]):
-            GRAPH_STATE["nodes"].append({"id": f"dcl_{ent}", "label": f"{ent.replace('_', ' ').title()} (Unified)", "type": "ontology"})
+    # Note: Ontology nodes will be added dynamically in apply_plan() 
+    # only when they actually receive data from sources
     
     # Add agent nodes to graph
+    if not agents_config:
+        agents_config = load_agents_config()
+        
     for agent_id in SELECTED_AGENTS:
         agent_info = agents_config.get("agents", {}).get(agent_id, {})
         if not any(n["id"] == f"agent_{agent_id}" for n in GRAPH_STATE["nodes"]):
@@ -583,7 +575,8 @@ def state():
         "llm": {"calls": LLM_CALLS, "tokens": LLM_TOKENS},
         "auto_ingest_unmapped": AUTO_INGEST_UNMAPPED,
         "rag": RAG_CONTEXT,
-        "agent_consumption": agent_consumption
+        "agent_consumption": agent_consumption,
+        "selected_agents": SELECTED_AGENTS
     })
 
 @app.get("/connect")
