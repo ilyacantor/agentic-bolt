@@ -765,6 +765,12 @@ def preview(node: Optional[str] = None):
             ontology_tables[f"dcl_{ent}"] = preview_table(con, f"dcl_{ent}")
     return JSONResponse({"sources": sources, "ontology": ontology_tables})
 
+@app.get("/source_schemas")
+def source_schemas():
+    """Return complete schema information for all connected sources."""
+    global SOURCE_SCHEMAS
+    return JSONResponse(SOURCE_SCHEMAS)
+
 @app.get("/toggle_auto_ingest")
 def toggle_auto_ingest(enabled: bool = Query(...)):
     global AUTO_INGEST_UNMAPPED
