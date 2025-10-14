@@ -289,7 +289,7 @@ function OntologyMapping() {
               <div className="bg-blue-900/10 border border-blue-800/30 rounded-lg px-4 py-3">
                 <div className="text-2xl font-bold text-blue-400">{sourceNodes.length}</div>
                 <div className="text-xs text-slate-500">Source Tables</div>
-                <div className="text-xs text-slate-600 mt-1">{consumedMappingEdges.length} fields consumed</div>
+                <div className="text-xs text-slate-600 mt-1">{uniqueSourceFields.size} fields consumed</div>
               </div>
               <div className="bg-green-900/10 border border-green-800/30 rounded-lg px-4 py-3">
                 <div className="text-2xl font-bold text-green-400">{Object.keys(consumedOntologyMappings).length}</div>
