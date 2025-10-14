@@ -656,7 +656,8 @@ def connect_source(source_key: str) -> Dict[str, Any]:
     elif AUTO_PUBLISH_PARTIAL and not score.blockers:
         log(f"I applied the mappings, but with some issues: {score.issues}")
     else:
-        log("I paused because of blockers and did not publish.")
+        blockers_msg = "; ".join(score.blockers) if score.blockers else "Unknown blockers"
+        log(f"I paused because of blockers and did not publish. Blockers: {blockers_msg}")
     previews = {"sources": {}, "ontology": {}}
     for t in tables.keys():
         previews["sources"][f"src_{source_key}_{t}"] = preview_table(con, f"src_{source_key}_{t}")
