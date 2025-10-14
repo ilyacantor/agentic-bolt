@@ -10,6 +10,7 @@ function DCLDashboard(){
   const [selectedAgents, setSelectedAgents] = React.useState(['finops_pilot']);
   const [processState, setProcessState] = React.useState({ active: false, stage: '', progress: 0, complete: false });
   const [viewType, setViewType] = React.useState('cytoscape');
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = React.useState(false);
   const cyRef = React.useRef(null);
 
   React.useEffect(()=>{
@@ -204,9 +205,28 @@ function DCLDashboard(){
       <div className="grid grid-cols-12 gap-5 max-w-[1400px] mx-auto">
         
         {/* Left Sidebar - Connectors */}
-        <div className="col-span-12 lg:col-span-3 space-y-4">
-          <div className="card">
-            <div className="card-title mb-3">Data Sources</div>
+        <div className={`col-span-12 ${leftPanelCollapsed ? 'lg:col-span-1' : 'lg:col-span-3'} space-y-4 transition-all duration-300`}>
+          {/* Collapse/Expand Button */}
+          <button
+            onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
+            className="w-full bg-slate-800 hover:bg-slate-700 rounded-lg p-2 flex items-center justify-center gap-2 text-slate-300 hover:text-white transition-colors"
+            title={leftPanelCollapsed ? "Expand panel" : "Collapse panel"}
+          >
+            <svg 
+              className={`w-4 h-4 transition-transform duration-300 ${leftPanelCollapsed ? 'rotate-180' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            </svg>
+            {!leftPanelCollapsed && <span className="text-sm font-medium">Collapse</span>}
+          </button>
+          
+          {!leftPanelCollapsed && (
+            <>
+              <div className="card">
+                <div className="card-title mb-3">Data Sources</div>
             <div className="space-y-2 mb-3">
               {sources.map(s => (
                 <label key={s.value} className="flex items-center gap-2 cursor-pointer group">
@@ -320,10 +340,12 @@ function DCLDashboard(){
           <button onClick={resetDemo} className="w-full bg-red-900 hover:bg-red-800 rounded-lg py-2 text-sm">
             Reset Demo
           </button>
+            </>
+          )}
         </div>
 
         {/* Center - Graph */}
-        <div className="col-span-12 lg:col-span-6 card">
+        <div className={`col-span-12 ${leftPanelCollapsed ? 'lg:col-span-8' : 'lg:col-span-6'} card transition-all duration-300`}>
           <div className="flex items-center justify-between mb-3">
             <div className="card-title">Data Flow Graph</div>
             <div className="flex items-center gap-2">
