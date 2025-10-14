@@ -106,14 +106,7 @@ function renderSankey(state) {
     }
   });
 
-  // Add agent nodes from graph state
-  const agentNodes = state.graph.nodes.filter(n => n.type === 'agent');
-  agentNodes.forEach(n => {
-    nodeIndexMap[n.id] = nodeIndex;
-    sankeyNodes.push({ name: n.label, type: n.type, id: n.id });
-    nodeIndex++;
-  });
-
+  // Add agent nodes and other nodes (agents are already in otherNodes)
   otherNodes.forEach(n => {
     nodeIndexMap[n.id] = nodeIndex;
     sankeyNodes.push({ name: n.label, type: n.type, id: n.id });
