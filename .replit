@@ -13,7 +13,7 @@ externalPort = 80
 
 [deployment]
 deploymentTarget = "vm"
-run = ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000"]
+run = ["sh", "-c", "./start.sh"]
 build = ["pip", "install", "--no-cache-dir", "-r", "requirements.txt"]
 
 [workflows]
