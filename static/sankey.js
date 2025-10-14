@@ -36,36 +36,6 @@ function renderSankey(state) {
     }
   });
 
-  Object.keys(sourceGroups).forEach(sourceSystem => {
-    const parentNodeName = sourceSystem.charAt(0).toUpperCase() + sourceSystem.slice(1).replace(/_/g, ' ');
-    const parentNodeId = `parent_${sourceSystem}`;
-    nodeIndexMap[parentNodeId] = nodeIndex;
-    sankeyNodes.push({ 
-      name: parentNodeName, 
-      type: 'source_parent',
-      id: parentNodeId,
-      sourceSystem: sourceSystem
-    });
-    nodeIndex++;
-
-    sourceGroups[sourceSystem].forEach(table => {
-      nodeIndexMap[table.id] = nodeIndex;
-      sankeyNodes.push({ 
-        name: table.tableName, 
-        type: 'source',
-        id: table.id,
-        sourceSystem: sourceSystem
-      });
-      sankeyLinks.push({
-        source: nodeIndexMap[parentNodeId],
-        target: nodeIndexMap[table.id],
-        value: 1,
-        sourceSystem: sourceSystem
-      });
-      nodeIndex++;
-    });
-  });
-
   // First pass: identify which ontology entities are consumed by agents
   const consumedOntologyIds = new Set();
   state.graph.edges.forEach(e => {
@@ -75,6 +45,55 @@ function renderSankey(state) {
     // If edge is from ontology to agent, mark the ontology entity as consumed
     if (sourceType === 'ontology' && targetType === 'agent') {
       consumedOntologyIds.add(e.source);
+    }
+  });
+
+  // Second pass: identify which source nodes have edges to consumed ontology entities
+  const usefulSourceIds = new Set();
+  state.graph.edges.forEach(e => {
+    const sourceType = state.graph.nodes.find(n => n.id === e.source)?.type;
+    const targetType = state.graph.nodes.find(n => n.id === e.target)?.type;
+    
+    // If edge is from source to consumed ontology, mark the source as useful
+    if (sourceType === 'source' && targetType === 'ontology' && consumedOntologyIds.has(e.target)) {
+      usefulSourceIds.add(e.source);
+    }
+  });
+
+  // Only add source nodes that have useful mappings
+  Object.keys(sourceGroups).forEach(sourceSystem => {
+    // Filter to only include tables that have useful mappings
+    const usefulTables = sourceGroups[sourceSystem].filter(table => usefulSourceIds.has(table.id));
+    
+    // Only add parent node if there are useful tables
+    if (usefulTables.length > 0) {
+      const parentNodeName = sourceSystem.charAt(0).toUpperCase() + sourceSystem.slice(1).replace(/_/g, ' ');
+      const parentNodeId = `parent_${sourceSystem}`;
+      nodeIndexMap[parentNodeId] = nodeIndex;
+      sankeyNodes.push({ 
+        name: parentNodeName, 
+        type: 'source_parent',
+        id: parentNodeId,
+        sourceSystem: sourceSystem
+      });
+      nodeIndex++;
+
+      usefulTables.forEach(table => {
+        nodeIndexMap[table.id] = nodeIndex;
+        sankeyNodes.push({ 
+          name: table.tableName, 
+          type: 'source',
+          id: table.id,
+          sourceSystem: sourceSystem
+        });
+        sankeyLinks.push({
+          source: nodeIndexMap[parentNodeId],
+          target: nodeIndexMap[table.id],
+          value: 1,
+          sourceSystem: sourceSystem
+        });
+        nodeIndex++;
+      });
     }
   });
 
