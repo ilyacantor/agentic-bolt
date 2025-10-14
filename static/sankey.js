@@ -367,9 +367,9 @@ function renderSankey(state) {
     const textY = (d.y1 + d.y0) / 2;
     const padding = 4;
     
-    // Source parent or source table nodes with type-specific colors
-    if (nodeData && (nodeData.type === 'source_parent' || nodeData.type === 'source') && typeInfo) {
-      const textWidth = d.name.length * 6.5;
+    // Source parent nodes (data sources) with icons and type-specific colors
+    if (nodeData && nodeData.type === 'source_parent' && typeInfo) {
+      const textWidth = d.name.length * 6.5 + 18;
       const rectWidth = textWidth + padding * 2;
       const rectHeight = 18;
       
@@ -385,12 +385,48 @@ function renderSankey(state) {
         .attr('opacity', 0.7);
       
       group.append('text')
+        .attr('x', isLeft ? textX + 2 : textX - rectWidth + padding + 2)
+        .attr('y', textY)
+        .attr('dy', '0.35em')
+        .attr('text-anchor', 'start')
+        .attr('fill', '#e2e8f0')
+        .style('font-size', '10px')
+        .text(typeInfo.icon);
+      
+      group.append('text')
+        .attr('x', isLeft ? textX + 18 : textX - rectWidth + padding + 18)
+        .attr('y', textY)
+        .attr('dy', '0.35em')
+        .attr('text-anchor', 'start')
+        .attr('fill', '#e2e8f0')
+        .style('font-size', '9px')
+        .style('font-weight', '600')
+        .text(d.name);
+    }
+    // Source table/field nodes - smaller with tighter boxes
+    else if (nodeData && nodeData.type === 'source' && typeInfo) {
+      const textWidth = d.name.length * 5;
+      const rectWidth = textWidth + padding * 2;
+      const rectHeight = 14;
+      
+      group.append('rect')
+        .attr('x', isLeft ? textX - padding : textX - rectWidth + padding)
+        .attr('y', textY - rectHeight / 2)
+        .attr('width', rectWidth)
+        .attr('height', rectHeight)
+        .attr('rx', 3)
+        .attr('fill', typeInfo.bgColor)
+        .attr('stroke', typeInfo.borderColor)
+        .attr('stroke-width', 0.5)
+        .attr('opacity', 0.7);
+      
+      group.append('text')
         .attr('x', isLeft ? textX + padding : textX - padding)
         .attr('y', textY)
         .attr('dy', '0.35em')
         .attr('text-anchor', isLeft ? 'start' : 'end')
         .attr('fill', '#e2e8f0')
-        .style('font-size', '9px')
+        .style('font-size', '8px')
         .style('font-weight', '600')
         .text(d.name);
     } 
@@ -421,18 +457,18 @@ function renderSankey(state) {
         .style('font-weight', '700')
         .text(d.name);
     }
-    // Ontology nodes with green boxes
+    // Ontology nodes - smaller with tighter green boxes
     else {
-      const textWidth = d.name.length * 7;
+      const textWidth = d.name.length * 5.5;
       const rectWidth = textWidth + padding * 2;
-      const rectHeight = 18;
+      const rectHeight = 14;
       
       group.append('rect')
         .attr('x', isLeft ? textX - padding : textX - rectWidth + padding)
         .attr('y', textY - rectHeight / 2)
         .attr('width', rectWidth)
         .attr('height', rectHeight)
-        .attr('rx', 4)
+        .attr('rx', 3)
         .attr('fill', '#14532d')
         .attr('stroke', '#16a34a')
         .attr('stroke-width', 0.5)
@@ -444,7 +480,7 @@ function renderSankey(state) {
         .attr('dy', '0.35em')
         .attr('text-anchor', isLeft ? 'start' : 'end')
         .attr('fill', '#e2e8f0')
-        .style('font-size', '10px')
+        .style('font-size', '8px')
         .style('font-weight', '500')
         .text(d.name);
     }
