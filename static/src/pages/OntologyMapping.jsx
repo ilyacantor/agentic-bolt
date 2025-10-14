@@ -29,27 +29,32 @@ function OntologyMapping() {
   // Build source structure: group by source system
   const sourceStructure = {};
   sourceNodes.forEach(node => {
+    if (!node?.id) return;
     const parts = node.id.split('_'); // src_snowflake_AWS_RESOURCES
-    const sourceSystem = parts[1];
-    const tableName = parts.slice(2).join('_');
+    const sourceSystem = parts[1] || 'unknown';
+    const tableName = parts.slice(2).join('_') || 'Unknown';
     if (!sourceStructure[sourceSystem]) {
       sourceStructure[sourceSystem] = [];
     }
-    sourceStructure[sourceSystem].push({ id: node.id, table: tableName, label: node.label });
+    sourceStructure[sourceSystem].push({ 
+      id: node.id, 
+      table: tableName, 
+      label: node?.label || tableName 
+    });
   });
 
   // Build ontology mappings: which sources map to which ontology entities
   const ontologyMappings = {};
   ontologyNodes.forEach(onto => {
-    const incomingEdges = mappingEdges.filter(e => e.target === onto.id);
-    const outgoingEdges = consumptionEdges.filter(e => e.source === onto.id);
+    const incomingEdges = mappingEdges.filter(e => e?.target === onto?.id) || [];
+    const outgoingEdges = consumptionEdges.filter(e => e?.source === onto?.id) || [];
     ontologyMappings[onto.id] = {
-      label: onto.label,
+      label: onto?.label || 'Unknown',
       sources: incomingEdges.map(e => ({
-        sourceId: e.source,
-        label: e.label
-      })),
-      consumedBy: outgoingEdges.map(e => e.target)
+        sourceId: e?.source || '',
+        label: e?.label || 'Unknown mapping'
+      })) || [],
+      consumedBy: outgoingEdges.map(e => e?.target) || []
     };
   });
 
@@ -57,13 +62,13 @@ function OntologyMapping() {
   const agentConsumption = {};
   agentNodes.forEach(agent => {
     const consumedEntities = consumptionEdges
-      .filter(e => e.target === agent.id)
+      .filter(e => e?.target === agent?.id)
       .map(e => ({
-        ontoId: e.source,
-        label: e.label
-      }));
+        ontoId: e?.source || '',
+        label: e?.label || 'Unknown entity'
+      })) || [];
     agentConsumption[agent.id] = {
-      label: agent.label,
+      label: agent?.label || 'Unknown agent',
       entities: consumedEntities
     };
   });
@@ -127,8 +132,8 @@ function OntologyMapping() {
                 {Object.entries(ontologyMappings).map(([ontoId, onto]) => (
                   <div key={ontoId}>
                     <div className="bg-green-900/20 border border-green-800/50 rounded-lg px-3 py-2">
-                      <div className="text-sm font-semibold text-green-400 mb-2">{onto.label}</div>
-                      {onto.sources.length > 0 ? (
+                      <div className="text-sm font-semibold text-green-400 mb-2">{onto?.label || 'Unknown'}</div>
+                      {onto?.sources && onto.sources.length > 0 ? (
                         <div className="space-y-1">
                           {onto.sources.map((src, i) => (
                             <div key={i} className="text-xs text-slate-400 flex items-center gap-1">
@@ -157,12 +162,12 @@ function OntologyMapping() {
               <div className="space-y-3">
                 {agentNodes.length > 0 ? (
                   agentNodes.map(agent => {
-                    const consumption = agentConsumption[agent.id] || { label: agent.label, entities: [] };
+                    const consumption = agentConsumption[agent?.id] || { label: agent?.label || 'Unknown', entities: [] };
                     return (
-                      <div key={agent.id}>
+                      <div key={agent?.id || Math.random()}>
                         <div className="bg-purple-900/20 border border-purple-800/50 rounded-lg px-3 py-2">
-                          <div className="text-sm font-semibold text-purple-400 mb-2">{consumption.label}</div>
-                          {consumption.entities.length > 0 ? (
+                          <div className="text-sm font-semibold text-purple-400 mb-2">{consumption?.label || 'Unknown Agent'}</div>
+                          {consumption?.entities && consumption.entities.length > 0 ? (
                             <div className="space-y-1">
                               {consumption.entities.map((ent, i) => {
                                 const ontoNode = ontologyNodes.find(n => n.id === ent.ontoId);
