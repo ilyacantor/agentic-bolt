@@ -119,6 +119,24 @@ function FAQ() {
                 result in lower confidence scores.
               </p>
             </div>
+            <div>
+              <h3 className="text-md font-semibold text-white mb-2">What does the Prod Mode toggle do?</h3>
+              <p className="text-slate-300 text-sm leading-relaxed mb-2">
+                The Prod Mode toggle controls how the DCL maps data sources to the ontology:
+              </p>
+              <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
+                <div>
+                  <span className="inline-block px-2 py-0.5 bg-green-600 text-white text-xs font-semibold rounded mr-2">ON</span>
+                  <span className="text-slate-300 text-sm">Uses AI/RAG mapping with Gemini API and Pinecone for intelligent, context-aware schema mapping. 
+                  Learns from historical mappings for higher accuracy but requires API keys.</span>
+                </div>
+                <div>
+                  <span className="inline-block px-2 py-0.5 bg-slate-600 text-white text-xs font-semibold rounded mr-2">OFF</span>
+                  <span className="text-slate-300 text-sm">Uses heuristic-only mapping with deterministic rules. 
+                  Faster, no external API dependencies, good for production environments where you want predictable behavior without AI costs.</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
