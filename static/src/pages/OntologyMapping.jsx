@@ -4,6 +4,8 @@ function OntologyMapping() {
     selected_sources: [],
     selected_agents: []
   });
+  
+  const [sourceSchemas, setSourceSchemas] = React.useState({});
 
   React.useEffect(() => {
     const fetchState = async () => {
@@ -13,6 +15,17 @@ function OntologyMapping() {
     };
     fetchState();
     const interval = setInterval(fetchState, 2000);
+    return () => clearInterval(interval);
+  }, []);
+  
+  React.useEffect(() => {
+    const fetchSchemas = async () => {
+      const res = await fetch('/source_schemas');
+      const data = await res.json();
+      setSourceSchemas(data);
+    };
+    fetchSchemas();
+    const interval = setInterval(fetchSchemas, 2000);
     return () => clearInterval(interval);
   }, []);
 
@@ -111,32 +124,50 @@ function OntologyMapping() {
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-4">
-            {/* Column 1: Source Structure */}
+            {/* Column 1: Source Structure - ALL Fields with Highlighting */}
             <div className="card">
               <div className="card-title mb-3 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                 Incoming Source Structure
               </div>
               <div className="space-y-4">
-                {Object.entries(sourceStructure).map(([source, tables]) => (
+                {Object.entries(sourceSchemas).map(([source, tables]) => (
                   <div key={source}>
                     <div className="text-sm font-semibold text-blue-400 mb-2 uppercase">{source}</div>
-                    {tables && tables.map(tbl => {
-                      const tableMappings = consumedMappingEdges.filter(e => e?.source === tbl?.id);
-                      if (tableMappings.length === 0) return null; // Hide tables with no consumed fields
+                    {Object.entries(tables).map(([tableName, tableInfo]) => {
+                      const sourceId = `src_${source}_${tableName}`;
+                      const schema = tableInfo?.schema || {};
+                      const allFields = Object.keys(schema);
+                      
+                      // Get consumed field labels for this table
+                      const consumedFieldLabels = new Set(
+                        consumedMappingEdges
+                          .filter(e => e?.source === sourceId)
+                          .map(e => e?.label?.split(' → ')[0]?.trim())
+                          .filter(Boolean)
+                      );
+                      
                       return (
-                        <div key={tbl?.id || Math.random()} className="mb-2">
+                        <div key={tableName} className="mb-2">
                           <div className="bg-blue-900/20 border border-blue-800/50 rounded-lg px-3 py-2">
-                            <div className="text-sm font-medium text-blue-300 mb-2">{tbl?.table || 'Unknown'}</div>
-                            <div className="space-y-1">
-                              {tableMappings.map((edge, i) => (
-                                <div key={i} className="text-xs text-slate-400 flex items-center gap-1">
-                                  <svg className="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                  <span className="truncate">{edge?.label || 'Unknown field'}</span>
-                                </div>
-                              ))}
+                            <div className="text-sm font-medium text-blue-300 mb-2">{tableName}</div>
+                            <div className="space-y-1 max-h-48 overflow-y-auto">
+                              {allFields.map((field, i) => {
+                                const isConsumed = consumedFieldLabels.has(field);
+                                return (
+                                  <div key={i} className={`text-xs flex items-center gap-1 ${isConsumed ? 'text-green-400 font-medium' : 'text-slate-500'}`}>
+                                    {isConsumed ? (
+                                      <svg className="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                    ) : (
+                                      <div className="w-3 h-3 flex-shrink-0"></div>
+                                    )}
+                                    <span className="truncate">{field}</span>
+                                    <span className="text-[10px] text-slate-600 ml-auto flex-shrink-0">({schema[field]})</span>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
