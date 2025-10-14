@@ -177,34 +177,15 @@ function renderSankey(state) {
   const sankey = d3.sankey()
     .nodeWidth(20)
     .nodePadding(30)
+    .nodeAlign(d3.sankeyCenter)  // Center alignment for better vertical positioning
     .extent([[1, 1], [width - 1, height - 6]]);
 
-  const { nodes, links } = sankey({
+  const graph = sankey({
     nodes: data.nodes.map(d => Object.assign({}, d)),
     links: data.links.map(d => Object.assign({}, d))
   });
 
-  // Center agent nodes vertically
-  const agentNodesInSankey = nodes.filter(n => {
-    const nodeData = sankeyNodes.find(sn => sn.name === n.name);
-    return nodeData && nodeData.type === 'agent';
-  });
-  
-  if (agentNodesInSankey.length > 0) {
-    // Calculate total height of all agent nodes including padding
-    const totalAgentHeight = agentNodesInSankey.reduce((sum, n) => sum + (n.y1 - n.y0), 0);
-    const totalPadding = (agentNodesInSankey.length - 1) * 30; // 30px padding between agents
-    const centerY = (height - totalAgentHeight - totalPadding) / 2;
-    
-    // Reposition agents to be centered
-    let currentY = centerY;
-    agentNodesInSankey.forEach(node => {
-      const nodeHeight = node.y1 - node.y0;
-      node.y0 = currentY;
-      node.y1 = currentY + nodeHeight;
-      currentY += nodeHeight + 30; // 30px padding
-    });
-  }
+  const { nodes, links } = graph;
 
   const sourceColorMap = {
     dynamics: { parent: '#3b82f6', child: '#60a5fa' },
