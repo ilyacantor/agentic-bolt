@@ -81,10 +81,10 @@ function OntologyMapping() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Ontology Mapping View</h2>
           <div className="text-sm text-slate-400">
-            {state.selected_sources.length > 0 && (
+            {state?.selected_sources && state.selected_sources.length > 0 && (
               <span>Sources: {state.selected_sources.join(', ')} • </span>
             )}
-            {state.selected_agents.length > 0 && (
+            {state?.selected_agents && state.selected_agents.length > 0 && (
               <span>Agents: {state.selected_agents.map(a => a.replace('_', ' ')).join(', ')}</span>
             )}
           </div>
@@ -107,12 +107,12 @@ function OntologyMapping() {
                 {Object.entries(sourceStructure).map(([source, tables]) => (
                   <div key={source}>
                     <div className="text-sm font-semibold text-blue-400 mb-2 uppercase">{source}</div>
-                    {tables.map(tbl => (
-                      <div key={tbl.id} className="mb-2">
+                    {tables && tables.map(tbl => (
+                      <div key={tbl?.id || Math.random()} className="mb-2">
                         <div className="bg-blue-900/20 border border-blue-800/50 rounded-lg px-3 py-2">
-                          <div className="text-sm font-medium text-blue-300">{tbl.table}</div>
+                          <div className="text-sm font-medium text-blue-300">{tbl?.table || 'Unknown'}</div>
                           <div className="text-xs text-slate-500 mt-1">
-                            {mappingEdges.filter(e => e.source === tbl.id).length} fields mapped
+                            {mappingEdges.filter(e => e?.source === tbl?.id).length} fields mapped
                           </div>
                         </div>
                       </div>
