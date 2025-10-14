@@ -751,6 +751,19 @@ def reset_demo():
 
 app = FastAPI()
 
+# Middleware for API usage logging
+@app.middleware("http")
+async def log_api_usage(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    
+    # Log API calls (exclude static file requests)
+    if not request.url.path.startswith("/static"):
+        log(f"📊 API: {request.method} {request.url.path} - {response.status_code} ({process_time:.2f}s)")
+    
+    return response
+
 # Custom route for JSX files with no-cache headers to force browser refresh
 @app.get("/static/src/{filepath:path}")
 async def serve_jsx_nocache(filepath: str):

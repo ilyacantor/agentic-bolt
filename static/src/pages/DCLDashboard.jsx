@@ -74,6 +74,14 @@ function DCLDashboard(){
       return;
     }
     
+    // Track Connect & Map action
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'connect_and_map', {
+        event_category: 'User Action',
+        event_label: `${selectedSources.length} sources, ${selectedAgents.length} agents`
+      });
+    }
+    
     setProcessState({ active: true, stage: 'Connecting to data sources...', progress: 20, complete: false });
     
     try {
@@ -96,15 +104,31 @@ function DCLDashboard(){
   }
 
   function toggleSource(value) {
-    setSelectedSources(prev => 
-      prev.includes(value) ? prev.filter(s => s !== value) : [...prev, value]
-    );
+    setSelectedSources(prev => {
+      const newSelection = prev.includes(value) ? prev.filter(s => s !== value) : [...prev, value];
+      // Track source selection
+      if (!prev.includes(value) && typeof gtag !== 'undefined') {
+        gtag('event', 'select_source', {
+          event_category: 'Data Source',
+          event_label: value
+        });
+      }
+      return newSelection;
+    });
   }
 
   function toggleAgent(value) {
-    setSelectedAgents(prev => 
-      prev.includes(value) ? prev.filter(a => a !== value) : [...prev, value]
-    );
+    setSelectedAgents(prev => {
+      const newSelection = prev.includes(value) ? prev.filter(a => a !== value) : [...prev, value];
+      // Track agent selection
+      if (!prev.includes(value) && typeof gtag !== 'undefined') {
+        gtag('event', 'select_agent', {
+          event_category: 'Agent',
+          event_label: value
+        });
+      }
+      return newSelection;
+    });
   }
 
   function checkAllSources() {
