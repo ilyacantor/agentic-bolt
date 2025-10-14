@@ -362,11 +362,12 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
             if cust: fields.append({"source": cust, "onto_field": "customer_id", "confidence": 0.85})
             if email: fields.append({"source": email, "onto_field": "email", "confidence": 0.8})
             mappings.append({"entity":"customer","source_table": f"{source_key}_{tname}", "fields": fields})
-        if (amount or datec) and "transaction" in available_entities:
+        if (amount or datec) and "opportunity" in available_entities:
             fields = []
             if amount: fields.append({"source": amount, "onto_field": "amount", "confidence": 0.82})
-            if datec: fields.append({"source": datec, "onto_field": "order_date", "confidence": 0.8})
-            mappings.append({"entity":"transaction","source_table": f"{source_key}_{tname}", "fields": fields})
+            if datec: fields.append({"source": datec, "onto_field": "close_date", "confidence": 0.8})
+            if cust: fields.append({"source": cust, "onto_field": "customer_id", "confidence": 0.85})
+            mappings.append({"entity":"opportunity","source_table": f"{source_key}_{tname}", "fields": fields})
         
         # FinOps mappings - aws_resource (config fields)
         if (resource or instance_type or vcpus or db_engine) and "aws_resource" in available_entities:
