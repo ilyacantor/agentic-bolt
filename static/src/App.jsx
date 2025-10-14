@@ -15,7 +15,7 @@ function App(){
     case '/pipeline': Page = <Pipeline/>; break;
     case '/command': Page = <CommandCenter/>; break;
     case '/faq': Page = <FAQ/>; break;
-    default: Page = <div className="p-6">Not found</div>;
+    default: Page = <DCLDashboard/>;
   }
 
   return (
