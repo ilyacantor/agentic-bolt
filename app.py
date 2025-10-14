@@ -479,12 +479,18 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
     return {"mappings": mappings, "joins": joins}
 
 def apply_plan(con, source_key: str, plan: Dict[str, Any]) -> Scorecard:
+    global STATE_LOCK
     issues, blockers, joins = [], [], []
     confs = []
     per_entity_views = {}
+    
+    # Build graph updates (nodes and edges) to apply atomically
+    nodes_to_add = []
+    edges_to_add = []
+    entities_to_update = []
+    
     for m in plan.get("mappings", []):
         ent = m["entity"]
-        src_table = f"src_{m['source_table']}"
         selects = []
         for f in m["fields"]:
             onto = f["onto_field"]
@@ -493,47 +499,73 @@ def apply_plan(con, source_key: str, plan: Dict[str, Any]) -> Scorecard:
             selects.append(f"{src} AS {onto}")
         if not selects:
             continue
-        table_suffix = m['source_table'].split('_',1)[1] if '_' in m['source_table'] else m['source_table']
-        view_name = f"dcl_{ent}_{source_key}_{table_suffix}"
-        src_table = f"src_{source_key}_{table_suffix}" if '_' not in m['source_table'] else f"src_{m['source_table']}"
+        
+        # Extract the raw table name from LLM's source_table (which may or may not have source_key prefix)
+        raw_table = m['source_table']
+        if raw_table.startswith(f"{source_key}_"):
+            # LLM already prefixed it
+            table_name = raw_table[len(source_key)+1:]
+        else:
+            # LLM returned just the table name
+            table_name = raw_table
+        
+        view_name = f"dcl_{ent}_{source_key}_{table_name}"
+        src_table = f"src_{source_key}_{table_name}"
         try:
             con.sql(f"CREATE OR REPLACE VIEW {view_name} AS SELECT {', '.join(selects)} FROM {src_table}")
             per_entity_views.setdefault(ent, []).append(view_name)
             
-            # Create ontology node if it doesn't exist yet (only when we have actual data mapping to it)
+            # Prepare ontology node (will check for existence when adding)
             target_node_id = f"dcl_{ent}"
-            if not any(n["id"] == target_node_id for n in GRAPH_STATE["nodes"]):
-                GRAPH_STATE["nodes"].append({
-                    "id": target_node_id,
-                    "label": f"{ent.replace('_', ' ').title()} (Unified)",
-                    "type": "ontology"
-                })
+            nodes_to_add.append({
+                "id": target_node_id,
+                "label": f"{ent.replace('_', ' ').title()} (Unified)",
+                "type": "ontology"
+            })
             
-            # Create edge from source to ontology with field-level mappings
-            GRAPH_STATE["edges"].append({
+            # Prepare edge from source to ontology
+            edges_to_add.append({
                 "source": src_table, 
                 "target": target_node_id, 
                 "label": f"{m['source_table']} → {ent}", 
                 "type": "mapping",
-                "field_mappings": m.get("fields", [])  # Store field-level mappings
+                "field_mappings": m.get("fields", [])
             })
         except Exception as e:
             blockers.append(f"{ent}: failed view {view_name}: {e}")
+    
     for ent, views in per_entity_views.items():
         union_sql = " UNION ALL ".join([f"SELECT * FROM {v}" for v in views])
         try:
             con.sql(f"CREATE OR REPLACE VIEW dcl_{ent} AS {union_sql}")
-            ENTITY_SOURCES.setdefault(ent, []).append(source_key)
+            entities_to_update.append(ent)
         except Exception as e:
             blockers.append(f"{ent}: union failed: {e}")
+    
     for j in plan.get("joins", []):
         joins.append({"left": j["left"], "right": j["right"], "reason": j.get("reason","")})
-        GRAPH_STATE["edges"].append({
+        edges_to_add.append({
             "source": f"src_{source_key}_{j['left'].split('.')[0]}",
             "target": f"src_{source_key}_{j['right'].split('.')[0]}",
             "label": j["left"].split('.')[-1] + " ↔ " + j["right"].split('.')[-1],
             "type": "join"
         })
+    
+    # Apply all graph state updates atomically
+    with STATE_LOCK:
+        # Add nodes (deduplicated)
+        for node in nodes_to_add:
+            if not any(n["id"] == node["id"] for n in GRAPH_STATE["nodes"]):
+                GRAPH_STATE["nodes"].append(node)
+        
+        # Add edges
+        for edge in edges_to_add:
+            GRAPH_STATE["edges"].append(edge)
+        
+        # Update entity sources
+        for ent in entities_to_update:
+            ENTITY_SOURCES.setdefault(ent, []).append(source_key)
+    
     conf = sum(confs)/len(confs) if confs else 0.8
     return Scorecard(confidence=conf, blockers=blockers, issues=issues, joins=joins)
 
