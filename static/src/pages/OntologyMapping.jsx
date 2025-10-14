@@ -286,12 +286,15 @@ function OntologyMapping() {
 
         {/* Summary Stats */}
         {hasData && (() => {
-          // Calculate total source fields used across all ontology mappings
-          const totalSourceFields = Object.values(consumedOntologyMappings).reduce((total, onto) => {
-            return total + (onto?.sources || []).reduce((sum, src) => {
-              return sum + (src?.fieldMappings?.length || 0);
-            }, 0);
-          }, 0);
+          // Calculate unique source fields used across all ontology mappings
+          const uniqueSourceFields = new Set();
+          Object.values(consumedOntologyMappings).forEach(onto => {
+            (onto?.sources || []).forEach(src => {
+              (src?.fieldMappings || []).forEach(field => {
+                uniqueSourceFields.add(field.source);
+              });
+            });
+          });
           
           return (
             <div className="mt-6 grid grid-cols-3 gap-4">
@@ -303,7 +306,7 @@ function OntologyMapping() {
               <div className="bg-green-900/10 border border-green-800/30 rounded-lg px-4 py-3">
                 <div className="text-2xl font-bold text-green-400">{Object.keys(consumedOntologyMappings).length}</div>
                 <div className="text-xs text-slate-500">Ontology Entities Mapped</div>
-                <div className="text-xs text-slate-600 mt-1">Using {totalSourceFields} source fields</div>
+                <div className="text-xs text-slate-600 mt-1">Using {uniqueSourceFields.size} source fields</div>
               </div>
               <div className="bg-purple-900/10 border border-purple-800/30 rounded-lg px-4 py-3">
                 <div className="text-2xl font-bold text-purple-400">{agentNodes.length}</div>
