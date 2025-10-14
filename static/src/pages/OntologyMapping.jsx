@@ -129,12 +129,12 @@ function OntologyMapping() {
         ) : (
           <div className="grid grid-cols-3 gap-4">
             {/* Column 1: Source Structure - ALL Fields with Highlighting */}
-            <div className="card">
+            <div className="card overflow-hidden">
               <div className="card-title mb-3 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                 Incoming Source Structure
               </div>
-              <div className="space-y-4 max-h-[600px] overflow-y-auto">
+              <div className="space-y-4">
                 {Object.entries(sourceSchemas).map(([source, tables]) => (
                   <div key={source}>
                     <div className="text-sm font-semibold text-blue-400 mb-2 uppercase">{source}</div>
@@ -183,12 +183,12 @@ function OntologyMapping() {
             </div>
 
             {/* Column 2: Ontology Targets & Mappings */}
-            <div className="card">
+            <div className="card overflow-hidden">
               <div className="card-title mb-3 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-500"></div>
                 Unified Ontology (Mapped Fields)
               </div>
-              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+              <div className="space-y-3">
                 {Object.entries(consumedOntologyMappings).map(([ontoId, onto]) => (
                   <div key={ontoId}>
                     <div className="bg-green-900/20 border border-green-800/50 rounded-lg px-3 py-2">
@@ -230,12 +230,12 @@ function OntologyMapping() {
             </div>
 
             {/* Column 3: Agent Consumption */}
-            <div className="card">
+            <div className="card overflow-hidden">
               <div className="card-title mb-3 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-purple-500"></div>
                 Consumed by Agents
               </div>
-              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+              <div className="space-y-3">
                 {agentNodes.length > 0 ? (
                   agentNodes.map(agent => {
                     const consumption = agentConsumption[agent?.id] || { label: agent?.label || 'Unknown', entities: [] };
