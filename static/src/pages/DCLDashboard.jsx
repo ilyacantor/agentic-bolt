@@ -284,7 +284,7 @@ function DCLDashboard(){
                 };
                 
                 return (
-                  <label key={s.value} className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer group transition-colors ${typeColors[s.type] || 'bg-slate-900/30 border-slate-700/50'}`}>
+                  <label key={s.value} className={`inline-flex items-center gap-2 p-2 rounded-lg border cursor-pointer group transition-colors ${typeColors[s.type] || 'bg-slate-900/30 border-slate-700/50'}`}>
                     <input 
                       type="checkbox" 
                       checked={selectedSources.includes(s.value)}
@@ -292,7 +292,7 @@ function DCLDashboard(){
                       className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500"
                     />
                     <span className="text-lg">{icons[s.type] || '📊'}</span>
-                    <span className="text-sm text-slate-200 group-hover:text-white flex-1">{s.name}</span>
+                    <span className="text-sm text-slate-200 group-hover:text-white">{s.name}</span>
                     <span className="text-[10px] text-slate-400 uppercase font-semibold">{s.type}</span>
                   </label>
                 );
