@@ -166,11 +166,15 @@ function renderSankey(state) {
     .attr('height', '600px');
 
   const { width, height } = svg.node().getBoundingClientRect();
+  
+  // Ensure valid dimensions to prevent RangeError
+  const validWidth = width > 0 ? width : 800;  // Fallback to 800px if width is invalid
+  const validHeight = height > 0 ? height : 600;  // Fallback to 600px if height is invalid
 
   const sankey = d3.sankey()
     .nodeWidth(20)
     .nodePadding(30)
-    .extent([[1, 1], [width - 1, height - 6]]);
+    .extent([[1, 1], [validWidth - 1, validHeight - 6]]);
 
   const graph = sankey({
     nodes: data.nodes.map(d => Object.assign({}, d)),
@@ -189,7 +193,7 @@ function renderSankey(state) {
     // Calculate total height of all agent nodes including padding
     const totalAgentHeight = agentNodesInSankey.reduce((sum, n) => sum + (n.y1 - n.y0), 0);
     const totalPadding = (agentNodesInSankey.length - 1) * 30; // 30px padding between agents
-    const centerY = (height - totalAgentHeight - totalPadding) / 2;
+    const centerY = (validHeight - totalAgentHeight - totalPadding) / 2;
     
     // Reposition agents to be centered
     let currentY = centerY;
@@ -336,10 +340,10 @@ function renderSankey(state) {
 
   nodeGroups
     .append('text')
-    .attr('x', d => d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6)
+    .attr('x', d => d.x0 < validWidth / 2 ? d.x1 + 6 : d.x0 - 6)
     .attr('y', d => (d.y1 + d.y0) / 2)
     .attr('dy', '0.35em')
-    .attr('text-anchor', d => d.x0 < width / 2 ? 'start' : 'end')
+    .attr('text-anchor', d => d.x0 < validWidth / 2 ? 'start' : 'end')
     .attr('fill', '#e2e8f0')
     .style('font-size', '11px')
     .style('font-weight', '500')
