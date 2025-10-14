@@ -227,9 +227,13 @@ function renderSankey(state) {
     .attr('d', d3.sankeyLinkHorizontal())
     .attr('stroke', (d, i) => {
       const originalLink = sankeyLinks[i];
-      if (originalLink && originalLink.targetType === 'agent') {
-        return '#9333ea';  // Purple for agent connections
+      
+      // Check if this link goes to an agent (ontology -> agent edges)
+      const targetNode = sankeyNodes.find(n => n.name === d.target.name);
+      if (targetNode && targetNode.type === 'agent') {
+        return '#16a34a';  // Green for ontology->agent connections (consumed data)
       }
+      
       if (originalLink && originalLink.sourceSystem) {
         return sourceColorMap[originalLink.sourceSystem]?.child || '#0bcad9';
       }
