@@ -66,10 +66,25 @@ function renderSankey(state) {
     });
   });
 
+  // First pass: identify which ontology entities are consumed by agents
+  const consumedOntologyIds = new Set();
+  state.graph.edges.forEach(e => {
+    const sourceType = state.graph.nodes.find(n => n.id === e.source)?.type;
+    const targetType = state.graph.nodes.find(n => n.id === e.target)?.type;
+    
+    // If edge is from ontology to agent, mark the ontology entity as consumed
+    if (sourceType === 'ontology' && targetType === 'agent') {
+      consumedOntologyIds.add(e.source);
+    }
+  });
+
+  // Only add ontology nodes that are consumed by agents
   ontologyNodes.forEach(n => {
-    nodeIndexMap[n.id] = nodeIndex;
-    sankeyNodes.push({ name: n.label, type: n.type, id: n.id });
-    nodeIndex++;
+    if (consumedOntologyIds.has(n.id)) {
+      nodeIndexMap[n.id] = nodeIndex;
+      sankeyNodes.push({ name: n.label, type: n.type, id: n.id });
+      nodeIndex++;
+    }
   });
 
   // Add agent nodes from graph state
@@ -86,11 +101,17 @@ function renderSankey(state) {
     nodeIndex++;
   });
 
+  // Now create links, filtering out edges to unconsumed ontology entities
   state.graph.edges.forEach(e => {
     const sourceType = state.graph.nodes.find(n => n.id === e.source)?.type;
     const targetType = state.graph.nodes.find(n => n.id === e.target)?.type;
     
     if (sourceType === 'source' && targetType === 'source') {
+      return;
+    }
+    
+    // Skip edges from sources to ontology entities that aren't consumed by any agent
+    if (sourceType === 'source' && targetType === 'ontology' && !consumedOntologyIds.has(e.target)) {
       return;
     }
     
