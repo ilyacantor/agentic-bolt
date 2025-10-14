@@ -211,8 +211,8 @@ function DCLDashboard(){
     {name: 'NetSuite', value: 'netsuite', type: 'erp'},
     {name: 'Legacy SQL Server', value: 'legacy_sql', type: 'database'},
     {name: 'Snowflake', value: 'snowflake', type: 'warehouse'},
-    {name: 'Supabase', value: 'supabase', type: 'health'},
-    {name: 'MongoDB', value: 'mongodb', type: 'usage'}
+    {name: 'Supabase', value: 'supabase', type: 'database'},
+    {name: 'MongoDB', value: 'mongodb', type: 'database'}
   ];
 
   const agents = [
@@ -269,18 +269,34 @@ function DCLDashboard(){
                   </div>
                 </div>
             <div className="space-y-2 mb-3">
-              {sources.map(s => (
-                <label key={s.value} className="flex items-center gap-2 cursor-pointer group">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedSources.includes(s.value)}
-                    onChange={() => toggleSource(s.value)}
-                    className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500"
-                  />
-                  <span className="text-sm text-slate-300 group-hover:text-slate-100">{s.name}</span>
-                  <span className="ml-auto text-[10px] text-slate-500 uppercase">{s.type}</span>
-                </label>
-              ))}
+              {sources.map(s => {
+                const icons = {
+                  crm: '📱',
+                  erp: '🏢',
+                  database: '💾',
+                  warehouse: '🏛️'
+                };
+                const typeColors = {
+                  crm: 'bg-blue-900/30 border-blue-700/50 text-blue-300',
+                  erp: 'bg-green-900/30 border-green-700/50 text-green-300',
+                  database: 'bg-red-900/30 border-red-700/50 text-red-300',
+                  warehouse: 'bg-cyan-900/30 border-cyan-700/50 text-cyan-300'
+                };
+                
+                return (
+                  <label key={s.value} className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer group transition-colors ${typeColors[s.type] || 'bg-slate-900/30 border-slate-700/50'}`}>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedSources.includes(s.value)}
+                      onChange={() => toggleSource(s.value)}
+                      className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500"
+                    />
+                    <span className="text-lg">{icons[s.type] || '📊'}</span>
+                    <span className="text-sm text-slate-200 group-hover:text-white flex-1">{s.name}</span>
+                    <span className="text-[10px] text-slate-400 uppercase font-semibold">{s.type}</span>
+                  </label>
+                );
+              })}
             </div>
           </div>
 

@@ -352,7 +352,7 @@ function renderSankey(state) {
   // Title without redundant agent labels (agents are already labeled on the nodes)
   svg.append('text')
     .attr('x', 10)
-    .attr('y', 20)
+    .attr('y', 45)
     .attr('fill', '#94a3b8')
     .style('font-size', '10px')
     .text('Data Sources → Tables → Unified Ontology → Agents');
