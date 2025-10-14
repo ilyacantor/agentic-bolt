@@ -446,33 +446,67 @@ function DCLDashboard(){
                           </div>
                         </div>
                       )}
-                      {Object.entries(state.preview.sources).map(([name, rows]) => (
-                        <div key={name} className="mb-2">
-                          <div className="text-slate-400 font-medium mb-0.5">{name}</div>
-                          {rows && rows.length > 0 && (
-                            <div className="bg-slate-900/30 rounded p-1 overflow-x-auto">
-                              <table className="w-full text-[8px]">
-                                <thead>
-                                  <tr className="border-b border-slate-800">
-                                    {Object.keys(rows[0]).map(col => (
-                                      <th key={col} className="text-left py-0.5 px-0.5 text-slate-500">{col}</th>
-                                    ))}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {rows.slice(0, 2).map((row, i) => (
-                                    <tr key={i}>
-                                      {Object.values(row).map((val, j) => (
-                                        <td key={j} className="py-0.5 px-0.5 text-slate-400">{val !== null ? String(val).substring(0, 15) : ''}</td>
+                      {Object.entries(state.preview.sources).map(([name, rows]) => {
+                        const cols = rows && rows.length > 0 ? Object.keys(rows[0]) : [];
+                        const useTransposed = cols.length > 10;
+                        return (
+                          <div key={name} className="mb-2">
+                            <div className="text-slate-400 font-medium mb-0.5">{name}</div>
+                            {rows && rows.length > 0 && (
+                              <div className="bg-slate-900/30 rounded p-1 overflow-x-auto">
+                                {useTransposed ? (
+                                  <table className="w-full text-xs transposed-table">
+                                    <thead>
+                                      <tr className="border-b border-slate-800">
+                                        <th className="text-left py-1 px-1 text-slate-500">Field</th>
+                                        {rows.slice(0, 2).map((_, i) => (
+                                          <th key={i} className="text-left py-1 px-1 text-slate-500">Record {i + 1}</th>
+                                        ))}
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {cols.map(col => (
+                                        <tr key={col}>
+                                          <td className="py-1 px-1 text-slate-300 font-semibold field-name">{col}</td>
+                                          {rows.slice(0, 2).map((row, i) => {
+                                            const val = row[col];
+                                            return (
+                                              <td key={i} className="py-1 px-1 text-slate-400">
+                                                {val != null && val !== '' && val !== undefined ? String(val).substring(0, 30) : '—'}
+                                              </td>
+                                            );
+                                          })}
+                                        </tr>
                                       ))}
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                                    </tbody>
+                                  </table>
+                                ) : (
+                                  <table className="w-full text-xs">
+                                    <thead>
+                                      <tr className="border-b border-slate-800">
+                                        {cols.map(col => (
+                                          <th key={col} className="text-left py-1 px-1 text-slate-500">{col}</th>
+                                        ))}
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {rows.slice(0, 2).map((row, i) => (
+                                        <tr key={i}>
+                                          {Object.values(row).map((val, j) => (
+                                            <td key={j} className="py-1 px-1 text-slate-400">
+                                              {val != null && val !== '' && val !== undefined ? String(val).substring(0, 20) : '—'}
+                                            </td>
+                                          ))}
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </>
                   )}
                 </div>
@@ -502,33 +536,67 @@ function DCLDashboard(){
                           </div>
                         </div>
                       )}
-                      {Object.entries(state.preview.ontology).map(([name, rows]) => (
-                        <div key={name} className="mb-2">
-                          <div className="text-slate-400 font-medium mb-0.5">{name}</div>
-                          {rows && rows.length > 0 && (
-                            <div className="bg-slate-900/30 rounded p-1 overflow-x-auto">
-                              <table className="w-full text-[8px]">
-                                <thead>
-                                  <tr className="border-b border-slate-800">
-                                    {Object.keys(rows[0]).map(col => (
-                                      <th key={col} className="text-left py-0.5 px-0.5 text-slate-500">{col}</th>
-                                    ))}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {rows.slice(0, 2).map((row, i) => (
-                                    <tr key={i}>
-                                      {Object.values(row).map((val, j) => (
-                                        <td key={j} className="py-0.5 px-0.5 text-slate-400">{val !== null ? String(val).substring(0, 15) : ''}</td>
+                      {Object.entries(state.preview.ontology).map(([name, rows]) => {
+                        const cols = rows && rows.length > 0 ? Object.keys(rows[0]) : [];
+                        const useTransposed = cols.length > 10;
+                        return (
+                          <div key={name} className="mb-2">
+                            <div className="text-slate-400 font-medium mb-0.5">{name}</div>
+                            {rows && rows.length > 0 && (
+                              <div className="bg-slate-900/30 rounded p-1 overflow-x-auto">
+                                {useTransposed ? (
+                                  <table className="w-full text-xs transposed-table">
+                                    <thead>
+                                      <tr className="border-b border-slate-800">
+                                        <th className="text-left py-1 px-1 text-slate-500">Field</th>
+                                        {rows.slice(0, 2).map((_, i) => (
+                                          <th key={i} className="text-left py-1 px-1 text-slate-500">Record {i + 1}</th>
+                                        ))}
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {cols.map(col => (
+                                        <tr key={col}>
+                                          <td className="py-1 px-1 text-slate-300 font-semibold field-name">{col}</td>
+                                          {rows.slice(0, 2).map((row, i) => {
+                                            const val = row[col];
+                                            return (
+                                              <td key={i} className="py-1 px-1 text-slate-400">
+                                                {val != null && val !== '' && val !== undefined ? String(val).substring(0, 30) : '—'}
+                                              </td>
+                                            );
+                                          })}
+                                        </tr>
                                       ))}
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                                    </tbody>
+                                  </table>
+                                ) : (
+                                  <table className="w-full text-xs">
+                                    <thead>
+                                      <tr className="border-b border-slate-800">
+                                        {cols.map(col => (
+                                          <th key={col} className="text-left py-1 px-1 text-slate-500">{col}</th>
+                                        ))}
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {rows.slice(0, 2).map((row, i) => (
+                                        <tr key={i}>
+                                          {Object.values(row).map((val, j) => (
+                                            <td key={j} className="py-1 px-1 text-slate-400">
+                                              {val != null && val !== '' && val !== undefined ? String(val).substring(0, 20) : '—'}
+                                            </td>
+                                          ))}
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </>
                   )}
                 </div>
