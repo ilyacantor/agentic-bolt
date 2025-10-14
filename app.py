@@ -771,7 +771,21 @@ def preview(node: Optional[str] = None):
 def source_schemas():
     """Return complete schema information for all connected sources."""
     global SOURCE_SCHEMAS
-    return JSONResponse(SOURCE_SCHEMAS)
+    
+    # Sanitize data for JSON serialization (replace NaN/Inf with None)
+    import math
+    def sanitize(obj):
+        if isinstance(obj, dict):
+            return {k: sanitize(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [sanitize(item) for item in obj]
+        elif isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
+            return None
+        else:
+            return obj
+    
+    clean_schemas = sanitize(SOURCE_SCHEMAS)
+    return JSONResponse(clean_schemas)
 
 @app.get("/toggle_auto_ingest")
 def toggle_auto_ingest(enabled: bool = Query(...)):
