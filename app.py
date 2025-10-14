@@ -32,6 +32,7 @@ LLM_CALLS = 0
 LLM_TOKENS = 0
 rag_engine = None
 RAG_CONTEXT = {"retrievals": [], "total_mappings": 0, "last_retrieval_count": 0}
+SOURCE_SCHEMAS: Dict[str, Dict[str, Any]] = {}
 
 def log(msg: str):
     print(msg, flush=True)
@@ -542,13 +543,17 @@ def preview_table(con, name: str, limit: int = 6) -> List[Dict[str,Any]]:
         return []
 
 def connect_source(source_key: str) -> Dict[str, Any]:
-    global ontology, agents_config
+    global ontology, agents_config, SOURCE_SCHEMAS
     if ontology is None:
         ontology = load_ontology()
     schema_dir = os.path.join(SCHEMAS_DIR, source_key)
     if not os.path.isdir(schema_dir):
         return {"error": f"Unknown source '{source_key}'"}
     tables = snapshot_tables_from_dir(source_key, schema_dir)
+    
+    # Store schema information for later retrieval
+    SOURCE_SCHEMAS[source_key] = tables
+    
     con = duckdb.connect(DB_PATH)
     register_src_views(con, source_key, tables)
     add_graph_nodes_for_source(source_key, tables)
