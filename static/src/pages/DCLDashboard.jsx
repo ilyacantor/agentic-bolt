@@ -17,20 +17,18 @@ function DCLDashboard(){
   const cyRef = React.useRef(null);
 
   React.useEffect(()=>{
-    fetchState();
+    async function initState() {
+      const res = await fetch('/state');
+      const data = await res.json();
+      setState(data);
+      // Sync local selections with backend on initial load only
+      setSelectedSources(data.selected_sources || []);
+      setSelectedAgents(data.selected_agents || []);
+    }
+    initState();
     const interval = setInterval(fetchState, 2000);
     return () => clearInterval(interval);
   },[]);
-  
-  // Sync local state with backend state on mount and when backend state changes
-  React.useEffect(() => {
-    if (state.selected_sources && state.selected_sources.length > 0) {
-      setSelectedSources(state.selected_sources);
-    }
-    if (state.selected_agents && state.selected_agents.length > 0) {
-      setSelectedAgents(state.selected_agents);
-    }
-  }, [state.selected_sources, state.selected_agents]);
 
   React.useEffect(()=>{
     if(state.graph.nodes.length > 0){
