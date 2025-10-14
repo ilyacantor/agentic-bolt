@@ -1,5 +1,5 @@
 
-import os, time, json, glob, duckdb, pandas as pd, yaml, warnings, threading, re, traceback
+import os, time, json, glob, duckdb, pandas as pd, yaml, warnings, threading, re, traceback, asyncio
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -34,6 +34,7 @@ rag_engine = None
 RAG_CONTEXT = {"retrievals": [], "total_mappings": 0, "last_retrieval_count": 0}
 SOURCE_SCHEMAS: Dict[str, Dict[str, Any]] = {}
 DEV_MODE = True  # When True, uses AI/RAG for mapping; when False, uses only heuristics
+STATE_LOCK = threading.Lock()  # Lock for thread-safe global state updates
 
 def log(msg: str):
     print(msg, flush=True)
@@ -609,7 +610,7 @@ def preview_table(con, name: str, limit: int = 6) -> List[Dict[str,Any]]:
         return []
 
 def connect_source(source_key: str) -> Dict[str, Any]:
-    global ontology, agents_config, SOURCE_SCHEMAS
+    global ontology, agents_config, SOURCE_SCHEMAS, STATE_LOCK
     if ontology is None:
         ontology = load_ontology()
     schema_dir = os.path.join(SCHEMAS_DIR, source_key)
@@ -617,26 +618,35 @@ def connect_source(source_key: str) -> Dict[str, Any]:
         return {"error": f"Unknown source '{source_key}'"}
     tables = snapshot_tables_from_dir(source_key, schema_dir)
     
-    # Store schema information for later retrieval
-    SOURCE_SCHEMAS[source_key] = tables
+    # Store schema information for later retrieval (thread-safe)
+    with STATE_LOCK:
+        SOURCE_SCHEMAS[source_key] = tables
     
     con = duckdb.connect(DB_PATH)
     register_src_views(con, source_key, tables)
-    add_graph_nodes_for_source(source_key, tables)
+    
+    # Add graph nodes (thread-safe)
+    with STATE_LOCK:
+        add_graph_nodes_for_source(source_key, tables)
+    
     plan = llm_propose(ontology, source_key, tables)
     if not plan:
         plan = heuristic_plan(ontology, source_key, tables)
         log(f"I connected to {source_key.title()} (schema sample) and generated a heuristic plan. I mapped obvious IDs and foreign keys and published a basic unified view.")
     else:
         log(f"I connected to {source_key.title()} (schema sample) and proposed mappings and joins.")
+    
     score = apply_plan(con, source_key, plan)
-    GRAPH_STATE["confidence"] = score.confidence
-    GRAPH_STATE["last_updated"] = time.strftime("%I:%M:%S %p")
     
-    # Create edges from ontology entities to agents
-    add_ontology_to_agent_edges()
-    
-    SOURCES_ADDED.append(source_key)
+    # Update graph state (thread-safe)
+    with STATE_LOCK:
+        GRAPH_STATE["confidence"] = score.confidence
+        GRAPH_STATE["last_updated"] = time.strftime("%I:%M:%S %p")
+        
+        # Create edges from ontology entities to agents
+        add_ontology_to_agent_edges()
+        
+        SOURCES_ADDED.append(source_key)
     ents = ", ".join(sorted(tables.keys()))
     log(f"I found these entities: {ents}.")
     if score.joins:
@@ -775,7 +785,7 @@ def state():
     })
 
 @app.get("/connect")
-def connect(sources: str = Query(...), agents: str = Query(...)):
+async def connect(sources: str = Query(...), agents: str = Query(...)):
     source_list = [s.strip() for s in sources.split(',') if s.strip()]
     agent_list = [a.strip() for a in agents.split(',') if a.strip()]
     
@@ -784,14 +794,17 @@ def connect(sources: str = Query(...), agents: str = Query(...)):
     if not agent_list:
         return JSONResponse({"error": "No agents provided"}, status_code=400)
     
-    # Store selected agents and sources globally
-    global SELECTED_AGENTS, SOURCES_ADDED
+    # Store selected agents globally
+    global SELECTED_AGENTS
     SELECTED_AGENTS = agent_list
     
-    # Connect only new sources (avoid duplicates)
-    for source in source_list:
-        if source not in SOURCES_ADDED:
-            connect_source(source)
+    # Filter out sources that are already connected
+    new_sources = [s for s in source_list if s not in SOURCES_ADDED]
+    
+    if new_sources:
+        # Connect sources in parallel using asyncio
+        tasks = [asyncio.to_thread(connect_source, source) for source in new_sources]
+        await asyncio.gather(*tasks)
     
     return JSONResponse({"ok": True, "sources": SOURCES_ADDED, "agents": agent_list})
 
