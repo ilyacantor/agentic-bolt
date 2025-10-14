@@ -1,11 +1,17 @@
 entities:
-  # RevOps Entities
-  customer:
-    pk: customer_id
-    fields: [customer_id, name, industry, annual_revenue, created_date]
+  # RevOps Entities (aligned with dcl-light RevOps agent)
+  account:
+    pk: account_id
+    fields: [account_id, account_name, industry, revenue, employee_count, created_date]
   opportunity:
     pk: opportunity_id
-    fields: [opportunity_id, customer_id, opportunity_name, amount, close_date, stage]
+    fields: [opportunity_id, opportunity_name, account_id, stage, amount, close_date, probability]
+  health:
+    pk: account_id
+    fields: [account_id, health_score, last_updated, risk_level]
+  usage:
+    pk: account_id
+    fields: [account_id, last_login_days, sessions_30d, avg_session_duration, features_used]
   
   # FinOps Entities
   aws_resource:

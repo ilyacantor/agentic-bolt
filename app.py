@@ -279,11 +279,17 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
         available_entities = set(ontology.get("entities", {}).keys())
     
     mappings, joins = [], []
-    # RevOps patterns
-    key_fields = ["accountid","AccountId","KUNNR","CustomerID","CUST_ID","entityId","customerid","parentcustomerid","Id","CUST_ID"]
-    email_fields = ["email","emailaddress1","Email","EMAIL"]
+    # RevOps patterns (aligned with dcl-light agent)
+    key_fields = ["accountid","AccountId","KUNNR","CustomerID","CUST_ID","entityId","customerid","parentcustomerid","Id","account_id","ACCOUNT_ID"]
+    name_fields = ["name","Name","account_name","AccountName","ACCOUNT_NAME"]
+    revenue_fields = ["revenue","Revenue","annual_revenue","AnnualRevenue","ANNUAL_REVENUE"]
+    industry_fields = ["industry","Industry","INDUSTRY"]
+    stage_fields = ["stage","Stage","StageName","STAGE_NAME","status","Status"]
     amount_fields = ["amount","Amount","NETWR","TotalAmount","estimatedvalue","AMOUNT"]
-    date_fields = ["createdon","CreatedDate","CloseDate","ERDAT","ORDER_DATE","tranDate","created_at","CREATED_AT","OrderDate","ORDER_DATE"]
+    date_fields = ["createdon","CreatedDate","CloseDate","ERDAT","ORDER_DATE","tranDate","created_at","CREATED_AT","OrderDate","ORDER_DATE","close_date"]
+    health_score_fields = ["health_score","healthScore","HealthScore","HEALTH_SCORE","score"]
+    login_fields = ["last_login_days","lastLoginDays","LAST_LOGIN_DAYS","days_since_login"]
+    session_fields = ["sessions_30d","sessions30d","SESSIONS_30D","session_count"]
     
     # FinOps patterns - Core identifiers
     resource_fields = ["resource_id","resourceId","ResourceId","instance_id","instanceId"]
@@ -321,11 +327,17 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
     for tname, info in tables.items():
         cols = list(info["schema"].keys())
         
-        # RevOps: customer entity
-        cust = next((c for c in cols if c in key_fields or c.lower() in ["customer_id","cust_id","id","accountid","account_id"]), None)
-        email = next((c for c in cols if c in email_fields or "email" in c.lower()), None)
+        # RevOps: account, opportunity, health, usage detection
+        account_id = next((c for c in cols if c in key_fields or c.lower() in ["customer_id","cust_id","id","accountid","account_id"]), None)
+        account_name = next((c for c in cols if c in name_fields or "name" in c.lower()), None)
+        revenue = next((c for c in cols if c in revenue_fields or "revenue" in c.lower()), None)
+        industry = next((c for c in cols if c in industry_fields or "industry" in c.lower()), None)
+        stage = next((c for c in cols if c in stage_fields or "stage" in c.lower()), None)
         amount = next((c for c in cols if c in amount_fields or "amount" in c.lower() or "price" in c.lower()), None)
-        datec = next((c for c in cols if c in date_fields or "date" in c.lower()), None)
+        close_date = next((c for c in cols if c in date_fields or "date" in c.lower()), None)
+        health_score = next((c for c in cols if c in health_score_fields or "health" in c.lower() or "score" in c.lower()), None)
+        last_login = next((c for c in cols if c in login_fields or "login" in c.lower()), None)
+        sessions = next((c for c in cols if c in session_fields or "session" in c.lower()), None)
         
         # FinOps: Core identifiers
         resource = next((c for c in cols if c in resource_fields or "resource_id" in c.lower() or "instance_id" in c.lower()), None)
@@ -356,18 +368,38 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
         service_category = next((c for c in cols if c in service_category_fields), None)
         usage_type = next((c for c in cols if c in usage_type_fields), None)
         
-        # RevOps mappings
-        if (cust or email) and "customer" in available_entities:
+        # RevOps mappings (aligned with dcl-light agent entities)
+        if (account_id or account_name or revenue or industry) and "account" in available_entities:
             fields = []
-            if cust: fields.append({"source": cust, "onto_field": "customer_id", "confidence": 0.85})
-            if email: fields.append({"source": email, "onto_field": "email", "confidence": 0.8})
-            mappings.append({"entity":"customer","source_table": f"{source_key}_{tname}", "fields": fields})
-        if (amount or datec) and "opportunity" in available_entities:
+            if account_id: fields.append({"source": account_id, "onto_field": "account_id", "confidence": 0.85})
+            if account_name: fields.append({"source": account_name, "onto_field": "account_name", "confidence": 0.85})
+            if revenue: fields.append({"source": revenue, "onto_field": "revenue", "confidence": 0.85})
+            if industry: fields.append({"source": industry, "onto_field": "industry", "confidence": 0.8})
+            if fields:
+                mappings.append({"entity":"account","source_table": f"{source_key}_{tname}", "fields": fields})
+        
+        if (amount or close_date or stage) and "opportunity" in available_entities:
             fields = []
             if amount: fields.append({"source": amount, "onto_field": "amount", "confidence": 0.82})
-            if datec: fields.append({"source": datec, "onto_field": "close_date", "confidence": 0.8})
-            if cust: fields.append({"source": cust, "onto_field": "customer_id", "confidence": 0.85})
-            mappings.append({"entity":"opportunity","source_table": f"{source_key}_{tname}", "fields": fields})
+            if close_date: fields.append({"source": close_date, "onto_field": "close_date", "confidence": 0.8})
+            if stage: fields.append({"source": stage, "onto_field": "stage", "confidence": 0.85})
+            if account_id: fields.append({"source": account_id, "onto_field": "account_id", "confidence": 0.85})
+            if fields:
+                mappings.append({"entity":"opportunity","source_table": f"{source_key}_{tname}", "fields": fields})
+        
+        if health_score and "health" in available_entities:
+            fields = []
+            fields.append({"source": health_score, "onto_field": "health_score", "confidence": 0.9})
+            if account_id: fields.append({"source": account_id, "onto_field": "account_id", "confidence": 0.85})
+            mappings.append({"entity":"health","source_table": f"{source_key}_{tname}", "fields": fields})
+        
+        if (last_login or sessions) and "usage" in available_entities:
+            fields = []
+            if last_login: fields.append({"source": last_login, "onto_field": "last_login_days", "confidence": 0.85})
+            if sessions: fields.append({"source": sessions, "onto_field": "sessions_30d", "confidence": 0.85})
+            if account_id: fields.append({"source": account_id, "onto_field": "account_id", "confidence": 0.85})
+            if fields:
+                mappings.append({"entity":"usage","source_table": f"{source_key}_{tname}", "fields": fields})
         
         # FinOps mappings - aws_resource (config fields)
         if (resource or instance_type or vcpus or db_engine) and "aws_resource" in available_entities:

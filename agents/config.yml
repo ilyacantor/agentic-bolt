@@ -17,12 +17,19 @@ agents:
   
   revops_pilot:
     name: RevOps Pilot
-    description: Revenue operations and sales pipeline optimization
+    description: Revenue operations and sales pipeline optimization (BANT validation, Pipeline health)
     consumes:
-      - customer
+      - account
       - opportunity
+      - health
+      - usage
     key_metrics:
-      - annual_revenue
+      - account_name
+      - revenue
       - amount
       - close_date
+      - stage
+      - health_score
+      - last_login_days
+      - sessions_30d
     color: "#3b82f6"
