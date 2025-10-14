@@ -67,7 +67,7 @@ function renderSankey(state) {
     
     // Only add parent node if there are useful tables
     if (usefulTables.length > 0) {
-      const parentNodeName = sourceSystem.charAt(0).toUpperCase() + sourceSystem.slice(1).replace(/_/g, ' ');
+      const parentNodeName = sourceSystem.replace(/_/g, ' ').toLowerCase();
       const parentNodeId = `parent_${sourceSystem}`;
       nodeIndexMap[parentNodeId] = nodeIndex;
       sankeyNodes.push({ 
@@ -81,7 +81,7 @@ function renderSankey(state) {
       usefulTables.forEach(table => {
         nodeIndexMap[table.id] = nodeIndex;
         sankeyNodes.push({ 
-          name: table.tableName, 
+          name: table.tableName.toLowerCase(), 
           type: 'source',
           id: table.id,
           sourceSystem: sourceSystem
@@ -357,7 +357,7 @@ function renderSankey(state) {
     return null;
   };
 
-  // Render labels with colored backgrounds and symbols for all node types
+  // Render labels with form-fitting boxes for all node types
   nodeGroups.each(function(d) {
     const nodeData = sankeyNodes.find(n => n.name === d.name);
     const isLeft = d.x0 < validWidth / 2;
@@ -365,11 +365,11 @@ function renderSankey(state) {
     const group = d3.select(this);
     const textX = isLeft ? d.x1 + 6 : d.x0 - 6;
     const textY = (d.y1 + d.y0) / 2;
+    const padding = 4;
     
-    // Source parent or source table nodes with type info
+    // Source parent or source table nodes with type-specific colors
     if (nodeData && (nodeData.type === 'source_parent' || nodeData.type === 'source') && typeInfo) {
-      const padding = 4;
-      const textWidth = d.name.length * 6 + 18;
+      const textWidth = d.name.length * 6.5;
       const rectWidth = textWidth + padding * 2;
       const rectHeight = 18;
       
@@ -385,28 +385,18 @@ function renderSankey(state) {
         .attr('opacity', 0.7);
       
       group.append('text')
-        .attr('x', isLeft ? textX + 2 : textX - rectWidth + padding + 2)
+        .attr('x', isLeft ? textX + padding : textX - padding)
         .attr('y', textY)
         .attr('dy', '0.35em')
-        .attr('text-anchor', 'start')
-        .attr('fill', '#e2e8f0')
-        .style('font-size', '10px')
-        .text(typeInfo.icon);
-      
-      group.append('text')
-        .attr('x', isLeft ? textX + 18 : textX - rectWidth + padding + 18)
-        .attr('y', textY)
-        .attr('dy', '0.35em')
-        .attr('text-anchor', 'start')
+        .attr('text-anchor', isLeft ? 'start' : 'end')
         .attr('fill', '#e2e8f0')
         .style('font-size', '9px')
         .style('font-weight', '600')
         .text(d.name);
     } 
-    // Agent nodes with special styling
+    // Agent nodes with purple styling
     else if (nodeData && nodeData.type === 'agent') {
-      const padding = 4;
-      const textWidth = d.name.length * 7 + 10;
+      const textWidth = d.name.length * 7;
       const rectWidth = textWidth + padding * 2;
       const rectHeight = 20;
       
@@ -431,15 +421,30 @@ function renderSankey(state) {
         .style('font-weight', '700')
         .text(d.name);
     }
-    // Regular text for ontology nodes
+    // Ontology nodes with green boxes
     else {
+      const textWidth = d.name.length * 7;
+      const rectWidth = textWidth + padding * 2;
+      const rectHeight = 18;
+      
+      group.append('rect')
+        .attr('x', isLeft ? textX - padding : textX - rectWidth + padding)
+        .attr('y', textY - rectHeight / 2)
+        .attr('width', rectWidth)
+        .attr('height', rectHeight)
+        .attr('rx', 4)
+        .attr('fill', '#14532d')
+        .attr('stroke', '#16a34a')
+        .attr('stroke-width', 0.5)
+        .attr('opacity', 0.7);
+      
       group.append('text')
-        .attr('x', isLeft ? d.x1 + 6 : d.x0 - 6)
-        .attr('y', (d.y1 + d.y0) / 2)
+        .attr('x', isLeft ? textX + padding : textX - padding)
+        .attr('y', textY)
         .attr('dy', '0.35em')
         .attr('text-anchor', isLeft ? 'start' : 'end')
         .attr('fill', '#e2e8f0')
-        .style('font-size', '11px')
+        .style('font-size', '10px')
         .style('font-weight', '500')
         .text(d.name);
     }
