@@ -408,6 +408,26 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
             if free_storage: fields.append({"source": free_storage, "onto_field": "free_storage_gb", "confidence": 0.85})
             if fields:
                 mappings.append({"entity":"cloud_usage","source_table": f"{source_key}_{tname}", "fields": fields})
+    
+    # Filter out mappings that don't provide any useful fields for selected agents
+    if SELECTED_AGENTS:
+        agent_key_metrics = set()
+        for agent_id in SELECTED_AGENTS:
+            agent_info = agents_config.get("agents", {}).get(agent_id, {})
+            agent_key_metrics.update(agent_info.get("key_metrics", []))
+        
+        filtered_mappings = []
+        for mapping in mappings:
+            # Check if any mapped field is in agent key_metrics
+            has_useful_field = any(
+                field["onto_field"] in agent_key_metrics 
+                for field in mapping.get("fields", [])
+            )
+            if has_useful_field:
+                filtered_mappings.append(mapping)
+        
+        mappings = filtered_mappings
+    
     # naive joins on shared key names
     name_to_tables = {}
     for t, info in tables.items():
