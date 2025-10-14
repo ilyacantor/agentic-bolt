@@ -65,7 +65,8 @@ function OntologyMapping() {
       label: onto?.label || 'Unknown',
       sources: incomingEdges.map(e => ({
         sourceId: e?.source || '',
-        label: e?.label || 'Unknown mapping'
+        label: e?.label || 'Unknown mapping',
+        fieldMappings: e?.field_mappings || []  // Include field-level mappings
       })) || [],
       consumedBy: outgoingEdges.map(e => e?.target) || []
     };
@@ -197,7 +198,7 @@ function OntologyMapping() {
             <div className="card">
               <div className="card-title mb-3 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                Unified Ontology (Mapped)
+                Unified Ontology (Mapped Fields)
               </div>
               <div className="space-y-3">
                 {Object.entries(consumedOntologyMappings).map(([ontoId, onto]) => (
@@ -205,13 +206,29 @@ function OntologyMapping() {
                     <div className="bg-green-900/20 border border-green-800/50 rounded-lg px-3 py-2">
                       <div className="text-sm font-semibold text-green-400 mb-2">{onto?.label || 'Unknown'}</div>
                       {onto?.sources && onto.sources.length > 0 ? (
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           {onto.sources.map((src, i) => (
-                            <div key={i} className="text-xs text-slate-400 flex items-center gap-1">
-                              <svg className="w-3 h-3 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                              </svg>
-                              <span className="truncate">{src.label}</span>
+                            <div key={i} className="space-y-1">
+                              <div className="text-[11px] text-blue-400 font-medium">{src.label.split(' → ')[0]}</div>
+                              {src.fieldMappings && src.fieldMappings.length > 0 ? (
+                                <div className="space-y-0.5 pl-2">
+                                  {src.fieldMappings.map((field, j) => (
+                                    <div key={j} className="text-xs text-slate-400 flex items-center gap-1">
+                                      <svg className="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                                      </svg>
+                                      <span className="text-blue-300">{field.source}</span>
+                                      <span className="text-slate-600">→</span>
+                                      <span className="text-green-300">{field.onto_field}</span>
+                                      {field.confidence && (
+                                        <span className="text-[10px] text-slate-600 ml-auto">({Math.round(field.confidence * 100)}%)</span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-xs text-slate-600 italic pl-2">Table-level mapping only</div>
+                              )}
                             </div>
                           ))}
                         </div>

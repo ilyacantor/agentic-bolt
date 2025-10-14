@@ -450,8 +450,14 @@ def apply_plan(con, source_key: str, plan: Dict[str, Any]) -> Scorecard:
                     "type": "ontology"
                 })
             
-            # Create edge from source to ontology
-            GRAPH_STATE["edges"].append({"source": src_table, "target": target_node_id, "label": f"{m['source_table']} → {ent}", "type": "mapping"})
+            # Create edge from source to ontology with field-level mappings
+            GRAPH_STATE["edges"].append({
+                "source": src_table, 
+                "target": target_node_id, 
+                "label": f"{m['source_table']} → {ent}", 
+                "type": "mapping",
+                "field_mappings": m.get("fields", [])  # Store field-level mappings
+            })
         except Exception as e:
             blockers.append(f"{ent}: failed view {view_name}: {e}")
     for ent, views in per_entity_views.items():
