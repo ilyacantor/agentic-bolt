@@ -496,9 +496,9 @@ def apply_plan(con, source_key: str, plan: Dict[str, Any]) -> Scorecard:
     for m in plan.get("mappings", []):
         ent = m["entity"]
         
-        # Get all ontology fields for this entity
+        # Get all ontology fields for this entity (fields are stored as a list)
         entity_def = ontology.get("entities", {}).get(ent, {})
-        all_ontology_fields = list(entity_def.get("fields", {}).keys())
+        all_ontology_fields = entity_def.get("fields", [])
         
         # Build a mapping dict: ontology_field -> source_field
         field_map = {}
