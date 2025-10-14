@@ -494,6 +494,39 @@ def add_graph_nodes_for_source(source_key: str, tables: Dict[str, Any]):
                 "type": "agent"
             })
 
+def add_ontology_to_agent_edges():
+    """Create edges from ontology entities to agents based on agent consumption config"""
+    global agents_config, SELECTED_AGENTS, GRAPH_STATE
+    
+    if not agents_config:
+        agents_config = load_agents_config()
+    
+    # Get all existing ontology nodes
+    ontology_nodes = [n for n in GRAPH_STATE["nodes"] if n["type"] == "ontology"]
+    
+    # For each selected agent, create edges from consumed ontology entities
+    for agent_id in SELECTED_AGENTS:
+        agent_info = agents_config.get("agents", {}).get(agent_id, {})
+        consumed_entities = agent_info.get("consumes", [])
+        
+        for onto_node in ontology_nodes:
+            # Extract entity name from node id (dcl_aws_resource -> aws_resource)
+            entity_name = onto_node["id"].replace("dcl_", "")
+            
+            if entity_name in consumed_entities:
+                # Create edge from ontology to agent if it doesn't exist
+                edge_exists = any(
+                    e["source"] == onto_node["id"] and e["target"] == f"agent_{agent_id}"
+                    for e in GRAPH_STATE["edges"]
+                )
+                if not edge_exists:
+                    GRAPH_STATE["edges"].append({
+                        "source": onto_node["id"],
+                        "target": f"agent_{agent_id}",
+                        "label": f"{entity_name} → {agent_info.get('name', agent_id)}",
+                        "type": "consumption"
+                    })
+
 def preview_table(con, name: str, limit: int = 6) -> List[Dict[str,Any]]:
     try:
         df = con.sql(f"SELECT * FROM {name} LIMIT {limit}").to_df()
@@ -528,6 +561,10 @@ def connect_source(source_key: str) -> Dict[str, Any]:
     score = apply_plan(con, source_key, plan)
     GRAPH_STATE["confidence"] = score.confidence
     GRAPH_STATE["last_updated"] = time.strftime("%I:%M:%S %p")
+    
+    # Create edges from ontology entities to agents
+    add_ontology_to_agent_edges()
+    
     SOURCES_ADDED.append(source_key)
     ents = ", ".join(sorted(tables.keys()))
     log(f"I found these entities: {ents}.")
