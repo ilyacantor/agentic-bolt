@@ -758,8 +758,8 @@ async def log_api_usage(request: Request, call_next):
     response = await call_next(request)
     process_time = time.time() - start_time
     
-    # Log API calls (exclude static file requests)
-    if not request.url.path.startswith("/static"):
+    # Log important API calls only (exclude static files and polling endpoints like /state)
+    if not request.url.path.startswith("/static") and request.url.path not in ["/state", "/"]:
         log(f"📊 API: {request.method} {request.url.path} - {response.status_code} ({process_time:.2f}s)")
     
     return response
