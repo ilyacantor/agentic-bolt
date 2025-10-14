@@ -584,7 +584,7 @@ def add_ontology_to_agent_edges():
                     GRAPH_STATE["edges"].append({
                         "source": onto_node["id"],
                         "target": f"agent_{agent_id}",
-                        "label": f"{entity_name} → {agent_info.get('name', agent_id)}",
+                        "label": "",  # No label needed - agent node already shows its name
                         "type": "consumption"
                     })
 
