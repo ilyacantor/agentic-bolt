@@ -107,6 +107,14 @@ function DCLDashboard(){
     );
   }
 
+  function checkAllSources() {
+    setSelectedSources(sources.map(s => s.value));
+  }
+
+  function uncheckAllSources() {
+    setSelectedSources([]);
+  }
+
   async function resetDemo(){
     await fetch('/reset');
     if(cyRef.current){
@@ -241,7 +249,25 @@ function DCLDashboard(){
           {!leftPanelCollapsed && (
             <>
               <div className="card">
-                <div className="card-title mb-3">Data Sources</div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="card-title">Data Sources</div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={checkAllSources}
+                      className="text-[10px] px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition-colors"
+                      title="Select all sources"
+                    >
+                      All
+                    </button>
+                    <button
+                      onClick={uncheckAllSources}
+                      className="text-[10px] px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition-colors"
+                      title="Deselect all sources"
+                    >
+                      None
+                    </button>
+                  </div>
+                </div>
             <div className="space-y-2 mb-3">
               {sources.map(s => (
                 <label key={s.value} className="flex items-center gap-2 cursor-pointer group">
