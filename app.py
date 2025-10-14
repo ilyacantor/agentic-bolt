@@ -71,7 +71,9 @@ def infer_types(df: pd.DataFrame) -> Dict[str, str]:
                 mapping[col] = "datetime"
             except Exception:
                 try:
-                    pd.to_datetime(series.dropna().head(50), errors="coerce")
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore")
+                        pd.to_datetime(series.dropna().head(50), errors="coerce")
                     mapping[col] = "datetime"
                 except Exception:
                     mapping[col] = "string"
