@@ -1,0 +1,213 @@
+Search
+Time
+Deployment
+Source
+Log
+2025-10-14 10:10:33.23
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:10:33.59
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:10:33.59
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:10:34.20
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:10:34.21
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:10:35.13
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:10:35.14
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:10:36.37
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:10:36.38
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:10:40.10
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:10:40.11
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:10:43.81
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:10:43.82
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:10:47.53
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:10:47.54
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:10:48.52
+f25eac18
+System
+crash loop detected
+2025-10-14 10:10:54.10
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:10:54.11
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:10:54.24
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:10:54.25
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:10:54.33
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:10:54.34
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:10:54.60
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:10:54.61
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:10:55.12
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:10:55.13
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:10:56.30
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:10:56.30
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:10:56.46
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:10:56.46
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:11:00.00
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:11:00.01
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:11:03.01
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:11:03.01
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:11:04.71
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:11:04.72
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:11:06.70
+f25eac18
+System
+crash loop detected
+2025-10-14 10:11:18.57
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:11:18.58
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:11:18.72
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:11:18.72
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:11:18.91
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:11:18.92
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:11:19.28
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:11:19.29
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:11:19.75
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:11:19.76
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:11:19.97
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:11:19.98
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:11:23.00
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
+2025-10-14 10:11:23.00
+f25eac18
+System
+command finished with error [python -m uvicorn app:app --host 0.0.0.0 --port 5000]: exit status 1
+2025-10-14 10:11:27.37
+f25eac18
+User
+/nix/store/223bkw05mg0r9wia6y2wqsr0m8534l4c-python-wrapped-0.1.0/bin/python: No module named uvicorn
