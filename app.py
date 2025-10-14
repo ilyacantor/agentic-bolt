@@ -613,12 +613,13 @@ def connect_source(source_key: str) -> Dict[str, Any]:
     return {"ok": True, "score": score.confidence, "previews": previews}
 
 def reset_demo():
-    global EVENT_LOG, GRAPH_STATE, SOURCES_ADDED, ENTITY_SOURCES, ontology, LLM_CALLS, LLM_TOKENS, SELECTED_AGENTS
+    global EVENT_LOG, GRAPH_STATE, SOURCES_ADDED, ENTITY_SOURCES, ontology, LLM_CALLS, LLM_TOKENS, SELECTED_AGENTS, SOURCE_SCHEMAS
     EVENT_LOG = []
     GRAPH_STATE = {"nodes": [], "edges": [], "confidence": None, "last_updated": None}
     SOURCES_ADDED = []
     ENTITY_SOURCES = {}
     SELECTED_AGENTS = []
+    SOURCE_SCHEMAS = {}
     LLM_CALLS = 0
     LLM_TOKENS = 0
     ontology = load_ontology()
