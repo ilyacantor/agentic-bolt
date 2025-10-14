@@ -9,7 +9,7 @@ function DCLDashboard(){
   const [selectedSources, setSelectedSources] = React.useState([]);
   const [selectedAgents, setSelectedAgents] = React.useState(['finops_pilot']);
   const [processState, setProcessState] = React.useState({ active: false, stage: '', progress: 0, complete: false });
-  const [viewType, setViewType] = React.useState('cytoscape');
+  const [viewType, setViewType] = React.useState('sankey');
   const [leftPanelCollapsed, setLeftPanelCollapsed] = React.useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = React.useState(false);
   const cyRef = React.useRef(null);
