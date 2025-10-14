@@ -101,20 +101,27 @@ function renderSankey(state) {
     nodeIndex++;
   });
 
-  // Now create links, filtering out edges to unconsumed ontology entities
+  // Create links from state.graph.edges, filtering out unconsumed paths
   state.graph.edges.forEach(e => {
     const sourceType = state.graph.nodes.find(n => n.id === e.source)?.type;
     const targetType = state.graph.nodes.find(n => n.id === e.target)?.type;
     
+    // Skip source-to-source edges
     if (sourceType === 'source' && targetType === 'source') {
       return;
     }
     
-    // Skip edges from sources to ontology entities that aren't consumed by any agent
+    // Skip source→ontology edges if the ontology entity isn't consumed by any agent
     if (sourceType === 'source' && targetType === 'ontology' && !consumedOntologyIds.has(e.target)) {
       return;
     }
     
+    // Skip ontology→agent edges if the ontology entity isn't consumed
+    if (sourceType === 'ontology' && targetType === 'agent' && !consumedOntologyIds.has(e.source)) {
+      return;
+    }
+    
+    // Create the link if both nodes exist in the Sankey
     if (nodeIndexMap[e.source] !== undefined && nodeIndexMap[e.target] !== undefined) {
       const sourceNode = state.graph.nodes.find(n => n.id === e.source);
       let linkSourceSystem = null;
@@ -130,36 +137,10 @@ function renderSankey(state) {
         source: nodeIndexMap[e.source],
         target: nodeIndexMap[e.target],
         value: 1,
-        sourceSystem: linkSourceSystem
+        sourceSystem: linkSourceSystem,
+        targetType: targetType  // Track target type for coloring
       });
     }
-  });
-
-  // Connect ontology nodes to their consumer agents based on agent consumption metadata
-  // Only create links when an agent actually consumes that specific entity
-  const agentConsumption = state.agent_consumption || {};
-  
-  agentNodes.forEach(agentNode => {
-    // Extract agent_id from node id (format: agent_revops_pilot -> revops_pilot)
-    const agentId = agentNode.id.replace('agent_', '');
-    const consumedEntities = agentConsumption[agentId] || [];
-    
-    ontologyNodes.forEach(ontNode => {
-      // Extract entity name from ontology node id (format: dcl_customer -> customer)
-      const entityName = ontNode.id.replace('dcl_', '');
-      
-      // Only create link if this agent consumes this entity
-      if (consumedEntities.includes(entityName) && 
-          nodeIndexMap[ontNode.id] !== undefined && 
-          nodeIndexMap[agentNode.id] !== undefined) {
-        sankeyLinks.push({
-          source: nodeIndexMap[ontNode.id],
-          target: nodeIndexMap[agentNode.id],
-          value: 1,
-          targetType: 'agent'
-        });
-      }
-    });
   });
 
   const data = {
