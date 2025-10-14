@@ -107,16 +107,30 @@ function OntologyMapping() {
                 {Object.entries(sourceStructure).map(([source, tables]) => (
                   <div key={source}>
                     <div className="text-sm font-semibold text-blue-400 mb-2 uppercase">{source}</div>
-                    {tables && tables.map(tbl => (
-                      <div key={tbl?.id || Math.random()} className="mb-2">
-                        <div className="bg-blue-900/20 border border-blue-800/50 rounded-lg px-3 py-2">
-                          <div className="text-sm font-medium text-blue-300">{tbl?.table || 'Unknown'}</div>
-                          <div className="text-xs text-slate-500 mt-1">
-                            {mappingEdges.filter(e => e?.source === tbl?.id).length} fields mapped
+                    {tables && tables.map(tbl => {
+                      const tableMappings = mappingEdges.filter(e => e?.source === tbl?.id);
+                      return (
+                        <div key={tbl?.id || Math.random()} className="mb-2">
+                          <div className="bg-blue-900/20 border border-blue-800/50 rounded-lg px-3 py-2">
+                            <div className="text-sm font-medium text-blue-300 mb-2">{tbl?.table || 'Unknown'}</div>
+                            {tableMappings.length > 0 ? (
+                              <div className="space-y-1">
+                                {tableMappings.map((edge, i) => (
+                                  <div key={i} className="text-xs text-slate-400 flex items-center gap-1">
+                                    <svg className="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    <span className="truncate">{edge?.label || 'Unknown field'}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-xs text-slate-500">No fields mapped</div>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ))}
               </div>
