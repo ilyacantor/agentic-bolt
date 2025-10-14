@@ -31,7 +31,7 @@ function NavBar({onSearch}){
           </div>
           
           <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-xl border border-slate-700">
-            <span className="text-xs text-slate-400">Dev Mode</span>
+            <span className="text-xs text-slate-400">Prod Mode</span>
             <button 
               onClick={toggleDevMode}
               className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${devMode ? 'bg-green-600' : 'bg-slate-600'}`}
