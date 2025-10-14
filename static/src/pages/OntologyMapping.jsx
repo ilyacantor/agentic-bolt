@@ -16,12 +16,15 @@ function OntologyMapping() {
     return () => clearInterval(interval);
   }, []);
 
-  // Parse data structure from graph state
-  const sourceNodes = state.graph.nodes.filter(n => n.type === 'source');
-  const ontologyNodes = state.graph.nodes.filter(n => n.type === 'ontology');
-  const agentNodes = state.graph.nodes.filter(n => n.type === 'agent');
-  const mappingEdges = state.graph.edges.filter(e => e.type === 'mapping');
-  const consumptionEdges = state.graph.edges.filter(e => e.type === 'consumption');
+  // Parse data structure from graph state with safety checks
+  const nodes = state?.graph?.nodes || [];
+  const edges = state?.graph?.edges || [];
+  
+  const sourceNodes = nodes.filter(n => n.type === 'source');
+  const ontologyNodes = nodes.filter(n => n.type === 'ontology');
+  const agentNodes = nodes.filter(n => n.type === 'agent');
+  const mappingEdges = edges.filter(e => e.type === 'mapping');
+  const consumptionEdges = edges.filter(e => e.type === 'consumption');
 
   // Build source structure: group by source system
   const sourceStructure = {};
