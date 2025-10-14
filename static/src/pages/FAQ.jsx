@@ -74,6 +74,66 @@ function FAQ() {
           <p className="text-slate-400">Learn about key concepts and terminology used in the Data Connection Layer</p>
         </div>
 
+        <div className="card mb-6">
+          <div className="card-title mb-4">How to Use the Demo</div>
+          <div className="space-y-4">
+            <div className="bg-slate-800/30 rounded-lg p-4 border-l-4 border-cyan-500">
+              <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                This demo shows how the Data Connection Layer automatically connects enterprise data sources to AI agents. 
+                Follow these simple steps to see it in action:
+              </p>
+              
+              <div className="space-y-3">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-cyan-600 text-white font-bold flex items-center justify-center text-sm">1</div>
+                  <div>
+                    <h4 className="text-white font-semibold text-sm mb-1">Select Data Sources</h4>
+                    <p className="text-slate-300 text-sm">On the left sidebar, check the boxes next to one or more data sources (Dynamics, Salesforce, Snowflake, etc.). These represent your enterprise systems.</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-cyan-600 text-white font-bold flex items-center justify-center text-sm">2</div>
+                  <div>
+                    <h4 className="text-white font-semibold text-sm mb-1">Choose Target Agents</h4>
+                    <p className="text-slate-300 text-sm">Select one or both AI agents (RevOps Pilot or FinOps Pilot) that will consume the data. Each agent specializes in different business domains.</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-cyan-600 text-white font-bold flex items-center justify-center text-sm">3</div>
+                  <div>
+                    <h4 className="text-white font-semibold text-sm mb-1">Click "Connect & Map"</h4>
+                    <p className="text-slate-300 text-sm">Watch the progress indicator as the system analyzes schemas, maps fields to the unified ontology, and validates the connections.</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-cyan-600 text-white font-bold flex items-center justify-center text-sm">4</div>
+                  <div>
+                    <h4 className="text-white font-semibold text-sm mb-1">Explore the Data Flow</h4>
+                    <p className="text-slate-300 text-sm">View the Sankey diagram showing how data flows from your sources → through the unified ontology → to your agents. Toggle between Sankey and Graph views.</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-cyan-600 text-white font-bold flex items-center justify-center text-sm">5</div>
+                  <div>
+                    <h4 className="text-white font-semibold text-sm mb-1">Try Different Combinations</h4>
+                    <p className="text-slate-300 text-sm">Click "Reset Demo" to start over and experiment with different data sources and agents to see how the mappings change.</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4 pt-4 border-t border-slate-700">
+                <p className="text-slate-400 text-xs">
+                  <strong className="text-cyan-400">Tip:</strong> Use the Prod Mode toggle in the top-right to switch between AI-powered mapping (ON) and rule-based mapping (OFF).
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="card">
           <div className="card-title mb-4">Glossary of Terms</div>
           <div className="space-y-6">
