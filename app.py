@@ -479,10 +479,14 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
     return {"mappings": mappings, "joins": joins}
 
 def apply_plan(con, source_key: str, plan: Dict[str, Any]) -> Scorecard:
-    global STATE_LOCK
+    global STATE_LOCK, ontology
     issues, blockers, joins = [], [], []
     confs = []
     per_entity_views = {}
+    
+    # Load ontology to get full field definitions
+    if ontology is None:
+        ontology = load_ontology()
     
     # Build graph updates (nodes and edges) to apply atomically
     nodes_to_add = []
@@ -491,26 +495,40 @@ def apply_plan(con, source_key: str, plan: Dict[str, Any]) -> Scorecard:
     
     for m in plan.get("mappings", []):
         ent = m["entity"]
-        selects = []
+        
+        # Get all ontology fields for this entity
+        entity_def = ontology.get("entities", {}).get(ent, {})
+        all_ontology_fields = list(entity_def.get("fields", {}).keys())
+        
+        # Build a mapping dict: ontology_field -> source_field
+        field_map = {}
         for f in m["fields"]:
-            onto = f["onto_field"]
-            src = f["source"]
+            onto_field = f["onto_field"]
+            src_field = f["source"]
+            field_map[onto_field] = src_field
             confs.append(float(f.get("confidence", 0.75)))
-            selects.append(f"{src} AS {onto}")
-        if not selects:
+        
+        if not field_map:
             continue
         
-        # Extract the raw table name from LLM's source_table (which may or may not have source_key prefix)
+        # Extract the raw table name from LLM's source_table
         raw_table = m['source_table']
         if raw_table.startswith(f"{source_key}_"):
-            # LLM already prefixed it
             table_name = raw_table[len(source_key)+1:]
         else:
-            # LLM returned just the table name
             table_name = raw_table
         
         view_name = f"dcl_{ent}_{source_key}_{table_name}"
         src_table = f"src_{source_key}_{table_name}"
+        
+        # Build SELECT with ALL ontology fields (use NULL for unmapped fields)
+        selects = []
+        for onto_field in all_ontology_fields:
+            if onto_field in field_map:
+                selects.append(f"{field_map[onto_field]} AS {onto_field}")
+            else:
+                selects.append(f"NULL AS {onto_field}")
+        
         try:
             con.sql(f"CREATE OR REPLACE VIEW {view_name} AS SELECT {', '.join(selects)} FROM {src_table}")
             per_entity_views.setdefault(ent, []).append(view_name)

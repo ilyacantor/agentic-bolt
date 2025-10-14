@@ -1,0 +1,42 @@
+I reset the demo. Pick a source from the menu to add it.
+📚 RAG: Retrieved 5 similar mappings for context
+📚 RAG: Retrieved 4 similar mappings for context
+📚 RAG: Retrieved 5 similar mappings for context
+💾 Stored 2 mappings to RAG
+I connected to Salesforce (schema sample) and proposed mappings and joins.
+I found these entities: Account, Opportunity.
+To connect them, I proposed joins like Account.Id with Opportunity.AccountId.
+I am about 97% confident. I created unified views so you can now query across these sources.
+💾 Stored 2 mappings to RAG
+I connected to Dynamics (schema sample) and proposed mappings and joins.
+I found these entities: accounts, opportunities.
+To connect them, I proposed joins like accounts.AccountId with opportunities.AccountId.
+I am about 97% confident. I created unified views so you can now query across these sources.
+💾 Stored 1 mappings to RAG
+I connected to Mongodb (schema sample) and proposed mappings and joins.
+I found these entities: account_usage.
+I am about 100% confident. I created unified views so you can now query across these sources.
+💾 Stored 3 mappings to RAG
+I connected to Legacy_Sql (schema sample) and proposed mappings and joins.
+I found these entities: CloudResources, UsageMetrics.
+To connect them, I proposed joins like CloudResources.ResourceID with UsageMetrics.ResourceID.
+I paused because of blockers and did not publish. Blockers: aws_resources: union failed: Binder Error: Set operations can only apply to expressions with the same number of result columns
+💾 Stored 2 mappings to RAG
+I connected to Sap (schema sample) and proposed mappings and joins.
+I found these entities: BILLING_ITEMS, CLOUD_INVOICES.
+To connect them, I proposed joins like BILLING_ITEMS.INVOICE_NUM with CLOUD_INVOICES.INVOICE_NUM.
+I paused because of blockers and did not publish. Blockers: cost_reports: failed view dcl_cost_reports_sap_BILLING_ITEMS: Binder Error: Referenced column "INVOICE_DATE" not found in FROM clause! Candidate bindings: "INVOICE_NUM", "LINE_TOTAL", "ITEM_ID", "AWS_SERVICE", "UNIT_PRICE" LINE 1: ...st_reports_sap_BILLING_ITEMS AS SELECT ITEM_ID AS cost_id, INVOICE_DATE AS report_date, AWS_SERVICE AS service_category... ^
+💾 Stored 1 mappings to RAG
+I connected to Supabase (schema sample) and proposed mappings and joins.
+I found these entities: account_health.
+I am about 97% confident. I created unified views so you can now query across these sources.
+💾 Stored 1 mappings to RAG
+I connected to Netsuite (schema sample) and proposed mappings and joins.
+I found these entities: CloudSpend, CloudVendorContracts.
+To connect them, I proposed joins like CloudVendorContracts.VendorID with CloudSpend.VendorID.
+I am about 98% confident. I created unified views so you can now query across these sources.
+💾 Stored 4 mappings to RAG
+I connected to Snowflake (schema sample) and proposed mappings and joins.
+I found these entities: AWS_COSTS, AWS_RESOURCES, RESOURCE_METRICS.
+To connect them, I proposed joins like AWS_RESOURCES.RESOURCE_ID with AWS_COSTS.RESOURCE_ID; AWS_RESOURCES.RESOURCE_ID with RESOURCE_METRICS.RESOURCE_ID.
+I paused because of blockers and did not publish. Blockers: aws_resources: union failed: Binder Error: Set operations can only apply to expressions with the same number of result columns
