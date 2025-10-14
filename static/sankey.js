@@ -190,7 +190,9 @@ function renderSankey(state) {
     sap: { parent: '#10b981', child: '#34d399' },
     netsuite: { parent: '#f59e0b', child: '#fbbf24' },
     legacy_sql: { parent: '#ef4444', child: '#f87171' },
-    snowflake: { parent: '#06b6d4', child: '#22d3ee' }
+    snowflake: { parent: '#06b6d4', child: '#22d3ee' },
+    supabase: { parent: '#14b8a6', child: '#2dd4bf' },
+    mongodb: { parent: '#10b981', child: '#34d399' }
   };
 
   const typeColorMap = {

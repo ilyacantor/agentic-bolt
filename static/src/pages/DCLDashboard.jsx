@@ -202,7 +202,9 @@ function DCLDashboard(){
     {name: 'SAP ERP', value: 'sap', type: 'erp'},
     {name: 'NetSuite', value: 'netsuite', type: 'erp'},
     {name: 'Legacy SQL Server', value: 'legacy_sql', type: 'database'},
-    {name: 'Snowflake', value: 'snowflake', type: 'warehouse'}
+    {name: 'Snowflake', value: 'snowflake', type: 'warehouse'},
+    {name: 'Supabase', value: 'supabase', type: 'health'},
+    {name: 'MongoDB', value: 'mongodb', type: 'usage'}
   ];
 
   const agents = [
