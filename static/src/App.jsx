@@ -14,6 +14,7 @@ function App(){
     case '/agents': Page = <Agents/>; break;
     case '/pipeline': Page = <Pipeline/>; break;
     case '/command': Page = <CommandCenter/>; break;
+    case '/faq': Page = <FAQ/>; break;
     default: Page = <div className="p-6">Not found</div>;
   }
 

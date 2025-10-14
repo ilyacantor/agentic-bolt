@@ -7,6 +7,7 @@ function SideNav(){
     { href:'#/agents', label:'Agents', icon:'🤖' },
     { href:'#/pipeline', label:'Pipeline', icon:'⚡' },
     { href:'#/command', label:'Command Center', icon:'💻' },
+    { href:'#/faq', label:'FAQ & Glossary', icon:'❓' },
   ];
   
   return (

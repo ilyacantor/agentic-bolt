@@ -9,7 +9,32 @@ An intelligent system that autonomously discovers data sources from multiple ent
 - Shows complete flows when source data matches agent requirements
 - Shows truncated flows (partial connections) when source data cannot feed selected agents
 
-## Recent Changes (October 13, 2025)
+## Recent Changes (October 14, 2025)
+- ✅ **FAQ & Glossary Page** (Latest)
+  - **Comprehensive Glossary**: Added definitions for all key terms (Node, Edge, Table, Ontology, Agent, DCL, RAG, LLM Call, RevOps Pilot, FinOps Pilot, Graph, Sankey, Data Source, Token, Confidence)
+  - **Common Questions**: Included FAQ section answering key user questions about data flow, mapping logic, and visualization differences
+  - **Navigation Integration**: Added FAQ link to side navigation with ❓ icon
+  - **User Education**: Provides clear, non-technical explanations for all demo concepts
+
+- ✅ **Collapsible Panel UI Enhancement**
+  - **Left Navigation Panel**: Collapses to icon-only mode (64px width) with tooltips on hover
+  - **Left Data Sources Panel**: Collapses to 1 column with toggle button
+  - **Right Status/Narration Panel**: Collapses to 1 column with toggle button
+  - **Smart Graph Expansion**: Center graph intelligently expands (6→8→10 columns) based on which panels are collapsed
+  - **Smooth Animations**: 300ms transitions for seamless collapsing/expanding
+  - **Independent Controls**: All three panels work independently for maximum workspace flexibility
+
+- ✅ **Sankey Default View**
+  - **Default Visualization**: Changed default from Graph to Sankey view for better data flow clarity
+  - **User can still toggle**: Graph/Sankey switcher remains available in toolbar
+
+- ✅ **Smart Edge Filtering in Sankey Diagram**
+  - **Consumption-Based Display**: Only shows edges for data that flows to selected agents
+  - **No Orphaned Connections**: Removed duplicate edge creation logic that caused false connections
+  - **Clean Data Flow**: Source→Consumed Ontology→Agent with accurate color coding
+  - **Backend Intelligence**: Heuristic planner filters mappings based on selected agents before creating them
+
+## Previous Changes (October 13, 2025)
 - ✅ **Detailed FinOps Field Implementation** (Latest)
   - **Comprehensive Ontology**: Added EC2, RDS, S3, ALB-specific fields (instance_type, vcpus, memory, storage, db_engine, cpu_utilization, memory_utilization, network_in/out, db_connections, S3 get/put requests)
   - **Enhanced Heuristic Detection**: Extended pattern matching to recognize detailed FinOps metrics across resource config, utilization, and cost/billing categories
