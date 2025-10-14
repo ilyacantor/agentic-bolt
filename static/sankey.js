@@ -231,13 +231,15 @@ function renderSankey(state) {
       // Check if this link goes to an agent (ontology -> agent edges)
       const targetNode = sankeyNodes.find(n => n.name === d.target.name);
       if (targetNode && targetNode.type === 'agent') {
-        return '#16a34a';  // Green for ontology->agent connections (consumed data)
+        return '#9333ea';  // Purple for ontology->agent connections (consumed data)
       }
       
+      // Source->ontology edges keep source colors
       if (originalLink && originalLink.sourceSystem) {
         return sourceColorMap[originalLink.sourceSystem]?.child || '#0bcad9';
       }
-      return '#64748b';
+      
+      return '#64748b';  // Grey for any other edge type
     })
     .attr('stroke-width', d => Math.max(1, d.width))
     .attr('stroke-opacity', 0.5)
