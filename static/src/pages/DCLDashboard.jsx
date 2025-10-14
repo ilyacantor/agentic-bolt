@@ -420,12 +420,12 @@ function DCLDashboard(){
         {/* Notes Section - Below Graph */}
         <div className="col-span-12 lg:col-span-9 lg:col-start-4">
           <div className="card">
-            <div className="text-slate-500 font-semibold text-xs mb-2">Notes:</div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="text-slate-500 font-semibold text-sm mb-3">Data Previews:</div>
+            <div className="grid grid-cols-2 gap-4">
               {/* Source Preview */}
               <div>
-                <div className="text-[10px] text-slate-400 font-medium mb-1">Source Preview</div>
-                <div className="text-[9px] max-h-[120px] overflow-y-auto">
+                <div className="text-xs text-slate-400 font-semibold mb-2">Source Preview</div>
+                <div className="text-xs max-h-[350px] overflow-y-auto">
                   {Object.keys(state.preview.sources).length === 0 ? (
                     <div className="text-slate-600 italic">Click a connection or source node</div>
                   ) : (
@@ -480,8 +480,8 @@ function DCLDashboard(){
 
               {/* Unified Preview */}
               <div>
-                <div className="text-[10px] text-slate-400 font-medium mb-1">Unified Preview</div>
-                <div className="text-[9px] max-h-[120px] overflow-y-auto">
+                <div className="text-xs text-slate-400 font-semibold mb-2">Unified Preview</div>
+                <div className="text-xs max-h-[350px] overflow-y-auto">
                   {Object.keys(state.preview.ontology).length === 0 ? (
                     <div className="text-slate-600 italic">Click a connection or unified node</div>
                   ) : (

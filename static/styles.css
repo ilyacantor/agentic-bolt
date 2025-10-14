@@ -200,11 +200,27 @@ table tr:nth-child(even) {
 }
 
 td { 
-  max-width: 160px; 
+  max-width: 200px; 
   overflow: hidden; 
   text-overflow: ellipsis; 
   white-space: nowrap;
   color: #6b7280;
+}
+
+/* Transposed table styles for better readability with many fields */
+.transposed-table td.field-name {
+  font-weight: 600;
+  background-color: #1e293b;
+  color: #94a3b8;
+  white-space: nowrap;
+  min-width: 150px;
+  max-width: none;
+}
+
+.transposed-table thead th {
+  background-color: #0f172a;
+  color: #cbd5e1;
+  font-weight: 600;
 }
 
 .pill { 

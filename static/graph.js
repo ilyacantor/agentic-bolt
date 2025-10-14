@@ -114,9 +114,28 @@ function renderTable(elId, tables){
     if(!rows || rows.length==0){ continue; }
     const cols = Object.keys(rows[0]);
     html += `<div class='pill' style='margin:6px 0;'>${name}</div>`;
-    html += "<table><thead><tr>" + cols.map(c=>`<th>${c}</th>`).join("") + "</tr></thead><tbody>";
-    rows.forEach(r => { html += "<tr>" + cols.map(c=>`<td>${r[c] !== null ? r[c] : ''}</td>`).join("") + "</tr>"; });
-    html += "</tbody></table>";
+    
+    // Transpose view: show fields as rows for better readability with many fields
+    if(cols.length > 10) {
+      // Transposed table: Field | Value (Record 1) | Value (Record 2) | ...
+      html += "<table class='transposed-table'><thead><tr><th>Field</th>";
+      rows.forEach((r, idx) => { html += `<th>Record ${idx + 1}</th>`; });
+      html += "</tr></thead><tbody>";
+      cols.forEach(col => {
+        html += `<tr><td class='field-name'>${col}</td>`;
+        rows.forEach(r => { 
+          const val = r[col];
+          html += `<td>${val != null && val !== '' && val !== undefined ? val : '—'}</td>`; 
+        });
+        html += "</tr>";
+      });
+      html += "</tbody></table>";
+    } else {
+      // Normal table: columns across the top
+      html += "<table><thead><tr>" + cols.map(c=>`<th>${c}</th>`).join("") + "</tr></thead><tbody>";
+      rows.forEach(r => { html += "<tr>" + cols.map(c=>`<td>${r[c] !== null ? r[c] : ''}</td>`).join("") + "</tr>"; });
+      html += "</tbody></table>";
+    }
   }
   el.innerHTML = html || "<div class='pill'>No data</div>";
 }
