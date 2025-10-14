@@ -17,6 +17,10 @@ function FAQ() {
       definition: "A unified data model that standardizes fields and entities across different source systems. The ontology acts as a translation layer, mapping diverse source schemas to a consistent structure."
     },
     {
+      term: "Entity",
+      definition: "A conceptual object or data category within the ontology that represents a business concept (like aws_resource, cloud_cost, customer, or transaction). Entities contain standardized fields that are populated from various source systems, allowing agents to work with consistent data regardless of the original source."
+    },
+    {
       term: "Agent",
       definition: "An AI-powered domain expert that consumes data from the unified ontology. Agents like RevOps Pilot and FinOps Pilot use the standardized data to provide insights and automation for their specific domains."
     },
