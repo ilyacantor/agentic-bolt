@@ -11,10 +11,6 @@ command = "uvicorn app:app --host 0.0.0.0 --port 8080"
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 36191
-externalPort = 3000
-
 [deployment]
 deploymentTarget = "vm"
 run = ["sh", "-c", "./start.sh"]
