@@ -33,6 +33,7 @@ LLM_TOKENS = 0
 rag_engine = None
 RAG_CONTEXT = {"retrievals": [], "total_mappings": 0, "last_retrieval_count": 0}
 SOURCE_SCHEMAS: Dict[str, Dict[str, Any]] = {}
+DEV_MODE = True  # When True, uses AI/RAG for mapping; when False, uses only heuristics
 
 def log(msg: str):
     print(msg, flush=True)
@@ -159,7 +160,12 @@ def safe_llm_call(prompt: str, source_key: str, tables: Dict[str, Any]) -> Dict[
         return None
 
 def llm_propose(ontology: Dict[str, Any], source_key: str, tables: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    global rag_engine, RAG_CONTEXT
+    global rag_engine, RAG_CONTEXT, DEV_MODE
+    
+    # Skip LLM calls if dev mode is disabled
+    if not DEV_MODE:
+        return None
+    
     if not os.getenv("GEMINI_API_KEY"):
         return None
     
@@ -764,7 +770,8 @@ def state():
         "rag": RAG_CONTEXT,
         "agent_consumption": agent_consumption,
         "selected_sources": SOURCES_ADDED,
-        "selected_agents": SELECTED_AGENTS
+        "selected_agents": SELECTED_AGENTS,
+        "dev_mode": DEV_MODE
     })
 
 @app.get("/connect")
@@ -792,6 +799,14 @@ def connect(sources: str = Query(...), agents: str = Query(...)):
 def reset():
     reset_demo()
     return JSONResponse({"ok": True})
+
+@app.get("/toggle_dev_mode")
+def toggle_dev_mode():
+    global DEV_MODE
+    DEV_MODE = not DEV_MODE
+    status = "enabled" if DEV_MODE else "disabled"
+    log(f"🔧 Dev Mode {status} - {'AI/RAG mapping active' if DEV_MODE else 'Using heuristic-only mapping'}")
+    return JSONResponse({"dev_mode": DEV_MODE, "status": status})
 
 @app.get("/preview")
 def preview(node: Optional[str] = None):
