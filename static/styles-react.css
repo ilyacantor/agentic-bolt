@@ -1,7 +1,13 @@
 
 /* Minimal tweaks on top of Tailwind */
 html, body, #root { height: 100%; }
-.card { @apply bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-lg shadow-slate-950/50 hover:shadow-xl hover:shadow-slate-950/60 transition-shadow duration-300; }
+.card { 
+  @apply bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-2xl shadow-black/60 transition-shadow duration-300;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+.card:hover {
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.85);
+}
 .card-title { @apply text-slate-200 font-semibold; }
 .subtle { @apply text-slate-400 text-sm; }
 .separator { @apply h-px bg-slate-800 my-4; }

@@ -174,7 +174,7 @@ function renderSankey(state) {
   const sankey = d3.sankey()
     .nodeWidth(20)
     .nodePadding(30)
-    .extent([[1, 1], [validWidth - 1, validHeight - 6]]);
+    .extent([[1, 40], [validWidth - 1, validHeight - 6]]);
 
   const graph = sankey({
     nodes: data.nodes.map(d => Object.assign({}, d)),
@@ -357,20 +357,19 @@ function renderSankey(state) {
     return null;
   };
 
-  // Render labels with colored backgrounds and symbols for source parents
+  // Render labels with colored backgrounds and symbols for all node types
   nodeGroups.each(function(d) {
     const nodeData = sankeyNodes.find(n => n.name === d.name);
     const isLeft = d.x0 < validWidth / 2;
     const typeInfo = getSourceTypeInfo(nodeData);
+    const group = d3.select(this);
+    const textX = isLeft ? d.x1 + 6 : d.x0 - 6;
+    const textY = (d.y1 + d.y0) / 2;
     
-    if (nodeData && nodeData.type === 'source_parent' && typeInfo) {
-      const group = d3.select(this);
-      const textX = isLeft ? d.x1 + 6 : d.x0 - 6;
-      const textY = (d.y1 + d.y0) / 2;
-      
-      // Background rect
+    // Source parent or source table nodes with type info
+    if (nodeData && (nodeData.type === 'source_parent' || nodeData.type === 'source') && typeInfo) {
       const padding = 4;
-      const textWidth = d.name.length * 6 + 18; // Approximate width including icon
+      const textWidth = d.name.length * 6 + 18;
       const rectWidth = textWidth + padding * 2;
       const rectHeight = 18;
       
@@ -385,7 +384,6 @@ function renderSankey(state) {
         .attr('stroke-width', 0.5)
         .attr('opacity', 0.7);
       
-      // Icon/Symbol
       group.append('text')
         .attr('x', isLeft ? textX + 2 : textX - rectWidth + padding + 2)
         .attr('y', textY)
@@ -395,7 +393,6 @@ function renderSankey(state) {
         .style('font-size', '10px')
         .text(typeInfo.icon);
       
-      // Label text
       group.append('text')
         .attr('x', isLeft ? textX + 18 : textX - rectWidth + padding + 18)
         .attr('y', textY)
@@ -405,9 +402,38 @@ function renderSankey(state) {
         .style('font-size', '9px')
         .style('font-weight', '600')
         .text(d.name);
-    } else {
-      // Regular text for non-source-parent nodes
-      d3.select(this).append('text')
+    } 
+    // Agent nodes with special styling
+    else if (nodeData && nodeData.type === 'agent') {
+      const padding = 4;
+      const textWidth = d.name.length * 7 + 10;
+      const rectWidth = textWidth + padding * 2;
+      const rectHeight = 20;
+      
+      group.append('rect')
+        .attr('x', isLeft ? textX - padding : textX - rectWidth + padding)
+        .attr('y', textY - rectHeight / 2)
+        .attr('width', rectWidth)
+        .attr('height', rectHeight)
+        .attr('rx', 5)
+        .attr('fill', '#581c87')
+        .attr('stroke', '#9333ea')
+        .attr('stroke-width', 1)
+        .attr('opacity', 0.8);
+      
+      group.append('text')
+        .attr('x', isLeft ? textX + padding : textX - padding)
+        .attr('y', textY)
+        .attr('dy', '0.35em')
+        .attr('text-anchor', isLeft ? 'start' : 'end')
+        .attr('fill', '#e9d5ff')
+        .style('font-size', '10px')
+        .style('font-weight', '700')
+        .text(d.name);
+    }
+    // Regular text for ontology nodes
+    else {
+      group.append('text')
         .attr('x', isLeft ? d.x1 + 6 : d.x0 - 6)
         .attr('y', (d.y1 + d.y0) / 2)
         .attr('dy', '0.35em')

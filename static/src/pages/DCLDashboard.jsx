@@ -401,7 +401,7 @@ function DCLDashboard(){
           ></div>
           <div 
             id="sankey-container" 
-            className="rounded-xl bg-slate-900/50 border border-slate-800 h-[600px] pt-12"
+            className="rounded-xl bg-slate-900/50 border border-slate-800 h-[600px]"
             style={{ display: viewType === 'sankey' ? 'block' : 'none' }}
           ></div>
         </div>
