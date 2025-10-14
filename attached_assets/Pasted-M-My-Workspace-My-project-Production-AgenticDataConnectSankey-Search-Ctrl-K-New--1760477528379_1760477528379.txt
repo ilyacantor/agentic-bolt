@@ -1,0 +1,95 @@
+M
+My Workspace
+My project
+
+Production
+
+AgenticDataConnectSankey
+
+
+Search
+Ctrl+
+K
+
+New
+
+Upgrade
+
+
+i
+Environment
+AgenticDataConnectSankey
+Events
+Settings
+Monitor
+Logs
+Metrics
+Manage
+Environment
+Shell
+Scaling
+Previews
+Disks
+Jobs
+
+Changelog
+Invite a friend
+
+Contact support
+Render Status
+Your free instance will spin down with inactivity, which can delay requests by 50 seconds or more.
+Upgrade now
+
+All logs
+Search
+Search
+
+Live tail
+PDT
+
+Menu
+
+     ==> Deploying...
+==> Running 'uvicorn app:app --host 0.0.0.0 --port $PORT'
+INFO:     Started server process [56]
+INFO:     Waiting for application startup.
+⚠️ GEMINI_API_KEY not set. LLM proposals may be unavailable.
+⚠️ RAG Engine initialization failed: Pinecone API key not found. Please set PINECONE_API_KEY environment variable.. Continuing without RAG.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:10000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:53616 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+     ==> Your service is live 🎉
+     ==> 
+     ==> ///////////////////////////////////////////////////////////
+     ==> 
+     ==> Available at your primary URL https://agenticdataconnectsankey.onrender.com
+     ==> 
+     ==> ///////////////////////////////////////////////////////////
+INFO:     35.197.37.4:0 - "GET / HTTP/1.1" 200 OK
+INFO:     67.160.196.212:0 - "GET / HTTP/1.1" 200 OK
+INFO:     67.160.196.212:0 - "GET /static/sankey.js?v=1760477117 HTTP/1.1" 200 OK
+INFO:     67.160.196.212:0 - "GET /static/styles-react.css HTTP/1.1" 200 OK
+INFO:     67.160.196.212:0 - "GET /static/src/router.js?v=1760477117 HTTP/1.1" 200 OK
+INFO:     67.160.196.212:0 - "GET /static/src/components/SideNav.jsx?v=1760477117 HTTP/1.1" 200 OK
+INFO:     67.160.196.212:0 - "GET /static/src/pages/FAQ.jsx?v=1760477117 HTTP/1.1" 200 OK
+INFO:     67.160.196.212:0 - "GET /static/src/App.jsx?v=1760477117 HTTP/1.1" 200 OK
+INFO:     67.160.196.212:0 - "GET /static/src/components/StatusPill.jsx?v=1760477117 HTTP/1.1" 200 OK
+INFO:     67.160.196.212:0 - "GET /static/src/pages/Agents.jsx?v=1760477117 HTTP/1.1" 200 OK
+INFO:     67.160.196.212:0 - "GET /static/src/pages/Pipeline.jsx?v=1760477117 HTTP/1.1" 200 OK
+INFO:     67.160.196.212:0 - "GET /static/src/pages/DCLDashboard.jsx?v=1760477117 HTTP/1.1" 200 OK
+INFO:     67.160.196.212:0 - "GET /static/src/pages/OntologyMapping.jsx?v=1760477117 HTTP/1.1" 200 OK
+INFO:     67.160.196.212:0 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+     ==> Detected service running on port 10000
+     ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+Need better ways to work with logs? Try theRender CLI, Render MCP Server, or set up a log stream integration 
+
+0 services selected:
+
+Move
+
+Generate Blueprint
+
+Resume
+
+Suspend
+
