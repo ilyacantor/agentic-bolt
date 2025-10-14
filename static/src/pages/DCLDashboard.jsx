@@ -11,6 +11,7 @@ function DCLDashboard(){
   const [processState, setProcessState] = React.useState({ active: false, stage: '', progress: 0, complete: false });
   const [viewType, setViewType] = React.useState('cytoscape');
   const [leftPanelCollapsed, setLeftPanelCollapsed] = React.useState(false);
+  const [rightPanelCollapsed, setRightPanelCollapsed] = React.useState(false);
   const cyRef = React.useRef(null);
 
   React.useEffect(()=>{
@@ -345,7 +346,12 @@ function DCLDashboard(){
         </div>
 
         {/* Center - Graph */}
-        <div className={`col-span-12 ${leftPanelCollapsed ? 'lg:col-span-8' : 'lg:col-span-6'} card transition-all duration-300`}>
+        <div className={`col-span-12 ${
+          leftPanelCollapsed && rightPanelCollapsed ? 'lg:col-span-10' : 
+          leftPanelCollapsed ? 'lg:col-span-8' : 
+          rightPanelCollapsed ? 'lg:col-span-8' : 
+          'lg:col-span-6'
+        } card transition-all duration-300`}>
           <div className="flex items-center justify-between mb-3">
             <div className="card-title">Data Flow Graph</div>
             <div className="flex items-center gap-2">
@@ -389,9 +395,28 @@ function DCLDashboard(){
         </div>
 
         {/* Right Sidebar */}
-        <div className="col-span-12 lg:col-span-3 space-y-4">
-          {/* Processing Indicator - Always Visible */}
-          <div className="rounded-lg p-4 bg-slate-900/90 border border-slate-800">
+        <div className={`col-span-12 ${rightPanelCollapsed ? 'lg:col-span-1' : 'lg:col-span-3'} space-y-4 transition-all duration-300`}>
+          {/* Collapse/Expand Button */}
+          <button
+            onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
+            className="w-full bg-slate-800 hover:bg-slate-700 rounded-lg p-2 flex items-center justify-center gap-2 text-slate-300 hover:text-white transition-colors"
+            title={rightPanelCollapsed ? "Expand panel" : "Collapse panel"}
+          >
+            <svg 
+              className={`w-4 h-4 transition-transform duration-300 ${rightPanelCollapsed ? '' : 'rotate-180'}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+            </svg>
+            {!rightPanelCollapsed && <span className="text-sm font-medium">Collapse</span>}
+          </button>
+          
+          {!rightPanelCollapsed && (
+            <>
+              {/* Processing Indicator - Always Visible */}
+              <div className="rounded-lg p-4 bg-slate-900/90 border border-slate-800">
             {processState.active ? (
               <>
                 <div className="flex items-center gap-2 mb-2">
@@ -437,6 +462,8 @@ function DCLDashboard(){
               )}
             </div>
           </div>
+            </>
+          )}
         </div>
 
         {/* Notes Section - Below Graph */}
