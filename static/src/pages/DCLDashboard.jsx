@@ -4,10 +4,12 @@ function DCLDashboard(){
     graph: {nodes: [], edges: []},
     llm: {calls: 0, tokens: 0},
     preview: {sources: {}, ontology: {}, connectionInfo: null},
-    rag: {retrievals: [], total_mappings: 0, last_retrieval_count: 0}
+    rag: {retrievals: [], total_mappings: 0, last_retrieval_count: 0},
+    selected_sources: [],
+    selected_agents: []
   });
   const [selectedSources, setSelectedSources] = React.useState([]);
-  const [selectedAgents, setSelectedAgents] = React.useState(['finops_pilot']);
+  const [selectedAgents, setSelectedAgents] = React.useState([]);
   const [processState, setProcessState] = React.useState({ active: false, stage: '', progress: 0, complete: false });
   const [viewType, setViewType] = React.useState('sankey');
   const [leftPanelCollapsed, setLeftPanelCollapsed] = React.useState(false);
@@ -19,6 +21,16 @@ function DCLDashboard(){
     const interval = setInterval(fetchState, 2000);
     return () => clearInterval(interval);
   },[]);
+  
+  // Sync local state with backend state on mount and when backend state changes
+  React.useEffect(() => {
+    if (state.selected_sources && state.selected_sources.length > 0) {
+      setSelectedSources(state.selected_sources);
+    }
+    if (state.selected_agents && state.selected_agents.length > 0) {
+      setSelectedAgents(state.selected_agents);
+    }
+  }, [state.selected_sources, state.selected_agents]);
 
   React.useEffect(()=>{
     if(state.graph.nodes.length > 0){
@@ -104,6 +116,8 @@ function DCLDashboard(){
       cyRef.current = null;
     }
     setProcessState({ active: false, stage: '', progress: 0, complete: false });
+    setSelectedSources([]);
+    setSelectedAgents([]);
     setState(prev => ({
       ...prev,
       preview: {sources: {}, ontology: {}, connectionInfo: null}

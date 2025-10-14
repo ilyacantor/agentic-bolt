@@ -711,6 +711,7 @@ def state():
         "auto_ingest_unmapped": AUTO_INGEST_UNMAPPED,
         "rag": RAG_CONTEXT,
         "agent_consumption": agent_consumption,
+        "selected_sources": SOURCES_ADDED,
         "selected_agents": SELECTED_AGENTS
     })
 
@@ -724,15 +725,16 @@ def connect(sources: str = Query(...), agents: str = Query(...)):
     if not agent_list:
         return JSONResponse({"error": "No agents provided"}, status_code=400)
     
-    # Store selected agents globally
-    global SELECTED_AGENTS
+    # Store selected agents and sources globally
+    global SELECTED_AGENTS, SOURCES_ADDED
     SELECTED_AGENTS = agent_list
     
-    # Connect each source
+    # Connect only new sources (avoid duplicates)
     for source in source_list:
-        connect_source(source)
+        if source not in SOURCES_ADDED:
+            connect_source(source)
     
-    return JSONResponse({"ok": True, "sources": source_list, "agents": agent_list})
+    return JSONResponse({"ok": True, "sources": SOURCES_ADDED, "agents": agent_list})
 
 @app.get("/reset")
 def reset():
