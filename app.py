@@ -292,15 +292,15 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
     session_fields = ["sessions_30d","sessions30d","SESSIONS_30D","session_count"]
     
     # FinOps patterns - Core identifiers
-    resource_fields = ["resource_id","resourceId","ResourceId","instance_id","instanceId"]
-    cost_fields = ["cost","monthly_cost","monthlyCost","spend","price","billing_amount","totalCost"]
+    resource_fields = ["resource_id","resourceId","ResourceId","RESOURCE_ID","instance_id","instanceId","INSTANCE_ID"]
+    cost_fields = ["cost","monthly_cost","monthlyCost","Monthly_Cost","MONTHLY_COST","spend","price","billing_amount","totalCost"]
     
     # FinOps patterns - Resource config (EC2, RDS, S3)
-    instance_type_fields = ["instance_type","instanceType","instanceClass"]
-    vcpu_fields = ["vcpus","vCPUs","cpu_count"]
-    memory_fields = ["memory","memoryGiB","ram"]
-    storage_fields = ["storage","allocatedStorage","sizeGB","size_gb"]
-    db_engine_fields = ["engine","db_engine","dbEngine"]
+    instance_type_fields = ["instance_type","instanceType","INSTANCE_TYPE","instanceClass","INSTANCE_CLASS"]
+    vcpu_fields = ["vcpus","vCPUs","VCPUS","cpu_count","CPU_COUNT"]
+    memory_fields = ["memory","memoryGiB","MEMORY_GB","ram","RAM"]
+    storage_fields = ["storage","allocatedStorage","ALLOCATED_STORAGE_GB","sizeGB","SIZE_GB","size_gb"]
+    db_engine_fields = ["engine","db_engine","DB_ENGINE","dbEngine"]
     
     # FinOps patterns - Utilization metrics (enhanced for detailed fields)
     cpu_util_fields = ["cpuUtilization","cpu_utilization","cpu_percent","CPU_UTILIZATION"]

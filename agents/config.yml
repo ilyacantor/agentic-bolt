@@ -9,10 +9,18 @@ agents:
       - cloud_usage
       - cloud_invoice
     key_metrics:
-      - cpuUtilization
-      - memoryUtilization
-      - networkOut
+      - resource_id
+      - instance_type
+      - vcpus
+      - memory
+      - db_engine
+      - cpu_utilization
+      - memory_utilization
+      - network_in
+      - network_out
+      - db_connections
       - monthly_cost
+      - service_category
     color: "#9333ea"
   
   revops_pilot:
