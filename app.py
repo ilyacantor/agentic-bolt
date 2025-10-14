@@ -123,7 +123,8 @@ def safe_llm_call(prompt: str, source_key: str, tables: Dict[str, Any]) -> Dict[
     global LLM_CALLS, LLM_TOKENS
     
     try:
-        resp = genai.GenerativeModel("gemini-2.5-pro").generate_content(prompt)
+        # Use gemini-2.5-flash for 10x faster inference
+        resp = genai.GenerativeModel("gemini-2.5-flash").generate_content(prompt)
         LLM_CALLS += 1
         try:
             usage = resp.usage_metadata
@@ -174,7 +175,7 @@ def llm_propose(ontology: Dict[str, Any], source_key: str, tables: Dict[str, Any
     rag_context = ""
     if rag_engine:
         try:
-            # Collect all fields from tables and get similar mappings
+            # Collect all fields from tables and get similar mappings (optimized)
             all_similar = []
             for table_name, table_info in tables.items():
                 schema = table_info.get('schema', {})
@@ -183,7 +184,7 @@ def llm_propose(ontology: Dict[str, Any], source_key: str, tables: Dict[str, Any
                         field_name=field_name,
                         field_type=field_type,
                         source_system=source_key,
-                        top_k=3,
+                        top_k=2,  # Reduced from 3 to 2 for faster retrieval
                         min_confidence=0.7
                     )
                     all_similar.extend(similar)
@@ -197,9 +198,9 @@ def llm_propose(ontology: Dict[str, Any], source_key: str, tables: Dict[str, Any
                     seen.add(key)
                     unique_similar.append(mapping)
             
-            # Build context from top 5 most similar
+            # Build context from top 3 most similar (reduced from 5 for faster LLM processing)
             unique_similar.sort(key=lambda x: x.get('similarity', 0), reverse=True)
-            top_similar = unique_similar[:5]
+            top_similar = unique_similar[:3]
             
             if top_similar:
                 rag_context = rag_engine.build_context_for_llm(top_similar)
