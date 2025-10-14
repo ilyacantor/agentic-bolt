@@ -332,50 +332,6 @@ function DCLDashboard(){
             Connect & Map
           </button>
 
-          {/* RAG Learning Engine - Updated Visual Identity */}
-          <div className="rounded-lg p-4 bg-gradient-to-br from-teal-950 to-cyan-950 border border-teal-700/30">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center text-white text-xs font-bold">🧠</div>
-              <span className="text-white font-bold text-sm">RAG Learning Engine</span>
-              <span className="ml-auto text-xs bg-teal-600 text-white px-2 py-0.5 rounded-full font-bold">
-                {state.rag?.total_mappings || 0} stored
-              </span>
-            </div>
-            <div className="text-xs space-y-2 max-h-[280px] overflow-y-auto">
-              {!state.rag?.retrievals || state.rag.retrievals.length === 0 ? (
-                <div className="text-teal-300/70 italic text-[11px]">
-                  No context retrieved yet. Connect a source to see RAG retrieve historical mappings.
-                </div>
-              ) : (
-                <>
-                  <div className="text-white font-semibold mb-2 text-[11px]">
-                    Retrieved {state.rag.last_retrieval_count} similar mappings:
-                  </div>
-                  {state.rag.retrievals.map((ret, i) => (
-                    <div key={i} className="mb-2">
-                      <div className="flex justify-between items-start mb-1">
-                        <div className="text-white font-semibold text-[11px]">{ret.source_field}</div>
-                        <div className="text-[10px] text-white font-bold">
-                          {(ret.similarity * 100).toFixed(0)}%
-                        </div>
-                      </div>
-                      <div className="text-teal-300 text-[10px] mb-1">→ {ret.ontology_entity}</div>
-                      <div className="w-full bg-slate-900/50 rounded-sm h-1.5 overflow-hidden mb-1">
-                        <div 
-                          className="bg-teal-400 h-full transition-all duration-300"
-                          style={{width: `${ret.similarity * 100}%`}}
-                        ></div>
-                      </div>
-                      <div className="text-[9px] text-slate-400">
-                        from {ret.source_system}
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-          </div>
-
           <div className="card">
             <div className="card-title mb-3">Metrics</div>
             <div className="space-y-2 text-sm">
@@ -445,7 +401,7 @@ function DCLDashboard(){
           ></div>
           <div 
             id="sankey-container" 
-            className="rounded-xl bg-slate-900/50 border border-slate-800 h-[600px]"
+            className="rounded-xl bg-slate-900/50 border border-slate-800 h-[600px] pt-12"
             style={{ display: viewType === 'sankey' ? 'block' : 'none' }}
           ></div>
         </div>
@@ -503,6 +459,50 @@ function DCLDashboard(){
                 No active processing
               </div>
             )}
+          </div>
+
+          {/* RAG Learning Engine - Updated Visual Identity */}
+          <div className="rounded-lg p-4 bg-gradient-to-br from-teal-950 to-cyan-950 border border-teal-700/30">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center text-white text-xs font-bold">🧠</div>
+              <span className="text-white font-bold text-sm">RAG Learning Engine</span>
+              <span className="ml-auto text-xs bg-teal-600 text-white px-2 py-0.5 rounded-full font-bold">
+                {state.rag?.total_mappings || 0} stored
+              </span>
+            </div>
+            <div className="text-xs space-y-2 max-h-[280px] overflow-y-auto">
+              {!state.rag?.retrievals || state.rag.retrievals.length === 0 ? (
+                <div className="text-teal-300/70 italic text-[11px]">
+                  No context retrieved yet. Connect a source to see RAG retrieve historical mappings.
+                </div>
+              ) : (
+                <>
+                  <div className="text-white font-semibold mb-2 text-[11px]">
+                    Retrieved {state.rag.last_retrieval_count} similar mappings:
+                  </div>
+                  {state.rag.retrievals.map((ret, i) => (
+                    <div key={i} className="mb-2">
+                      <div className="flex justify-between items-start mb-1">
+                        <div className="text-white font-semibold text-[11px]">{ret.source_field}</div>
+                        <div className="text-[10px] text-white font-bold">
+                          {(ret.similarity * 100).toFixed(0)}%
+                        </div>
+                      </div>
+                      <div className="text-teal-300 text-[10px] mb-1">→ {ret.ontology_entity}</div>
+                      <div className="w-full bg-slate-900/50 rounded-sm h-1.5 overflow-hidden mb-1">
+                        <div 
+                          className="bg-teal-400 h-full transition-all duration-300"
+                          style={{width: `${ret.similarity * 100}%`}}
+                        ></div>
+                      </div>
+                      <div className="text-[9px] text-slate-400">
+                        from {ret.source_system}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
           </div>
 
           {/* Narration with Bounding Box */}

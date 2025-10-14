@@ -338,21 +338,91 @@ function renderSankey(state) {
       }
     });
 
-  nodeGroups
-    .append('text')
-    .attr('x', d => d.x0 < validWidth / 2 ? d.x1 + 6 : d.x0 - 6)
-    .attr('y', d => (d.y1 + d.y0) / 2)
-    .attr('dy', '0.35em')
-    .attr('text-anchor', d => d.x0 < validWidth / 2 ? 'start' : 'end')
-    .attr('fill', '#e2e8f0')
-    .style('font-size', '11px')
-    .style('font-weight', '500')
-    .text(d => d.name);
+  // Helper to get source system type and colors
+  const getSourceTypeInfo = (nodeData) => {
+    const typeMap = {
+      dynamics: { type: 'crm', icon: '📱', bgColor: '#1e3a8a', borderColor: '#3b82f6' },
+      salesforce: { type: 'crm', icon: '📱', bgColor: '#1e3a8a', borderColor: '#3b82f6' },
+      sap: { type: 'erp', icon: '🏢', bgColor: '#14532d', borderColor: '#10b981' },
+      netsuite: { type: 'erp', icon: '🏢', bgColor: '#14532d', borderColor: '#10b981' },
+      legacy_sql: { type: 'database', icon: '💾', bgColor: '#7f1d1d', borderColor: '#ef4444' },
+      snowflake: { type: 'warehouse', icon: '🏛️', bgColor: '#164e63', borderColor: '#06b6d4' },
+      supabase: { type: 'database', icon: '💾', bgColor: '#7f1d1d', borderColor: '#ef4444' },
+      mongodb: { type: 'database', icon: '💾', bgColor: '#7f1d1d', borderColor: '#ef4444' }
+    };
+    
+    if (nodeData.sourceSystem && typeMap[nodeData.sourceSystem]) {
+      return typeMap[nodeData.sourceSystem];
+    }
+    return null;
+  };
+
+  // Render labels with colored backgrounds and symbols for source parents
+  nodeGroups.each(function(d) {
+    const nodeData = sankeyNodes.find(n => n.name === d.name);
+    const isLeft = d.x0 < validWidth / 2;
+    const typeInfo = getSourceTypeInfo(nodeData);
+    
+    if (nodeData && nodeData.type === 'source_parent' && typeInfo) {
+      const group = d3.select(this);
+      const textX = isLeft ? d.x1 + 6 : d.x0 - 6;
+      const textY = (d.y1 + d.y0) / 2;
+      
+      // Background rect
+      const padding = 4;
+      const textWidth = d.name.length * 6 + 18; // Approximate width including icon
+      const rectWidth = textWidth + padding * 2;
+      const rectHeight = 18;
+      
+      group.append('rect')
+        .attr('x', isLeft ? textX - padding : textX - rectWidth + padding)
+        .attr('y', textY - rectHeight / 2)
+        .attr('width', rectWidth)
+        .attr('height', rectHeight)
+        .attr('rx', 4)
+        .attr('fill', typeInfo.bgColor)
+        .attr('stroke', typeInfo.borderColor)
+        .attr('stroke-width', 0.5)
+        .attr('opacity', 0.7);
+      
+      // Icon/Symbol
+      group.append('text')
+        .attr('x', isLeft ? textX + 2 : textX - rectWidth + padding + 2)
+        .attr('y', textY)
+        .attr('dy', '0.35em')
+        .attr('text-anchor', 'start')
+        .attr('fill', '#e2e8f0')
+        .style('font-size', '10px')
+        .text(typeInfo.icon);
+      
+      // Label text
+      group.append('text')
+        .attr('x', isLeft ? textX + 18 : textX - rectWidth + padding + 18)
+        .attr('y', textY)
+        .attr('dy', '0.35em')
+        .attr('text-anchor', 'start')
+        .attr('fill', '#e2e8f0')
+        .style('font-size', '9px')
+        .style('font-weight', '600')
+        .text(d.name);
+    } else {
+      // Regular text for non-source-parent nodes
+      d3.select(this).append('text')
+        .attr('x', isLeft ? d.x1 + 6 : d.x0 - 6)
+        .attr('y', (d.y1 + d.y0) / 2)
+        .attr('dy', '0.35em')
+        .attr('text-anchor', isLeft ? 'start' : 'end')
+        .attr('fill', '#e2e8f0')
+        .style('font-size', '11px')
+        .style('font-weight', '500')
+        .text(d.name);
+    }
+  });
 
   // Title without redundant agent labels (agents are already labeled on the nodes)
   svg.append('text')
     .attr('x', 10)
-    .attr('y', 45)
+    .attr('y', 20)
     .attr('fill', '#94a3b8')
     .style('font-size', '10px')
     .text('Data Sources → Tables → Unified Ontology → Agents');
