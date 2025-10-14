@@ -17,8 +17,8 @@ function NavBar({onSearch}){
     <div className="h-14 w-full border-b border-slate-800 bg-slate-900/70 backdrop-blur sticky top-0 z-40">
       <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-4">
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-full bg-brand-600 grid place-items-center text-white font-bold">∗</div>
-          <a href="#/" className="text-lg font-semibold">AutonomOS</a>
+          <img src="/static/favicon.png" alt="autonomOS" className="w-7 h-7"/>
+          <a href="#/" className="text-lg font-semibold">autonom<span className="text-cyan-500">OS</span></a>
           <div className="hidden sm:flex items-center gap-6 text-sm text-slate-300 ml-6">
             <a href="#/dcl" className="hover:text-white">Data Connectivity Layer</a>
             <a href="#/ontology" className="hover:text-white">Ontology Mapping</a>
