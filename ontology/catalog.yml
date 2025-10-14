@@ -13,94 +13,63 @@ entities:
     pk: account_id
     fields: [account_id, last_login_days, sessions_30d, avg_session_duration, features_used]
   
-  # FinOps Entities
-  aws_resource:
+  # FinOps Entities (aligned with FinOps Autopilot agent)
+  aws_resources:
     pk: resource_id
     fields: 
-      # Core resource info
-      - resource_id
-      - resource_type  # EC2, RDS, S3, ALB, Lambda, EKS
-      - region
-      - account_id
-      # EC2 specific config
-      - instance_type  # m5.2xlarge, t3.large, c5.4xlarge
-      - vcpus
-      - memory
-      - storage_type  # EBS-optimized
-      # RDS specific config
-      - db_engine  # mysql, postgres
-      - instance_class  # db.r5.xlarge, db.t3.medium
-      - allocated_storage
-      # S3 specific config
-      - storage_class  # STANDARD
-      - size_gb
-      - object_count
-      - versioning_enabled
-      # ALB specific config
-      - load_balancer_type  # application
-      - scheme  # internet-facing
-      - target_count
-      # Common metadata
-      - resource_tags
-      - created_date
-      - last_analyzed
-  cloud_cost:
+      # Core identifiers
+      - resource_id          # AWS resource ID (i-abc123, db-xyz789)
+      - resource_type        # EC2, RDS, S3, ALB, Redshift
+      - region               # us-east-1, us-west-2, etc.
+      
+      # EC2 currentConfig fields
+      - instance_type        # m5.2xlarge, t3.large
+      - vcpus                # CPU count
+      - memory               # Memory in GiB
+      - storage              # EBS-optimized, instance-store
+      
+      # RDS currentConfig fields
+      - db_engine            # postgres, mysql
+      - instance_class       # db.r5.xlarge
+      - allocated_storage    # GB
+      - storage_type         # gp2, io1
+      
+      # S3 currentConfig fields
+      - storage_class        # STANDARD, GLACIER
+      - size_gb              # Total size
+      - object_count         # Number of objects
+      - versioning           # true/false
+      
+      # EC2 utilizationMetrics fields
+      - cpu_utilization      # percentage
+      - memory_utilization   # percentage
+      - network_in           # MB
+      - network_out          # MB
+      
+      # RDS utilizationMetrics fields
+      - db_connections       # active connections
+      - read_latency         # ms
+      - write_latency        # ms
+      
+      # S3 utilizationMetrics fields
+      - get_requests         # GET request count
+      - put_requests         # PUT request count
+      - data_transfer_out    # GB transferred
+      
+      # Cost & metadata
+      - monthly_cost         # integer * 1000 (NO decimals)
+      - last_analyzed        # timestamp
+      - created_at           # timestamp
+      
+  cost_reports:
     pk: cost_id
     fields: 
-      - cost_id
-      - resource_id
-      - service_category  # EC2-Instance, RDS, S3, ELB, CloudWatch, Route53, CloudFront, Lambda, EBS, Data Transfer
-      - usage_date
-      - monthly_cost
-      - cost_amount
-      - currency
-      - usage_quantity
-      - usage_type  # Instance-Hours, GB-Month, LoadBalancer-Hours, Requests, Queries, Invocations, GB
-      - billing_period
-      - region
-  cloud_usage:
-    pk: usage_id
-    fields: 
-      - usage_id
-      - resource_id
-      - metric_name
-      # EC2 utilization metrics
-      - cpu_utilization  # percentage
-      - memory_utilization  # percentage
-      - network_in  # MB
-      - network_out  # MB
-      - disk_read_ops  # IOPS
-      - disk_write_ops  # IOPS
-      - network_packets_in
-      - network_packets_out
-      # RDS metrics
-      - db_connections
-      - read_latency_ms  # milliseconds
-      - write_latency_ms  # milliseconds
-      - read_throughput_mb  # MB/s
-      - write_throughput_mb  # MB/s
-      - free_storage_gb  # GB
-      - disk_queue_depth
-      # S3 metrics
-      - get_requests
-      - put_requests
-      - delete_requests
-      - list_requests
-      - bytes_downloaded
-      - bytes_uploaded
-      - data_transfer_out  # GB
-      # ALB metrics
-      - request_count
-      - active_connections
-      - new_connections
-      - target_response_time  # ms
-      - http_2xx_count
-      - http_4xx_count
-      - http_5xx_count
-      - healthy_targets
-      # Common fields
-      - timestamp
-      - account_id
-  cloud_invoice:
-    pk: invoice_id
-    fields: [invoice_id, account_id, invoice_date, total_amount, service_charges, discount_amount, payment_status]
+      - cost_id              # UUID
+      - report_date          # timestamp (first of month)
+      - service_category     # EC2-Instance, RDS, S3, ELB, Lambda, CloudWatch, Route53, CloudFront, EBS, Data Transfer
+      - resource_id          # optional: specific resource
+      - cost                 # integer * 1000 (NO decimals)
+      - usage                # usage amount (decimal)
+      - usage_type           # Instance-Hours, GB-Month, LoadBalancer-Hours, Requests, Queries, Invocations, GB
+      - region               # AWS region
+      - created_at           # timestamp

@@ -28,7 +28,11 @@ The project aims to provide a dynamic data connection layer, aligning diverse da
 - **RAG Engine**: Implemented for context-aware, learning-based schema mapping with historical memory. It uses Pinecone for embeddings and storage to retrieve similar mappings as context for LLM inference, continuously improving accuracy.
 - **Schema Inference**: AI-powered schema inference allows users to create custom fields and get AI-powered ontology mappings.
 - **DuckDB Views**: Mapped data is automatically published as DuckDB views for efficient access.
-- **FinOps Use Case**: The system includes a comprehensive FinOps ontology with entities like `aws_resource`, `cloud_cost`, `cloud_usage`, and `cloud_invoice`, consuming data from various sources like Snowflake, Legacy SQL, NetSuite, and SAP.
+- **FinOps Alignment**: The system's FinOps ontology is fully aligned with the standalone FinOps Autopilot agent schema, featuring:
+  - `aws_resources` - Consolidated resource configuration, utilization metrics, and cost data (matches agent's currentConfig + utilizationMetrics + monthlyCost structure)
+  - `cost_reports` - Detailed cost reporting by service category, usage type, and resource (matches agent's cost_reports table)
+  - All monetary values follow the agent's format: integers * 1000 (NO decimal pennies)
+  - The DCL intelligently maps fields from Snowflake AWS data, Legacy SQL, NetSuite, and SAP to this unified schema
 
 ### System Design Choices
 - **Backend Services**: A FastAPI server serves as the main web dashboard, handling ontology mapping, DuckDB view management, and RAG engine integration.

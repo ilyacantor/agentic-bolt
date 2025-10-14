@@ -1,26 +1,50 @@
 agents:
   finops_pilot:
     name: FinOps Pilot
-    description: AWS cost optimization and cloud resource management
+    description: AWS cost optimization and cloud resource management (FinOps Autopilot)
     url: https://replit.com/@ilyacantor/FinOpsPilot
     consumes:
-      - aws_resource
-      - cloud_cost
-      - cloud_usage
-      - cloud_invoice
+      - aws_resources
+      - cost_reports
     key_metrics:
+      # Core identifiers
       - resource_id
+      - resource_type
+      - region
+      # EC2 config
       - instance_type
       - vcpus
       - memory
+      - storage
+      # RDS config
       - db_engine
+      - instance_class
+      - allocated_storage
+      - storage_type
+      # S3 config
+      - storage_class
+      - size_gb
+      - object_count
+      - versioning
+      # EC2 utilization
       - cpu_utilization
       - memory_utilization
       - network_in
       - network_out
+      # RDS utilization
       - db_connections
+      - read_latency
+      - write_latency
+      # S3 utilization
+      - get_requests
+      - put_requests
+      - data_transfer_out
+      # Cost data
       - monthly_cost
       - service_category
+      - cost
+      - usage
+      - usage_type
     color: "#9333ea"
   
   revops_pilot:

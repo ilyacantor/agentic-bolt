@@ -401,45 +401,44 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
             if fields:
                 mappings.append({"entity":"usage","source_table": f"{source_key}_{tname}", "fields": fields})
         
-        # FinOps mappings - aws_resource (config fields)
-        if (resource or instance_type or vcpus or db_engine) and "aws_resource" in available_entities:
+        # FinOps mappings - aws_resources (config + utilization + cost - consolidated per FinOps Autopilot schema)
+        if (resource or instance_type or vcpus or db_engine or cpu_util or mem_util or network_in or cost) and "aws_resources" in available_entities:
             fields = []
+            # Core identifiers
             if resource: fields.append({"source": resource, "onto_field": "resource_id", "confidence": 0.9})
+            # EC2 config
             if instance_type: fields.append({"source": instance_type, "onto_field": "instance_type", "confidence": 0.85})
             if vcpus: fields.append({"source": vcpus, "onto_field": "vcpus", "confidence": 0.85})
             if memory: fields.append({"source": memory, "onto_field": "memory", "confidence": 0.85})
             if storage: fields.append({"source": storage, "onto_field": "allocated_storage", "confidence": 0.85})
+            # RDS config
             if db_engine: fields.append({"source": db_engine, "onto_field": "db_engine", "confidence": 0.85})
-            if fields:
-                mappings.append({"entity":"aws_resource","source_table": f"{source_key}_{tname}", "fields": fields})
-        
-        # FinOps mappings - cloud_cost (billing fields)
-        if (cost or service_category or usage_type) and "cloud_cost" in available_entities:
-            fields = []
-            if cost: fields.append({"source": cost, "onto_field": "monthly_cost", "confidence": 0.9})
-            if service_category: fields.append({"source": service_category, "onto_field": "service_category", "confidence": 0.85})
-            if usage_type: fields.append({"source": usage_type, "onto_field": "usage_type", "confidence": 0.85})
-            if fields:
-                mappings.append({"entity":"cloud_cost","source_table": f"{source_key}_{tname}", "fields": fields})
-        
-        # FinOps mappings - cloud_usage (utilization metrics - enhanced with detailed metrics)
-        if (cpu_util or mem_util or network_in or network_out or connections or disk_read or disk_write or 
-            get_requests or read_latency or write_latency or free_storage) and "cloud_usage" in available_entities:
-            fields = []
+            # EC2 utilization
             if cpu_util: fields.append({"source": cpu_util, "onto_field": "cpu_utilization", "confidence": 0.9})
             if mem_util: fields.append({"source": mem_util, "onto_field": "memory_utilization", "confidence": 0.9})
             if network_in: fields.append({"source": network_in, "onto_field": "network_in", "confidence": 0.85})
             if network_out: fields.append({"source": network_out, "onto_field": "network_out", "confidence": 0.85})
+            # RDS utilization
             if connections: fields.append({"source": connections, "onto_field": "db_connections", "confidence": 0.85})
-            if disk_read: fields.append({"source": disk_read, "onto_field": "disk_read_ops", "confidence": 0.85})
-            if disk_write: fields.append({"source": disk_write, "onto_field": "disk_write_ops", "confidence": 0.85})
+            if read_latency: fields.append({"source": read_latency, "onto_field": "read_latency", "confidence": 0.85})
+            if write_latency: fields.append({"source": write_latency, "onto_field": "write_latency", "confidence": 0.85})
+            # S3 utilization
             if get_requests: fields.append({"source": get_requests, "onto_field": "get_requests", "confidence": 0.85})
             if put_requests: fields.append({"source": put_requests, "onto_field": "put_requests", "confidence": 0.85})
-            if read_latency: fields.append({"source": read_latency, "onto_field": "read_latency_ms", "confidence": 0.85})
-            if write_latency: fields.append({"source": write_latency, "onto_field": "write_latency_ms", "confidence": 0.85})
-            if free_storage: fields.append({"source": free_storage, "onto_field": "free_storage_gb", "confidence": 0.85})
+            # Cost
+            if cost: fields.append({"source": cost, "onto_field": "monthly_cost", "confidence": 0.9})
             if fields:
-                mappings.append({"entity":"cloud_usage","source_table": f"{source_key}_{tname}", "fields": fields})
+                mappings.append({"entity":"aws_resources","source_table": f"{source_key}_{tname}", "fields": fields})
+        
+        # FinOps mappings - cost_reports (detailed cost reporting per FinOps Autopilot schema)
+        if (cost or service_category or usage_type) and "cost_reports" in available_entities:
+            fields = []
+            if cost: fields.append({"source": cost, "onto_field": "cost", "confidence": 0.9})
+            if service_category: fields.append({"source": service_category, "onto_field": "service_category", "confidence": 0.85})
+            if usage_type: fields.append({"source": usage_type, "onto_field": "usage_type", "confidence": 0.85})
+            if resource: fields.append({"source": resource, "onto_field": "resource_id", "confidence": 0.85})
+            if fields:
+                mappings.append({"entity":"cost_reports","source_table": f"{source_key}_{tname}", "fields": fields})
     
     # Filter out mappings that don't provide any useful fields for selected agents
     if SELECTED_AGENTS:

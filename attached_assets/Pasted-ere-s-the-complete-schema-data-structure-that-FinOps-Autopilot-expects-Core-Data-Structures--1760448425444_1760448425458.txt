@@ -1,0 +1,230 @@
+ere's the complete schema/data structure that FinOps Autopilot expects:
+
+📋 Core Data Structures
+1. AWS Resources (aws_resources)
+{
+  id: string,                    // UUID (auto-generated)
+  resourceId: string,            // Unique AWS resource ID (e.g., "i-abc123", "db-xyz789")
+  resourceType: string,          // "EC2", "RDS", "S3", "ALB", "Redshift", etc.
+  region: string,                // AWS region (e.g., "us-east-1", "us-west-2")
+  currentConfig: JSON,           // Resource configuration object
+  utilizationMetrics: JSON,      // Utilization metrics object (optional)
+  monthlyCost: integer,          // Cost * 1000 (NO pennies - e.g., $245.76 = 245760)
+  lastAnalyzed: timestamp,       // Last analysis timestamp
+  createdAt: timestamp           // Auto-generated
+}
+Example currentConfig structures:
+
+// EC2
+{
+  "instanceType": "m5.2xlarge",
+  "vcpus": 8,
+  "memory": "32 GiB",
+  "storage": "EBS-optimized"
+}
+// RDS
+{
+  "engine": "postgres",
+  "instanceClass": "db.r5.xlarge",
+  "allocatedStorage": 500,
+  "storageType": "gp2"
+}
+// S3
+{
+  "storageClass": "STANDARD",
+  "sizeGB": 2500,
+  "objectCount": 125000,
+  "versioning": true
+}
+Example utilizationMetrics structures:
+
+// EC2
+{
+  "cpuUtilization": 25.5,
+  "memoryUtilization": 40.2,
+  "networkIn": 1024.5,
+  "networkOut": 2048.1
+}
+// RDS
+{
+  "cpuUtilization": 45.2,
+  "connections": 125,
+  "readLatency": 0.002,
+  "writeLatency": 0.005
+}
+// S3
+{
+  "getRequests": 50000,
+  "putRequests": 5000,
+  "dataTransferOut": 100.5
+}
+Example tags (stored in currentConfig or separate):
+
+{
+  "Environment": "production",
+  "Team": "backend",
+  "Project": "web-api"
+}
+2. Cost Reports (cost_reports)
+{
+  id: string,                    // UUID (auto-generated)
+  reportDate: timestamp,         // Report date (typically first of month)
+  serviceCategory: string,       // "EC2-Instance", "RDS", "S3", "ELB", "Lambda", etc.
+  resourceId: string,            // Optional: specific resource ID
+  cost: integer,                 // Cost * 1000 (NO pennies - e.g., $814.00 = 814000)
+  usage: decimal(12, 6),         // Usage amount (e.g., 500.123456)
+  usageType: string,             // "Instance-Hours", "GB-Month", "Requests", etc.
+  region: string,                // AWS region
+  createdAt: timestamp           // Auto-generated
+}
+Service Categories:
+
+EC2-Instance, RDS, S3, ELB, CloudWatch
+Route53, CloudFront, Lambda, EBS, Data Transfer
+Usage Types:
+
+Instance-Hours (EC2, RDS)
+GB-Month (S3, EBS)
+LoadBalancer-Hours (ELB)
+Requests (CloudWatch, CloudFront)
+Queries (Route53)
+Invocations (Lambda)
+GB (Data Transfer)
+3. Recommendations (recommendations)
+{
+  id: string,                         // UUID (auto-generated)
+  resourceId: string,                 // AWS resource ID this applies to
+  type: string,                       // "resize", "terminate", "storage-class", "reserved-instance"
+  priority: string,                   // "critical", "high", "medium", "low"
+  title: string,                      // Short recommendation title
+  description: string,                // Detailed description
+  currentConfig: JSON,                // Current resource configuration
+  recommendedConfig: JSON,            // Recommended configuration
+  projectedMonthlySavings: integer,   // Monthly savings * 1000 (e.g., $250.56 = 250560)
+  projectedAnnualSavings: integer,    // Annual savings * 1000 (e.g., $3006.72 = 3006720)
+  riskLevel: decimal(5, 2),           // Risk percentage (e.g., 15.50)
+  status: string,                     // "pending", "approved", "rejected", "executed"
+  createdAt: timestamp,               // Auto-generated
+  updatedAt: timestamp                // Auto-generated
+}
+Recommendation Types:
+
+resize - Change instance size
+terminate - Stop/delete resource
+storage-class - Change S3 storage tier
+reserved-instance - Purchase reserved capacity
+schedule - Auto-shutdown scheduling
+Priority Levels:
+
+critical - High impact, immediate attention
+high - Significant savings opportunity
+medium - Moderate savings
+low - Minor optimization
+4. Optimization History (optimization_history)
+{
+  id: string,                    // UUID (auto-generated)
+  recommendationId: string,      // Reference to recommendation ID
+  executedBy: string,            // User ID or "system"
+  executionDate: timestamp,      // When optimization was executed
+  beforeConfig: JSON,            // Configuration before change
+  afterConfig: JSON,             // Configuration after change
+  actualSavings: integer,        // Actual savings * 1000 (e.g., $425.68 = 425680)
+  status: string,                // "success", "failed", "in-progress"
+  errorMessage: string,          // Error details if failed (optional)
+  slackMessageId: string,        // Slack notification ID (optional)
+  createdAt: timestamp           // Auto-generated
+}
+Example History Entry:
+
+{
+  "recommendationId": "rec-123",
+  "executedBy": "system",
+  "executionDate": "2025-10-01T14:30:00Z",
+  "beforeConfig": {
+    "instanceType": "t3.2xlarge",
+    "vcpus": 8,
+    "memory": "32 GiB"
+  },
+  "afterConfig": {
+    "instanceType": "t3.xlarge",
+    "vcpus": 4,
+    "memory": "16 GiB"
+  },
+  "actualSavings": 142500,
+  "status": "success"
+}
+5. Approval Requests (approval_requests)
+{
+  id: string,                    // UUID (auto-generated)
+  recommendationId: string,      // Reference to recommendation
+  requestedBy: string,           // User ID who requested approval
+  approverRole: string,          // Required approver role
+  status: string,                // "pending", "approved", "rejected"
+  approvedBy: string,            // User ID who approved (optional)
+  approvalDate: timestamp,       // When approved/rejected (optional)
+  comments: string,              // Approval/rejection comments (optional)
+  slackThreadId: string,         // Slack thread ID (optional)
+  createdAt: timestamp           // Auto-generated
+}
+6. System Configuration (system_config)
+{
+  id: string,                    // UUID (auto-generated)
+  key: string,                   // Config key (unique)
+  value: string,                 // Config value (stored as string)
+  description: string,           // What this config does (optional)
+  updatedBy: string,             // User ID who updated
+  updatedAt: timestamp,          // Auto-generated
+  createdAt: timestamp           // Auto-generated
+}
+Agent Config Keys:
+
+agent.autonomous_mode - "true" or "false"
+agent.max_autonomous_risk_level - "5.0" (percentage as string)
+agent.approval_required_above_savings - "10000000" (value * 1000)
+agent.auto_execute_types - "resize,storage-class" (comma-separated)
+7. Users (users)
+{
+  id: string,                    // UUID (auto-generated)
+  username: string,              // Unique username
+  password: string,              // Hashed password
+  role: string,                  // "admin", "user", "cfo"
+  createdAt: timestamp           // Auto-generated
+}
+🔑 Critical Data Format Rules
+Financial Values (MANDATORY):
+ALL monetary values are INTEGERS multiplied by 1000
+NO decimal places, NO pennies
+Examples:
+$245.76 → 245760
+$1,234.56 → 1234560
+$0.99 → 990
+JSON Fields:
+currentConfig, recommendedConfig, beforeConfig, afterConfig - Store as JSON/JSONB
+Must be valid JSON objects
+Can contain nested structures
+Timestamps:
+ISO 8601 format: 2025-10-06T20:00:00Z
+PostgreSQL timestamp type
+Decimal Precision:
+riskLevel: decimal(5, 2) - e.g., 15.50
+usage: decimal(12, 6) - e.g., 500.123456
+📊 Dashboard Metrics API Response
+The agent expects this structure from /api/dashboard/metrics:
+
+{
+  monthlySpend: integer,         // Total monthly spend * 1000
+  identifiedSavings: integer,    // Total identified savings * 1000
+  realizedSavings: integer,      // Total realized savings * 1000
+  resourcesAnalyzed: integer,    // Count of resources
+  wastePercentage: number        // Waste percentage (0-100)
+}
+📈 Cost Trends API Response
+From /api/dashboard/cost-trends:
+
+[
+  {
+    month: string,               // "2025-10" format
+    totalCost: integer           // Total cost * 1000
+  }
+]
+This is the exact ontology your DCL must produce to integrate with FinOps Autopilot! All integer financial values must be multiplied by 1000, and JSON structures must match these formats exactly.
