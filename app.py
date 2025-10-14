@@ -835,9 +835,24 @@ async def connect(sources: str = Query(...), agents: str = Query(...)):
     new_sources = [s for s in source_list if s not in SOURCES_ADDED]
     
     if new_sources:
-        # Connect sources in parallel using asyncio
-        tasks = [asyncio.to_thread(connect_source, source) for source in new_sources]
-        await asyncio.gather(*tasks)
+        try:
+            # Connect sources in parallel using asyncio
+            tasks = [asyncio.to_thread(connect_source, source) for source in new_sources]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Check for any errors in the results
+            errors = []
+            for i, result in enumerate(results):
+                if isinstance(result, Exception):
+                    error_msg = f"{new_sources[i]}: {str(result)}"
+                    errors.append(error_msg)
+                    log(f"❌ Error connecting {new_sources[i]}: {str(result)}")
+            
+            if errors:
+                log(f"⚠️ Some sources failed to connect: {'; '.join(errors)}")
+        except Exception as e:
+            log(f"❌ Connection error: {str(e)}")
+            return JSONResponse({"error": str(e)}, status_code=500)
     
     return JSONResponse({"ok": True, "sources": SOURCES_ADDED, "agents": agent_list})
 
