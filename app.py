@@ -1042,3 +1042,27 @@ def agentic_connection():
     with open("static/agentic-connection.html", "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content)
+
+# Catch-all route for React Router - must be last
+@app.get("/{full_path:path}", response_class=HTMLResponse)
+def catch_all(full_path: str):
+    # Serve index.html for all non-API routes to support client-side routing
+    with open("static/index.html", "r", encoding="utf-8") as f:
+        html_content = f.read()
+    # Add cache-busting timestamp to all JSX script tags
+    cache_buster = str(int(time.time()))
+    html_content = html_content.replace(
+        'src="/static/src/',
+        f'src="/static/src/'
+    ).replace(
+        '.jsx"',
+        f'.jsx?v={cache_buster}"'
+    ).replace(
+        '.js"',
+        f'.js?v={cache_buster}"'
+    )
+    return HTMLResponse(content=html_content, headers={
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+    })
