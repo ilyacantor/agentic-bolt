@@ -269,27 +269,17 @@ function renderSankey(state) {
     })
     .attr('stroke-width', d => Math.max(1, d.width))
     .attr('stroke-opacity', 0.5)
-    .attr('class', (d, i) => {
+    .attr('stroke-dasharray', (d, i) => {
       const sourceNode = sankeyNodes.find(n => n.name === d.source.name);
       const targetNode = sankeyNodes.find(n => n.name === d.target.name);
       
-      // Ontology to agent edges get pulse animation
-      if (sourceNode && sourceNode.type === 'ontology' && targetNode && targetNode.type === 'agent') {
-        return 'sankey-link-pulse';
-      }
-      
-      // Source to ontology edges get flow animation
+      // Flow animation for source to ontology
       if (sourceNode && (sourceNode.type === 'source' || sourceNode.type === 'source_parent') && 
-          targetNode && targetNode.type === 'ontology') {
-        return 'sankey-link-flow';
+          targetNode && (targetNode.type === 'ontology' || targetNode.type === 'source')) {
+        return '10 10';
       }
       
-      // Source parent to source child also gets flow
-      if (sourceNode && sourceNode.type === 'source_parent' && targetNode && targetNode.type === 'source') {
-        return 'sankey-link-flow';
-      }
-      
-      return '';
+      return 'none';
     })
     .style('cursor', 'pointer')
     .on('mouseover', function() {
@@ -297,6 +287,37 @@ function renderSankey(state) {
     })
     .on('mouseout', function() {
       d3.select(this).attr('stroke-opacity', 0.5);
+    })
+    .each(function(d, i) {
+      const sourceNode = sankeyNodes.find(n => n.name === d.source.name);
+      const targetNode = sankeyNodes.find(n => n.name === d.target.name);
+      const path = d3.select(this);
+      
+      // Flowing animation for source->ontology edges
+      if (sourceNode && (sourceNode.type === 'source' || sourceNode.type === 'source_parent') && 
+          targetNode && (targetNode.type === 'ontology' || targetNode.type === 'source')) {
+        let offset = 0;
+        setInterval(() => {
+          offset -= 0.5;
+          path.attr('stroke-dashoffset', offset);
+        }, 30);
+      }
+      
+      // Pulsing animation for ontology->agent edges
+      if (sourceNode && sourceNode.type === 'ontology' && targetNode && targetNode.type === 'agent') {
+        let growing = true;
+        let opacity = 0.5;
+        setInterval(() => {
+          if (growing) {
+            opacity += 0.02;
+            if (opacity >= 0.9) growing = false;
+          } else {
+            opacity -= 0.02;
+            if (opacity <= 0.5) growing = true;
+          }
+          path.attr('stroke-opacity', opacity);
+        }, 40);
+      }
     })
     .on('click', async (event, d) => {
       const sourceNodeData = sankeyNodes.find(n => n.name === d.source.name);
