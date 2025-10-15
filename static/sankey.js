@@ -319,14 +319,43 @@ function renderSankey(state) {
       const nodeData = sankeyNodes.find(n => n.name === d.name);
       return getNodeColor(nodeData);
     })
-    .attr('stroke', '#1e293b')
-    .attr('stroke-width', 1)
+    .attr('fill-opacity', 0.3)
+    .attr('stroke', d => {
+      const nodeData = sankeyNodes.find(n => n.name === d.name);
+      return getNodeColor(nodeData);
+    })
+    .attr('stroke-width', 0.5)
     .style('cursor', 'pointer')
-    .on('mouseover', function() {
-      d3.select(this).attr('opacity', 0.8);
+    .on('mouseover', function(event, d) {
+      d3.select(this).attr('fill-opacity', 0.6);
+      const nodeData = sankeyNodes.find(n => n.name === d.name);
+      const tooltip = getNodeTooltip(nodeData);
+      
+      // Create tooltip element
+      const existingTooltip = document.getElementById('sankey-tooltip');
+      if (existingTooltip) existingTooltip.remove();
+      
+      const tooltipDiv = document.createElement('div');
+      tooltipDiv.id = 'sankey-tooltip';
+      tooltipDiv.style.position = 'fixed';
+      tooltipDiv.style.left = event.pageX + 10 + 'px';
+      tooltipDiv.style.top = event.pageY + 10 + 'px';
+      tooltipDiv.style.background = 'rgba(15, 23, 42, 0.95)';
+      tooltipDiv.style.color = '#e2e8f0';
+      tooltipDiv.style.padding = '8px 12px';
+      tooltipDiv.style.borderRadius = '6px';
+      tooltipDiv.style.border = '1px solid #475569';
+      tooltipDiv.style.fontSize = '12px';
+      tooltipDiv.style.zIndex = '10000';
+      tooltipDiv.style.pointerEvents = 'none';
+      tooltipDiv.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+      tooltipDiv.innerHTML = tooltip;
+      document.body.appendChild(tooltipDiv);
     })
     .on('mouseout', function() {
-      d3.select(this).attr('opacity', 1);
+      d3.select(this).attr('fill-opacity', 0.3);
+      const tooltip = document.getElementById('sankey-tooltip');
+      if (tooltip) tooltip.remove();
     })
     .on('click', async (event, d) => {
       const nodeData = sankeyNodes.find(n => n.name === d.name);
@@ -337,6 +366,20 @@ function renderSankey(state) {
         window.dispatchEvent(evt);
       }
     });
+
+  // Helper function for node tooltips
+  function getNodeTooltip(nodeData) {
+    if (!nodeData) return 'Unknown Node';
+    
+    const typeDescriptions = {
+      'source_parent': `<strong>Data Source</strong><br>${nodeData.name}<br><span style="color: #94a3b8; font-size: 10px;">Enterprise system containing raw data</span>`,
+      'source': `<strong>Source Field</strong><br>${nodeData.name}<br><span style="color: #94a3b8; font-size: 10px;">Raw data field from ${nodeData.sourceSystem || 'source'}</span>`,
+      'ontology': `<strong>Unified Field</strong><br>${nodeData.name}<br><span style="color: #94a3b8; font-size: 10px;">Standardized data field in ontology</span>`,
+      'agent': `<strong>AI Agent</strong><br>${nodeData.name}<br><span style="color: #94a3b8; font-size: 10px;">Consumes and processes unified data</span>`
+    };
+    
+    return typeDescriptions[nodeData.type] || `<strong>${nodeData.name}</strong>`;
+  }
 
   // Helper to get source system type and colors
   const getSourceTypeInfo = (nodeData) => {
