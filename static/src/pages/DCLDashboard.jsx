@@ -475,7 +475,7 @@ function DCLDashboard(){
         <div className="col-span-12 lg:col-span-6 card">
           <div 
             id="sankey-container" 
-            className="rounded-xl bg-slate-900/50 border border-slate-800 h-[400px] sm:h-[500px] lg:h-[600px] overflow-x-auto"
+            className="rounded-xl bg-slate-900/50 border border-slate-800 h-[400px] sm:h-[500px] lg:h-[600px] overflow-hidden"
           ></div>
         </div>
 
@@ -562,7 +562,7 @@ function DCLDashboard(){
           {/* Narration with Bounding Box */}
           <div className="card border-2 border-slate-700">
             <div className="card-title mb-3">Narration</div>
-            <div className="text-xs space-y-2 max-h-[450px] overflow-y-auto border border-slate-800 rounded-lg p-3 bg-slate-900/50">
+            <div className="text-xs space-y-2 max-h-[450px] overflow-hidden border border-slate-800 rounded-lg p-3 bg-slate-900/50">
               {typingEvents.length === 0 ? (
                 <div className="text-slate-500 italic">No events yet. Add a source to begin.</div>
               ) : (
