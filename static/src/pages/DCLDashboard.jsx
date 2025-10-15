@@ -34,7 +34,7 @@ function DCLDashboard(){
   const [selectedSources, setSelectedSources] = React.useState([]);
   const [selectedAgents, setSelectedAgents] = React.useState([]);
   const [processState, setProcessState] = React.useState({ active: false, stage: '', progress: 0, complete: false });
-  const [showHookModal, setShowHookModal] = React.useState(true);
+  const [showHookModal, setShowHookModal] = React.useState(false);
   const [typingEvents, setTypingEvents] = React.useState([]);
   
   const modalButtonRef = React.useRef(null);
