@@ -21,10 +21,7 @@ function App(){
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar/>
-      <div className="flex flex-1">
-        <SideNav/>
-        <main className="flex-1">{Page}</main>
-      </div>
+      <main className="flex-1">{Page}</main>
     </div>
   );
 }
