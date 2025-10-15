@@ -294,11 +294,11 @@ function DCLDashboard(){
                 </div>
             <div className="space-y-2 mb-3">
               {sources.map(s => {
-                const icons = {
-                  crm: '📱',
-                  erp: '🏢',
-                  database: '💾',
-                  warehouse: '🏛️'
+                const iconPaths = {
+                  crm: '/static/icon-crm.png',
+                  erp: '/static/icon-erp.png',
+                  database: '/static/icon-database.png',
+                  warehouse: '/static/icon-warehouse.png'
                 };
                 const typeColors = {
                   crm: 'bg-blue-900/30 border-blue-700/50 text-blue-300',
@@ -315,7 +315,11 @@ function DCLDashboard(){
                       onChange={() => toggleSource(s.value)}
                       className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500"
                     />
-                    <span className="text-lg">{icons[s.type] || '📊'}</span>
+                    <img 
+                      src={iconPaths[s.type]} 
+                      alt={s.type} 
+                      className="w-5 h-5 object-contain"
+                    />
                     <span className="text-sm text-slate-200 group-hover:text-white flex-1">{s.name}</span>
                     <span className="text-[10px] text-slate-400 uppercase font-semibold">{s.type}</span>
                   </label>
