@@ -267,7 +267,7 @@ function renderSankey(state) {
       
       return '#64748b';  // Grey for any other edge type
     })
-    .attr('stroke-width', d => Math.max(1, d.width))
+    .attr('stroke-width', d => Math.min(Math.max(1, d.width), 10))
     .attr('stroke-opacity', 0.5)
     .style('cursor', 'pointer')
     .on('mouseover', function() {
