@@ -1,3 +1,26 @@
+// Typing animation component for narration
+function TypingText({ text, speed = 30 }) {
+  const [displayedText, setDisplayedText] = React.useState('');
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayedText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, speed);
+      return () => clearTimeout(timeout);
+    }
+  }, [currentIndex, text, speed]);
+
+  React.useEffect(() => {
+    setDisplayedText('');
+    setCurrentIndex(0);
+  }, [text]);
+
+  return <span>{displayedText}</span>;
+}
+
 function DCLDashboard(){
   const [state, setState] = React.useState({
     events: [],
@@ -13,6 +36,7 @@ function DCLDashboard(){
   const [processState, setProcessState] = React.useState({ active: false, stage: '', progress: 0, complete: false });
   const [viewType, setViewType] = React.useState('sankey');
   const [showHookModal, setShowHookModal] = React.useState(true);
+  const [typingEvents, setTypingEvents] = React.useState([]);
   
   // Auto-collapse panels on mobile by default
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 1024);
@@ -20,6 +44,7 @@ function DCLDashboard(){
   const [rightPanelCollapsed, setRightPanelCollapsed] = React.useState(window.innerWidth < 1024);
   const cyRef = React.useRef(null);
   const modalButtonRef = React.useRef(null);
+  const processTimeoutRef = React.useRef(null);
 
   // Detect mobile screen size
   React.useEffect(() => {
@@ -129,6 +154,36 @@ function DCLDashboard(){
     return () => window.removeEventListener('sankey-node-click', handleSankeyNodeClick);
   }, []);
 
+  // Track new events and animate them with typing effect
+  React.useEffect(() => {
+    // Check if events changed (length or content)
+    const eventsChanged = state.events.length !== typingEvents.length || 
+      state.events.some((event, idx) => typingEvents[idx]?.text !== event);
+    
+    if (eventsChanged) {
+      if (state.events.length === 0) {
+        // Events were cleared
+        setTypingEvents([]);
+      } else {
+        // New events or content changed - update and mark latest for typing
+        setTypingEvents(state.events.map((event, idx) => ({
+          text: event,
+          isTyping: idx === state.events.length - 1, // Only the latest event types
+          key: `${idx}-${event.substring(0, 20)}-${Date.now()}` // Unique key with timestamp
+        })));
+      }
+    }
+  }, [state.events, typingEvents]);
+
+  // Cleanup timeout on unmount to prevent React warnings
+  React.useEffect(() => {
+    return () => {
+      if (processTimeoutRef.current) {
+        clearTimeout(processTimeoutRef.current);
+      }
+    };
+  }, []);
+
   async function fetchState(){
     const res = await fetch('/state');
     const data = await res.json();
@@ -175,8 +230,17 @@ function DCLDashboard(){
       
       await fetchState();
       setProcessState({ active: true, stage: 'Completed successfully', progress: 100, complete: true });
+      
+      // Reset to idle after brief display of success
+      processTimeoutRef.current = setTimeout(() => {
+        setProcessState({ active: false, stage: '', progress: 0, complete: false });
+      }, 1500);
     } catch (error) {
       setProcessState({ active: true, stage: 'Failed', progress: 0, complete: true });
+      // Reset to idle after brief display of error
+      processTimeoutRef.current = setTimeout(() => {
+        setProcessState({ active: false, stage: '', progress: 0, complete: false });
+      }, 2000);
     }
   }
 
@@ -488,10 +552,20 @@ function DCLDashboard(){
 
           <button 
             onClick={connectSources} 
-            className="w-full bg-brand-500 hover:bg-brand-600 rounded-lg py-2 text-sm font-medium disabled:opacity-50"
-            disabled={selectedSources.length === 0 || selectedAgents.length === 0}
+            className="w-full bg-brand-500 hover:bg-brand-600 rounded-lg py-2 text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+            disabled={selectedSources.length === 0 || selectedAgents.length === 0 || processState.active}
           >
-            Connect & Map
+            {processState.active ? (
+              <>
+                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Agent Working...
+              </>
+            ) : (
+              'Connect & Map'
+            )}
           </button>
 
           <div className="card">
@@ -671,11 +745,13 @@ function DCLDashboard(){
           <div className="card border-2 border-slate-700">
             <div className="card-title mb-3">Narration</div>
             <div className="text-xs space-y-2 max-h-[450px] overflow-y-auto border border-slate-800 rounded-lg p-3 bg-slate-900/50">
-              {state.events.length === 0 ? (
+              {typingEvents.length === 0 ? (
                 <div className="text-slate-500 italic">No events yet. Add a source to begin.</div>
               ) : (
-                state.events.map((event, i) => (
-                  <div key={i} className="text-slate-300 leading-relaxed">{event}</div>
+                typingEvents.map((event, i) => (
+                  <div key={event.key} className="text-slate-300 leading-relaxed">
+                    {event.isTyping ? <TypingText text={event.text} speed={20} /> : event.text}
+                  </div>
                 ))
               )}
             </div>
