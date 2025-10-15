@@ -182,8 +182,8 @@ function renderSankey(state) {
   const validHeight = height > 0 ? height : responsiveHeight;
 
   const sankey = d3.sankey()
-    .nodeWidth(20)
-    .nodePadding(2)
+    .nodeWidth(16)
+    .nodePadding(8)
     .extent([[1, 40], [validWidth - 1, validHeight - 6]]);
 
   const graph = sankey({
@@ -255,15 +255,6 @@ function renderSankey(state) {
     return '#0bcad9';
   };
 
-  // Dynamic max edge width based on link density
-  const linkCount = links.length;
-  let maxEdgeWidth = 10;
-  if (linkCount > 40) {
-    maxEdgeWidth = 6;  // Very dense - narrow edges
-  } else if (linkCount > 25) {
-    maxEdgeWidth = 8;  // Dense - medium edges
-  }
-
   svg.append('g')
     .attr('fill', 'none')
     .selectAll('path')
@@ -286,14 +277,14 @@ function renderSankey(state) {
       
       return '#64748b';  // Grey for any other edge type
     })
-    .attr('stroke-width', d => Math.min(Math.max(1, d.width), maxEdgeWidth))
-    .attr('stroke-opacity', 0.5)
+    .attr('stroke-width', d => Math.min(Math.max(0.5, d.width * 0.5), 20))
+    .attr('stroke-opacity', 0.3)
     .style('cursor', 'pointer')
     .on('mouseover touchstart', function() {
       d3.select(this).attr('stroke-opacity', 0.7);
     })
     .on('mouseout touchend', function() {
-      d3.select(this).attr('stroke-opacity', 0.5);
+      d3.select(this).attr('stroke-opacity', 0.3);
     })
     .on('click', async (event, d) => {
       const sourceNodeData = sankeyNodes.find(n => n.name === d.source.name);
@@ -338,12 +329,8 @@ function renderSankey(state) {
       const nodeData = sankeyNodes.find(n => n.name === d.name);
       return getNodeColor(nodeData);
     })
-    .attr('fill-opacity', 0.3)
-    .attr('stroke', d => {
-      const nodeData = sankeyNodes.find(n => n.name === d.name);
-      return getNodeColor(nodeData);
-    })
-    .attr('stroke-width', 0.5)
+    .attr('fill-opacity', 0.25)
+    .attr('stroke', 'none')
     .style('cursor', 'pointer')
     .on('mouseover touchstart', function(event, d) {
       d3.select(this).attr('fill-opacity', 0.6);
@@ -375,7 +362,7 @@ function renderSankey(state) {
       document.body.appendChild(tooltipDiv);
     })
     .on('mouseout touchend', function() {
-      d3.select(this).attr('fill-opacity', 0.3);
+      d3.select(this).attr('fill-opacity', 0.25);
       const tooltip = document.getElementById('sankey-tooltip');
       if (tooltip) tooltip.remove();
     })
