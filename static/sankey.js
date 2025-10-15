@@ -255,6 +255,15 @@ function renderSankey(state) {
     return '#0bcad9';
   };
 
+  // Dynamic max edge width based on link density
+  const linkCount = links.length;
+  let maxEdgeWidth = 30;
+  if (linkCount > 40) {
+    maxEdgeWidth = 12;  // Very dense - narrow edges
+  } else if (linkCount > 25) {
+    maxEdgeWidth = 18;  // Dense - medium edges
+  }
+
   svg.append('g')
     .attr('fill', 'none')
     .selectAll('path')
@@ -277,7 +286,7 @@ function renderSankey(state) {
       
       return '#64748b';  // Grey for any other edge type
     })
-    .attr('stroke-width', d => Math.min(Math.max(1, d.width), 30))
+    .attr('stroke-width', d => Math.min(Math.max(1, d.width), maxEdgeWidth))
     .attr('stroke-opacity', 0.5)
     .style('cursor', 'pointer')
     .on('mouseover touchstart', function() {
