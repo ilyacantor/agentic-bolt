@@ -20,6 +20,8 @@ The project aims to provide a dynamic data connection layer, aligning diverse da
 - **Smart Graph Expansion**: The central graph dynamically adjusts its width based on the state of collapsed side panels.
 - **Progress Indicator**: A staged processing progress bar (Connecting, Analyzing, Mapping, Validating, Complete) is always visible at the top right sidebar, persisting with a green checkmark upon completion.
 - **Layout Reorganization**: Narration is in the right sidebar, and Source/Unified Previews are in a "Notes" section below the graph.
+- **5-Second Hook Modal**: A welcome modal appears on page load with the headline "Stop Building Pipelines. Let Agents Deliver the Outcome." and explains the "Insight-to-Action Gap." Features a pulsing/glowing button with full WCAG 2.1 accessibility (focus trap, Escape key dismissal, ARIA semantics, screen reader support).
+- **Mobile Responsiveness**: Fully responsive design with auto-collapsing panels on screens < 1024px, reduced padding/gaps on mobile, responsive Sankey diagram heights (400px mobile, 500px tablet, 600px desktop), touch event support (touchstart, touchend), and mobile-optimized CSS (44px minimum touch targets, horizontal overflow prevention, smooth touch scrolling).
 
 ### Technical Implementations
 - **Multi-Agent Architecture**: The DCL dynamically adapts its ontology and data flows based on user-selected domain agents (e.g., RevOps Pilot, FinOps Pilot) and data sources.
