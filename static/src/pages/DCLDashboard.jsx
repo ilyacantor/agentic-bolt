@@ -34,7 +34,6 @@ function DCLDashboard(){
   const [selectedSources, setSelectedSources] = React.useState([]);
   const [selectedAgents, setSelectedAgents] = React.useState([]);
   const [processState, setProcessState] = React.useState({ active: false, stage: '', progress: 0, complete: false });
-  const [viewType, setViewType] = React.useState('sankey');
   const [showHookModal, setShowHookModal] = React.useState(true);
   const [typingEvents, setTypingEvents] = React.useState([]);
   
@@ -42,7 +41,6 @@ function DCLDashboard(){
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 1024);
   const [leftPanelCollapsed, setLeftPanelCollapsed] = React.useState(window.innerWidth < 1024);
   const [rightPanelCollapsed, setRightPanelCollapsed] = React.useState(false);
-  const cyRef = React.useRef(null);
   const modalButtonRef = React.useRef(null);
   const processTimeoutRef = React.useRef(null);
 
@@ -133,13 +131,9 @@ function DCLDashboard(){
 
   React.useEffect(()=>{
     if(state.graph.nodes.length > 0){
-      if(viewType === 'cytoscape'){
-        renderGraph();
-      } else {
-        renderSankey(state);
-      }
+      renderSankey(state);
     }
-  },[state.graph, viewType]);
+  },[state.graph]);
 
   React.useEffect(() => {
     const handleSankeyNodeClick = (e) => {
@@ -281,10 +275,6 @@ function DCLDashboard(){
 
   async function resetDemo(){
     await fetch('/reset');
-    if(cyRef.current){
-      cyRef.current.destroy();
-      cyRef.current = null;
-    }
     setProcessState({ active: false, stage: '', progress: 0, complete: false });
     setSelectedSources([]);
     setSelectedAgents([]);
@@ -295,78 +285,6 @@ function DCLDashboard(){
     fetchState();
   }
 
-  function renderGraph(){
-    const container = document.getElementById('cy-container');
-    if(!container) return;
-
-    const nodeTypeMap = {};
-    state.graph.nodes.forEach(n => {
-      nodeTypeMap[n.id] = n.type;
-    });
-
-    const filteredEdges = state.graph.edges.filter(e => {
-      const sourceType = nodeTypeMap[e.source];
-      const targetType = nodeTypeMap[e.target];
-      return !(sourceType === 'source' && targetType === 'source');
-    });
-
-    const elements = [
-      ...state.graph.nodes.map(n => ({
-        data: { id: n.id, label: n.label, type: n.type }
-      })),
-      ...filteredEdges.map(e => ({
-        data: { source: e.source, target: e.target, label: e.label || "", type: e.type || "" }
-      }))
-    ];
-
-    const positions = computePositionsByType(state.graph.nodes);
-
-    if (!cyRef.current) {
-      cyRef.current = cytoscape({
-        container: container,
-        elements,
-        style: [
-          { selector: "node[type='source']", style: { "background-color": "#2563eb", "shape": "round-rectangle", "color": "#fff", "label": "data(label)", "font-size": "11px", "text-valign": "center", "text-halign": "center", "width": 80, "height": 40 }},
-          { selector: "node[type='agent']",   style: { "background-color": "#9333ea", "shape": "ellipse", "color": "#fff", "label": "data(label)", "font-size": "11px", "text-valign": "center", "text-halign": "center", "width": 80, "height": 40 }},
-          { selector: "node[type='ontology']",style: { "background-color": "#16a34a", "shape": "round-rectangle", "color": "#fff", "label": "data(label)", "font-size": "11px", "text-valign": "center", "text-halign": "center", "width": 80, "height": 40 }},
-          { selector: "node[type='consumer']",style: { "background-color": "#475569", "shape": "rectangle", "color": "#fff", "label": "data(label)", "font-size": "11px", "text-valign": "center", "text-halign": "center", "width": 80, "height": 40 }},
-          { selector: "edge", style: { "curve-style": "bezier", "line-color": "#64748b", "target-arrow-shape": "triangle", "target-arrow-color": "#64748b", "width": 2, "label": "data(label)", "font-size": "9px", "color": "#94a3b8" }}
-        ],
-        layout: { name: "preset", positions, fit: true, padding: 20 }
-      });
-
-      cyRef.current.nodes().lock();
-
-      cyRef.current.on('tap', 'node', async (evt) => {
-        const id = evt.target.id();
-        const r = await fetch('/preview?node=' + encodeURIComponent(id));
-        const data = await r.json();
-        setState(prev => ({...prev, preview: {...data, connectionInfo: prev.preview.connectionInfo}}));
-      });
-
-    } else {
-      cyRef.current.elements().remove();
-      cyRef.current.add(elements);
-      cyRef.current.layout({ name: "preset", positions, fit: true }).run();
-      cyRef.current.nodes().lock();
-    }
-  }
-
-  function computePositionsByType(nodes) {
-    const colIndex = { source: 0, agent: 1, ontology: 2, consumer: 3 };
-    const colX = [100, 280, 460, 640];
-    const rowGap = 90, yStart = 80;
-    const counters = [0, 0, 0, 0], pos = {};
-    nodes.forEach(n => {
-      const t = n.type || "source";
-      const col = colIndex[t] !== undefined ? colIndex[t] : 1;
-      const x = colX[col];
-      const y = yStart + counters[col] * rowGap;
-      counters[col] += 1;
-      pos[n.id] = { x, y };
-    });
-    return pos;
-  }
 
   const sources = [
     {name: 'Dynamics CRM', value: 'dynamics', type: 'crm'},
@@ -600,44 +518,14 @@ function DCLDashboard(){
           'lg:col-span-6'
         } card transition-all duration-300`}>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
-            <div className="card-title">Data Flow Graph</div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex bg-slate-800 rounded-lg p-1">
-                <button
-                  onClick={() => setViewType('cytoscape')}
-                  className={`px-2 sm:px-3 py-1 text-xs rounded transition-all ${
-                    viewType === 'cytoscape' 
-                      ? 'bg-cyan-600 text-white' 
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Graph
-                </button>
-                <button
-                  onClick={() => setViewType('sankey')}
-                  className={`px-2 sm:px-3 py-1 text-xs rounded transition-all ${
-                    viewType === 'sankey' 
-                      ? 'bg-cyan-600 text-white' 
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Sankey
-                </button>
-              </div>
-              <div className="text-xs text-slate-400 hidden sm:block">
-                {state.graph.nodes.length} nodes, {state.graph.edges.length} edges
-              </div>
+            <div className="card-title">Data Flow</div>
+            <div className="text-xs text-slate-400 hidden sm:block">
+              {state.graph.nodes.length} nodes, {state.graph.edges.length} edges
             </div>
           </div>
           <div 
-            id="cy-container" 
-            className="rounded-xl bg-slate-900/50 border border-slate-800 h-[400px] sm:h-[500px] lg:h-[600px]"
-            style={{ display: viewType === 'cytoscape' ? 'block' : 'none' }}
-          ></div>
-          <div 
             id="sankey-container" 
             className="rounded-xl bg-slate-900/50 border border-slate-800 h-[400px] sm:h-[500px] lg:h-[600px] overflow-x-auto"
-            style={{ display: viewType === 'sankey' ? 'block' : 'none' }}
           ></div>
         </div>
 
