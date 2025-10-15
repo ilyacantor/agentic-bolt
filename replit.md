@@ -22,6 +22,7 @@ The project aims to provide a dynamic data connection layer, aligning diverse da
 - **Layout Reorganization**: Narration is in the right sidebar, and Source/Unified Previews are in a "Notes" section below the graph.
 - **5-Second Hook Modal**: A welcome modal appears on page load with the headline "Stop Building Pipelines. Let Agents Deliver the Outcome." and explains the "Insight-to-Action Gap." Features a pulsing/glowing button with full WCAG 2.1 accessibility (focus trap, Escape key dismissal, ARIA semantics, screen reader support).
 - **Mobile Responsiveness**: Fully responsive design with auto-collapsing panels on screens < 1024px, reduced padding/gaps on mobile, responsive Sankey diagram heights (400px mobile, 500px tablet, 600px desktop), touch event support (touchstart, touchend), and mobile-optimized CSS (44px minimum touch targets, horizontal overflow prevention, smooth touch scrolling).
+- **Real-Time Agent Visualization**: The Connect & Map button provides instant feedback, changing to "Agent Working..." with a spinning loader during processing. The Narration panel displays agent thought process with typewriter animation (20ms per character) for new events, creating a real-time visualization of the agent's work. Button auto-resets to idle state after completion (1.5s delay) or failure (2s delay).
 
 ### Technical Implementations
 - **Multi-Agent Architecture**: The DCL dynamically adapts its ontology and data flows based on user-selected domain agents (e.g., RevOps Pilot, FinOps Pilot) and data sources.
