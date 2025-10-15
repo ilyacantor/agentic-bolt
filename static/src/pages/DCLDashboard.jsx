@@ -37,26 +37,8 @@ function DCLDashboard(){
   const [showHookModal, setShowHookModal] = React.useState(true);
   const [typingEvents, setTypingEvents] = React.useState([]);
   
-  // Auto-collapse panels on mobile by default
-  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 1024);
-  const [leftPanelCollapsed, setLeftPanelCollapsed] = React.useState(window.innerWidth < 1024);
-  const [rightPanelCollapsed, setRightPanelCollapsed] = React.useState(false);
   const modalButtonRef = React.useRef(null);
   const processTimeoutRef = React.useRef(null);
-
-  // Detect mobile screen size
-  React.useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 1024;
-      setIsMobile(mobile);
-      // Auto-collapse LEFT panel only when switching to mobile
-      if (mobile && !isMobile) {
-        setLeftPanelCollapsed(true);
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isMobile]);
 
   // Handle modal accessibility: Escape key and focus trap
   React.useEffect(() => {
@@ -340,26 +322,7 @@ function DCLDashboard(){
       <div className="grid grid-cols-12 gap-3 sm:gap-5 max-w-[1400px] mx-auto" aria-hidden={showHookModal}>
         
         {/* Left Sidebar - Connectors */}
-        <div className={`col-span-12 ${leftPanelCollapsed ? 'lg:col-span-1' : 'lg:col-span-3'} space-y-4 transition-all duration-300`}>
-          {/* Collapse/Expand Button */}
-          <button
-            onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
-            className="w-full bg-slate-800 hover:bg-slate-700 rounded-lg p-2 flex items-center justify-center gap-2 text-slate-300 hover:text-white transition-colors"
-            title={leftPanelCollapsed ? "Expand panel" : "Collapse panel"}
-          >
-            <svg 
-              className={`w-4 h-4 transition-transform duration-300 ${leftPanelCollapsed ? 'rotate-180' : ''}`} 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-            </svg>
-            {!leftPanelCollapsed && <span className="text-sm font-medium">Collapse</span>}
-          </button>
-          
-          {!leftPanelCollapsed && (
-            <>
+        <div className="col-span-12 lg:col-span-3 space-y-4">
               <div className="card">
                 <div className="flex items-center justify-between mb-3">
                   <div className="card-title">Data Sources</div>
@@ -506,23 +469,10 @@ function DCLDashboard(){
           <button onClick={resetDemo} className="w-full bg-red-900 hover:bg-red-800 rounded-lg py-2 text-sm">
             Reset Demo
           </button>
-            </>
-          )}
         </div>
 
         {/* Center - Graph */}
-        <div className={`col-span-12 ${
-          leftPanelCollapsed && rightPanelCollapsed ? 'lg:col-span-10' : 
-          leftPanelCollapsed ? 'lg:col-span-8' : 
-          rightPanelCollapsed ? 'lg:col-span-8' : 
-          'lg:col-span-6'
-        } card transition-all duration-300`}>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
-            <div className="card-title">Data Flow</div>
-            <div className="text-xs text-slate-400 hidden sm:block">
-              {state.graph.nodes.length} nodes, {state.graph.edges.length} edges
-            </div>
-          </div>
+        <div className="col-span-12 lg:col-span-6 card">
           <div 
             id="sankey-container" 
             className="rounded-xl bg-slate-900/50 border border-slate-800 h-[400px] sm:h-[500px] lg:h-[600px] overflow-x-auto"
@@ -530,26 +480,7 @@ function DCLDashboard(){
         </div>
 
         {/* Right Sidebar */}
-        <div className={`col-span-12 ${rightPanelCollapsed ? 'lg:col-span-1' : 'lg:col-span-3'} space-y-4 transition-all duration-300`}>
-          {/* Collapse/Expand Button */}
-          <button
-            onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
-            className="w-full bg-slate-800 hover:bg-slate-700 rounded-lg p-2 flex items-center justify-center gap-2 text-slate-300 hover:text-white transition-colors"
-            title={rightPanelCollapsed ? "Expand panel" : "Collapse panel"}
-          >
-            <svg 
-              className={`w-4 h-4 transition-transform duration-300 ${rightPanelCollapsed ? '' : 'rotate-180'}`} 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-            </svg>
-            {!rightPanelCollapsed && <span className="text-sm font-medium">Collapse</span>}
-          </button>
-          
-          {!rightPanelCollapsed && (
-            <>
+        <div className="col-span-12 lg:col-span-3 space-y-4">
               {/* Processing Indicator - Always Visible */}
               <div className="rounded-lg p-4 bg-slate-900/90 border border-slate-800">
             {processState.active ? (
@@ -643,8 +574,6 @@ function DCLDashboard(){
               )}
             </div>
           </div>
-            </>
-          )}
         </div>
 
       </div>
