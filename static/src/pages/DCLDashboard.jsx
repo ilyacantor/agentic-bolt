@@ -41,7 +41,7 @@ function DCLDashboard(){
   // Auto-collapse panels on mobile by default
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 1024);
   const [leftPanelCollapsed, setLeftPanelCollapsed] = React.useState(window.innerWidth < 1024);
-  const [rightPanelCollapsed, setRightPanelCollapsed] = React.useState(window.innerWidth < 1024);
+  const [rightPanelCollapsed, setRightPanelCollapsed] = React.useState(false);
   const cyRef = React.useRef(null);
   const modalButtonRef = React.useRef(null);
   const processTimeoutRef = React.useRef(null);
@@ -51,10 +51,9 @@ function DCLDashboard(){
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
-      // Auto-collapse panels when switching to mobile
+      // Auto-collapse LEFT panel only when switching to mobile
       if (mobile && !isMobile) {
         setLeftPanelCollapsed(true);
-        setRightPanelCollapsed(true);
       }
     };
     window.addEventListener('resize', handleResize);
