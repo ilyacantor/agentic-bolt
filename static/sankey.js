@@ -257,11 +257,11 @@ function renderSankey(state) {
 
   // Dynamic max edge width based on link density
   const linkCount = links.length;
-  let maxEdgeWidth = 30;
+  let maxEdgeWidth = 20;
   if (linkCount > 40) {
-    maxEdgeWidth = 12;  // Very dense - narrow edges
+    maxEdgeWidth = 8;  // Very dense - narrow edges
   } else if (linkCount > 25) {
-    maxEdgeWidth = 18;  // Dense - medium edges
+    maxEdgeWidth = 12;  // Dense - medium edges
   }
 
   svg.append('g')
