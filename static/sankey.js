@@ -269,26 +269,12 @@ function renderSankey(state) {
     })
     .attr('stroke-width', d => Math.max(1, d.width))
     .attr('stroke-opacity', 0.5)
-    .attr('stroke-dasharray', '8 4')
     .style('cursor', 'pointer')
     .on('mouseover', function() {
       d3.select(this).attr('stroke-opacity', 0.7);
     })
     .on('mouseout', function() {
       d3.select(this).attr('stroke-opacity', 0.5);
-    })
-    .each(function(d) {
-      const targetNode = sankeyNodes.find(n => n.name === d.target.name);
-      const path = d3.select(this);
-      
-      // Animate all edges except those ending at agents (flow stops at agents)
-      if (!targetNode || targetNode.type !== 'agent') {
-        let offset = 0;
-        setInterval(() => {
-          offset -= 1;
-          path.attr('stroke-dashoffset', offset);
-        }, 50);
-      }
     })
     .on('click', async (event, d) => {
       const sourceNodeData = sankeyNodes.find(n => n.name === d.source.name);
