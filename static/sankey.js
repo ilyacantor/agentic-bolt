@@ -182,8 +182,8 @@ function renderSankey(state) {
   const validHeight = height > 0 ? height : responsiveHeight;
 
   const sankey = d3.sankey()
-    .nodeWidth(16)
-    .nodePadding(8)
+    .nodeWidth(20)
+    .nodePadding(2)
     .extent([[1, 40], [validWidth - 1, validHeight - 6]]);
 
   const graph = sankey({
@@ -277,8 +277,8 @@ function renderSankey(state) {
       
       return '#64748b';  // Grey for any other edge type
     })
-    .attr('stroke-width', d => Math.min(Math.max(0.5, d.width * 0.5), 20))
-    .attr('stroke-opacity', 0.3)
+    .attr('stroke-width', d => Math.min(Math.max(1, d.width), 30))
+    .attr('stroke-opacity', 0.5)
     .style('cursor', 'pointer')
     .on('mouseover touchstart', function() {
       d3.select(this).attr('stroke-opacity', 0.7);
@@ -329,8 +329,12 @@ function renderSankey(state) {
       const nodeData = sankeyNodes.find(n => n.name === d.name);
       return getNodeColor(nodeData);
     })
-    .attr('fill-opacity', 0.25)
-    .attr('stroke', 'none')
+    .attr('fill-opacity', 0.3)
+    .attr('stroke', d => {
+      const nodeData = sankeyNodes.find(n => n.name === d.name);
+      return getNodeColor(nodeData);
+    })
+    .attr('stroke-width', 0.5)
     .style('cursor', 'pointer')
     .on('mouseover touchstart', function(event, d) {
       d3.select(this).attr('fill-opacity', 0.6);
@@ -409,65 +413,131 @@ function renderSankey(state) {
     return null;
   };
 
-  // Render labels aligned with nodes
+  // Render labels with form-fitting boxes for all node types
   nodeGroups.each(function(d) {
     const nodeData = sankeyNodes.find(n => n.name === d.name);
     const isLeft = d.x0 < validWidth / 2;
     const typeInfo = getSourceTypeInfo(nodeData);
     const group = d3.select(this);
-    const textX = isLeft ? d.x1 + 8 : d.x0 - 8;
+    const textX = isLeft ? d.x1 + 6 : d.x0 - 6;
     const textY = (d.y1 + d.y0) / 2;
-    const nodeHeight = d.y1 - d.y0;
+    const padding = 4;
     
-    // Calculate font size based on node height to ensure text fits
-    const fontSize = Math.min(nodeHeight * 0.8, 10);
-    
-    // Source parent nodes (data sources) - minimal with just text
+    // Source parent nodes (data sources) with icons and type-specific colors
     if (nodeData && nodeData.type === 'source_parent' && typeInfo) {
+      const textWidth = d.name.length * 6.5 + 18;
+      const rectWidth = textWidth + padding * 2;
+      const rectHeight = 18;
+      
+      group.append('rect')
+        .attr('x', isLeft ? textX - padding : textX - rectWidth + padding)
+        .attr('y', textY - rectHeight / 2)
+        .attr('width', rectWidth)
+        .attr('height', rectHeight)
+        .attr('rx', 4)
+        .attr('fill', typeInfo.bgColor)
+        .attr('stroke', typeInfo.borderColor)
+        .attr('stroke-width', 0.5)
+        .attr('opacity', 0.7);
+      
       group.append('text')
-        .attr('x', isLeft ? textX : textX)
+        .attr('x', isLeft ? textX + 2 : textX - rectWidth + padding + 2)
         .attr('y', textY)
         .attr('dy', '0.35em')
-        .attr('text-anchor', isLeft ? 'start' : 'end')
-        .attr('fill', typeInfo.borderColor)
-        .style('font-size', fontSize + 'px')
+        .attr('text-anchor', 'start')
+        .attr('fill', '#e2e8f0')
+        .style('font-size', '10px')
+        .text(typeInfo.icon);
+      
+      group.append('text')
+        .attr('x', isLeft ? textX + 18 : textX - rectWidth + padding + 18)
+        .attr('y', textY)
+        .attr('dy', '0.35em')
+        .attr('text-anchor', 'start')
+        .attr('fill', '#e2e8f0')
+        .style('font-size', '9px')
         .style('font-weight', '600')
         .text(d.name);
     }
-    // Source table/field nodes - just text, no boxes
+    // Source table/field nodes - smaller with tighter boxes
     else if (nodeData && nodeData.type === 'source' && typeInfo) {
+      const textWidth = d.name.length * 5;
+      const rectWidth = textWidth + padding * 2;
+      const rectHeight = 14;
+      
+      group.append('rect')
+        .attr('x', isLeft ? textX - padding : textX - rectWidth + padding)
+        .attr('y', textY - rectHeight / 2)
+        .attr('width', rectWidth)
+        .attr('height', rectHeight)
+        .attr('rx', 3)
+        .attr('fill', typeInfo.bgColor)
+        .attr('stroke', typeInfo.borderColor)
+        .attr('stroke-width', 0.5)
+        .attr('opacity', 0.7);
+      
       group.append('text')
-        .attr('x', isLeft ? textX : textX)
+        .attr('x', isLeft ? textX + padding : textX - padding)
         .attr('y', textY)
         .attr('dy', '0.35em')
         .attr('text-anchor', isLeft ? 'start' : 'end')
-        .attr('fill', typeInfo.borderColor)
-        .style('font-size', fontSize + 'px')
-        .style('font-weight', '400')
+        .attr('fill', '#e2e8f0')
+        .style('font-size', '8px')
+        .style('font-weight', '600')
         .text(d.name);
     } 
-    // Agent nodes - minimal styling
+    // Agent nodes with purple styling
     else if (nodeData && nodeData.type === 'agent') {
+      const textWidth = d.name.length * 7;
+      const rectWidth = textWidth + padding * 2;
+      const rectHeight = 20;
+      
+      group.append('rect')
+        .attr('x', isLeft ? textX - padding : textX - rectWidth + padding)
+        .attr('y', textY - rectHeight / 2)
+        .attr('width', rectWidth)
+        .attr('height', rectHeight)
+        .attr('rx', 5)
+        .attr('fill', '#581c87')
+        .attr('stroke', '#9333ea')
+        .attr('stroke-width', 1)
+        .attr('opacity', 0.8);
+      
       group.append('text')
-        .attr('x', isLeft ? textX : textX)
+        .attr('x', isLeft ? textX + padding : textX - padding)
         .attr('y', textY)
         .attr('dy', '0.35em')
         .attr('text-anchor', isLeft ? 'start' : 'end')
-        .attr('fill', '#a78bfa')
-        .style('font-size', Math.min(nodeHeight * 0.8, 11) + 'px')
+        .attr('fill', '#e9d5ff')
+        .style('font-size', '10px')
         .style('font-weight', '700')
         .text(d.name);
     }
-    // Ontology nodes - minimal text only
+    // Ontology nodes - smaller with tighter green boxes
     else {
+      const textWidth = d.name.length * 5.5;
+      const rectWidth = textWidth + padding * 2;
+      const rectHeight = 14;
+      
+      group.append('rect')
+        .attr('x', isLeft ? textX - padding : textX - rectWidth + padding)
+        .attr('y', textY - rectHeight / 2)
+        .attr('width', rectWidth)
+        .attr('height', rectHeight)
+        .attr('rx', 3)
+        .attr('fill', '#14532d')
+        .attr('stroke', '#16a34a')
+        .attr('stroke-width', 0.5)
+        .attr('opacity', 0.7);
+      
       group.append('text')
-        .attr('x', isLeft ? textX : textX)
+        .attr('x', isLeft ? textX + padding : textX - padding)
         .attr('y', textY)
         .attr('dy', '0.35em')
         .attr('text-anchor', isLeft ? 'start' : 'end')
-        .attr('fill', '#4ade80')
-        .style('font-size', fontSize + 'px')
-        .style('font-weight', '400')
+        .attr('fill', '#e2e8f0')
+        .style('font-size', '8px')
+        .style('font-weight', '500')
         .text(d.name);
     }
   });
