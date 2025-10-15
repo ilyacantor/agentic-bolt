@@ -19,10 +19,6 @@ externalPort = 3001
 localPort = 35611
 externalPort = 3000
 
-[[ports]]
-localPort = 46751
-externalPort = 3002
-
 [deployment]
 deploymentTarget = "vm"
 run = ["sh", "-c", "./start.sh"]
