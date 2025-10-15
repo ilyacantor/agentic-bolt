@@ -182,7 +182,7 @@ function renderSankey(state) {
   const validHeight = height > 0 ? height : responsiveHeight;
 
   const sankey = d3.sankey()
-    .nodeWidth(8)
+    .nodeWidth(16)
     .nodePadding(8)
     .extent([[1, 40], [validWidth - 1, validHeight - 6]]);
 
@@ -329,12 +329,8 @@ function renderSankey(state) {
       const nodeData = sankeyNodes.find(n => n.name === d.name);
       return getNodeColor(nodeData);
     })
-    .attr('fill-opacity', 0.1)
-    .attr('stroke', d => {
-      const nodeData = sankeyNodes.find(n => n.name === d.name);
-      return getNodeColor(nodeData);
-    })
-    .attr('stroke-width', 1)
+    .attr('fill-opacity', 0.25)
+    .attr('stroke', 'none')
     .style('cursor', 'pointer')
     .on('mouseover touchstart', function(event, d) {
       d3.select(this).attr('fill-opacity', 0.6);
@@ -413,61 +409,64 @@ function renderSankey(state) {
     return null;
   };
 
-  // Render labels with form-fitting boxes for all node types
+  // Render labels aligned with nodes
   nodeGroups.each(function(d) {
     const nodeData = sankeyNodes.find(n => n.name === d.name);
     const isLeft = d.x0 < validWidth / 2;
     const typeInfo = getSourceTypeInfo(nodeData);
     const group = d3.select(this);
-    const textX = isLeft ? d.x1 + 6 : d.x0 - 6;
+    const textX = isLeft ? d.x1 + 8 : d.x0 - 8;
     const textY = (d.y1 + d.y0) / 2;
-    const padding = 4;
+    const nodeHeight = d.y1 - d.y0;
+    
+    // Calculate font size based on node height to ensure text fits
+    const fontSize = Math.min(nodeHeight * 0.8, 10);
     
     // Source parent nodes (data sources) - minimal with just text
     if (nodeData && nodeData.type === 'source_parent' && typeInfo) {
       group.append('text')
-        .attr('x', isLeft ? textX + 4 : textX - 4)
+        .attr('x', isLeft ? textX : textX)
         .attr('y', textY)
         .attr('dy', '0.35em')
         .attr('text-anchor', isLeft ? 'start' : 'end')
         .attr('fill', typeInfo.borderColor)
-        .style('font-size', '9px')
+        .style('font-size', fontSize + 'px')
         .style('font-weight', '600')
         .text(d.name);
     }
     // Source table/field nodes - just text, no boxes
     else if (nodeData && nodeData.type === 'source' && typeInfo) {
       group.append('text')
-        .attr('x', isLeft ? textX + 4 : textX - 4)
+        .attr('x', isLeft ? textX : textX)
         .attr('y', textY)
         .attr('dy', '0.35em')
         .attr('text-anchor', isLeft ? 'start' : 'end')
         .attr('fill', typeInfo.borderColor)
-        .style('font-size', '8px')
+        .style('font-size', fontSize + 'px')
         .style('font-weight', '400')
         .text(d.name);
     } 
     // Agent nodes - minimal styling
     else if (nodeData && nodeData.type === 'agent') {
       group.append('text')
-        .attr('x', isLeft ? textX + 4 : textX - 4)
+        .attr('x', isLeft ? textX : textX)
         .attr('y', textY)
         .attr('dy', '0.35em')
         .attr('text-anchor', isLeft ? 'start' : 'end')
         .attr('fill', '#a78bfa')
-        .style('font-size', '10px')
+        .style('font-size', Math.min(nodeHeight * 0.8, 11) + 'px')
         .style('font-weight', '700')
         .text(d.name);
     }
     // Ontology nodes - minimal text only
     else {
       group.append('text')
-        .attr('x', isLeft ? textX + 4 : textX - 4)
+        .attr('x', isLeft ? textX : textX)
         .attr('y', textY)
         .attr('dy', '0.35em')
         .attr('text-anchor', isLeft ? 'start' : 'end')
         .attr('fill', '#4ade80')
-        .style('font-size', '8px')
+        .style('font-size', fontSize + 'px')
         .style('font-weight', '400')
         .text(d.name);
     }
