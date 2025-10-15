@@ -269,12 +269,34 @@ function renderSankey(state) {
     })
     .attr('stroke-width', d => Math.max(1, d.width))
     .attr('stroke-opacity', 0.5)
+    .attr('class', (d, i) => {
+      const sourceNode = sankeyNodes.find(n => n.name === d.source.name);
+      const targetNode = sankeyNodes.find(n => n.name === d.target.name);
+      
+      // Ontology to agent edges get pulse animation
+      if (sourceNode && sourceNode.type === 'ontology' && targetNode && targetNode.type === 'agent') {
+        return 'sankey-link-pulse';
+      }
+      
+      // Source to ontology edges get flow animation
+      if (sourceNode && (sourceNode.type === 'source' || sourceNode.type === 'source_parent') && 
+          targetNode && targetNode.type === 'ontology') {
+        return 'sankey-link-flow';
+      }
+      
+      // Source parent to source child also gets flow
+      if (sourceNode && sourceNode.type === 'source_parent' && targetNode && targetNode.type === 'source') {
+        return 'sankey-link-flow';
+      }
+      
+      return '';
+    })
     .style('cursor', 'pointer')
     .on('mouseover', function() {
       d3.select(this).attr('stroke-opacity', 0.7);
     })
     .on('mouseout', function() {
-      d3.select(this).attr('stroke-opacity', 0.4);
+      d3.select(this).attr('stroke-opacity', 0.5);
     })
     .on('click', async (event, d) => {
       const sourceNodeData = sankeyNodes.find(n => n.name === d.source.name);
