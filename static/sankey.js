@@ -193,6 +193,28 @@ function renderSankey(state) {
 
   const { nodes, links } = graph;
 
+  // Distribute ontology nodes evenly across vertical space
+  const ontologyNodesInSankey = nodes.filter(n => {
+    const nodeData = sankeyNodes.find(sn => sn.name === n.name);
+    return nodeData && nodeData.type === 'ontology';
+  });
+  
+  if (ontologyNodesInSankey.length > 1) {
+    const totalOntologyHeight = ontologyNodesInSankey.reduce((sum, n) => sum + (n.y1 - n.y0), 0);
+    const availableSpace = validHeight - totalOntologyHeight - 80; // Leave margin
+    const spacing = availableSpace / (ontologyNodesInSankey.length - 1);
+    
+    let currentY = 40; // Start with top margin
+    ontologyNodesInSankey.forEach(node => {
+      const nodeHeight = node.y1 - node.y0;
+      node.y0 = currentY;
+      node.y1 = currentY + nodeHeight;
+      currentY += nodeHeight + spacing;
+    });
+    
+    sankey.update(graph);
+  }
+
   // Manually center agent nodes vertically
   const agentNodesInSankey = nodes.filter(n => {
     const nodeData = sankeyNodes.find(sn => sn.name === n.name);
