@@ -35,3 +35,19 @@ html, body, #root { height: 100%; }
     min-width: 44px;
   }
 }
+
+/* Pulsing animation for Connect & Map button */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(16, 185, 129, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.6), 0 0 60px rgba(16, 185, 129, 0.3);
+    transform: scale(1.03);
+  }
+}
+
+.pulse-button {
+  animation: pulse-glow 2s ease-in-out infinite;
+}

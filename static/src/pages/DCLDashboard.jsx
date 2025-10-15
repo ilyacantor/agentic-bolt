@@ -12,12 +12,14 @@ function DCLDashboard(){
   const [selectedAgents, setSelectedAgents] = React.useState([]);
   const [processState, setProcessState] = React.useState({ active: false, stage: '', progress: 0, complete: false });
   const [viewType, setViewType] = React.useState('sankey');
+  const [showHookModal, setShowHookModal] = React.useState(true);
   
   // Auto-collapse panels on mobile by default
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 1024);
   const [leftPanelCollapsed, setLeftPanelCollapsed] = React.useState(window.innerWidth < 1024);
   const [rightPanelCollapsed, setRightPanelCollapsed] = React.useState(window.innerWidth < 1024);
   const cyRef = React.useRef(null);
+  const modalButtonRef = React.useRef(null);
 
   // Detect mobile screen size
   React.useEffect(() => {
@@ -33,6 +35,63 @@ function DCLDashboard(){
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [isMobile]);
+
+  // Handle modal accessibility: Escape key and focus trap
+  React.useEffect(() => {
+    if (showHookModal) {
+      // Store previously focused element
+      const previouslyFocused = document.activeElement;
+      
+      const handleKeyDown = (e) => {
+        // Handle Escape key
+        if (e.key === 'Escape') {
+          setShowHookModal(false);
+          return;
+        }
+        
+        // Handle Tab key - trap focus within modal
+        if (e.key === 'Tab') {
+          const modal = document.querySelector('[role="dialog"]');
+          if (!modal) return;
+          
+          const focusableElements = modal.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          const firstElement = focusableElements[0];
+          const lastElement = focusableElements[focusableElements.length - 1];
+          
+          if (e.shiftKey) {
+            // Shift+Tab
+            if (document.activeElement === firstElement) {
+              e.preventDefault();
+              lastElement.focus();
+            }
+          } else {
+            // Tab
+            if (document.activeElement === lastElement) {
+              e.preventDefault();
+              firstElement.focus();
+            }
+          }
+        }
+      };
+      
+      document.addEventListener('keydown', handleKeyDown);
+      
+      // Auto-focus the button when modal opens
+      if (modalButtonRef.current) {
+        modalButtonRef.current.focus();
+      }
+      
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        // Restore focus to previously focused element
+        if (previouslyFocused) {
+          previouslyFocused.focus();
+        }
+      };
+    }
+  }, [showHookModal]);
 
   React.useEffect(()=>{
     async function initState() {
@@ -267,7 +326,37 @@ function DCLDashboard(){
 
   return (
     <div className="p-3 sm:p-5 w-full">
-      <div className="grid grid-cols-12 gap-3 sm:gap-5 max-w-[1400px] mx-auto">
+      {/* 5-Second Hook Modal */}
+      {showHookModal && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="hook-modal-title"
+          aria-describedby="hook-modal-description"
+        >
+          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-8 max-w-lg w-full shadow-2xl">
+            <h2 id="hook-modal-title" className="text-2xl sm:text-3xl font-bold text-white mb-4 text-center">
+              Stop Building Pipelines.<br />Let Agents Deliver the Outcome.
+            </h2>
+            <p id="hook-modal-description" className="text-slate-300 text-base sm:text-lg mb-6 text-center leading-relaxed">
+              This is how you bridge the "Insight-to-Action Gap". Click <strong className="text-emerald-400">Connect & Map</strong> to see our autonomous system build the data connections you need, instantly.
+            </p>
+            <div className="flex justify-center">
+              <button
+                ref={modalButtonRef}
+                onClick={() => setShowHookModal(false)}
+                className="pulse-button bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-300 shadow-lg shadow-emerald-500/30"
+                aria-label="Close welcome modal and start using the application"
+              >
+                Got It - Show Me
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="grid grid-cols-12 gap-3 sm:gap-5 max-w-[1400px] mx-auto" aria-hidden={showHookModal}>
         
         {/* Left Sidebar - Connectors */}
         <div className={`col-span-12 ${leftPanelCollapsed ? 'lg:col-span-1' : 'lg:col-span-3'} space-y-4 transition-all duration-300`}>
