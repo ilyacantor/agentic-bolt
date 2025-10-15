@@ -183,7 +183,7 @@ function renderSankey(state) {
 
   const sankey = d3.sankey()
     .nodeWidth(16)
-    .nodePadding(12)
+    .nodePadding(18)
     .extent([[1, 40], [validWidth - 1, validHeight - 6]]);
 
   const graph = sankey({
@@ -329,11 +329,11 @@ function renderSankey(state) {
       const nodeData = sankeyNodes.find(n => n.name === d.name);
       return getNodeColor(nodeData);
     })
-    .attr('fill-opacity', 0.35)
+    .attr('fill-opacity', 0.7)
     .attr('stroke', 'none')
     .style('cursor', 'pointer')
     .on('mouseover touchstart', function(event, d) {
-      d3.select(this).attr('fill-opacity', 0.6);
+      d3.select(this).attr('fill-opacity', 0.9);
       const nodeData = sankeyNodes.find(n => n.name === d.name);
       const tooltip = getNodeTooltip(nodeData);
       
@@ -362,7 +362,7 @@ function renderSankey(state) {
       document.body.appendChild(tooltipDiv);
     })
     .on('mouseout touchend', function() {
-      d3.select(this).attr('fill-opacity', 0.35);
+      d3.select(this).attr('fill-opacity', 0.7);
       const tooltip = document.getElementById('sankey-tooltip');
       if (tooltip) tooltip.remove();
     })
