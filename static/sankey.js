@@ -173,7 +173,7 @@ function renderSankey(state) {
 
   const sankey = d3.sankey()
     .nodeWidth(20)
-    .nodePadding(30)
+    .nodePadding(2)
     .extent([[1, 40], [validWidth - 1, validHeight - 6]]);
 
   const graph = sankey({
@@ -192,7 +192,7 @@ function renderSankey(state) {
   if (agentNodesInSankey.length > 0) {
     // Calculate total height of all agent nodes including padding
     const totalAgentHeight = agentNodesInSankey.reduce((sum, n) => sum + (n.y1 - n.y0), 0);
-    const totalPadding = (agentNodesInSankey.length - 1) * 30; // 30px padding between agents
+    const totalPadding = (agentNodesInSankey.length - 1) * 2; // 2px padding between agents
     const centerY = (validHeight - totalAgentHeight - totalPadding) / 2;
     
     // Reposition agents to be centered
@@ -201,7 +201,7 @@ function renderSankey(state) {
       const nodeHeight = node.y1 - node.y0;
       node.y0 = currentY;
       node.y1 = currentY + nodeHeight;
-      currentY += nodeHeight + 30; // 30px padding
+      currentY += nodeHeight + 2; // 2px padding
     });
     
     // Update the sankey link generator to use the new positions
