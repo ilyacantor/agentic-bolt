@@ -160,16 +160,26 @@ function renderSankey(state) {
     links: sankeyLinks
   };
 
+  // Get container dimensions for responsive sizing
+  const containerRect = container.getBoundingClientRect();
+  const isMobile = window.innerWidth < 640; // sm breakpoint
+  const isTablet = window.innerWidth >= 640 && window.innerWidth < 1024; // sm to lg
+  
+  // Responsive height
+  const responsiveHeight = isMobile ? 400 : isTablet ? 500 : 600;
+  
   const svg = d3.select(container)
     .append('svg')
     .attr('width', '100%')
-    .attr('height', '600px');
+    .attr('height', responsiveHeight + 'px')
+    .attr('viewBox', `0 0 ${Math.max(containerRect.width, 320)} ${responsiveHeight}`)
+    .attr('preserveAspectRatio', 'xMidYMid meet');
 
   const { width, height } = svg.node().getBoundingClientRect();
   
-  // Ensure valid dimensions to prevent RangeError
-  const validWidth = width > 0 ? width : 800;  // Fallback to 800px if width is invalid
-  const validHeight = height > 0 ? height : 600;  // Fallback to 600px if height is invalid
+  // Ensure valid dimensions to prevent RangeError, with mobile-friendly minimum
+  const validWidth = width > 0 ? Math.max(width, 320) : 800;  // Min 320px for mobile
+  const validHeight = height > 0 ? height : responsiveHeight;
 
   const sankey = d3.sankey()
     .nodeWidth(20)
@@ -270,10 +280,10 @@ function renderSankey(state) {
     .attr('stroke-width', d => Math.min(Math.max(1, d.width), 30))
     .attr('stroke-opacity', 0.5)
     .style('cursor', 'pointer')
-    .on('mouseover', function() {
+    .on('mouseover touchstart', function() {
       d3.select(this).attr('stroke-opacity', 0.7);
     })
-    .on('mouseout', function() {
+    .on('mouseout touchend', function() {
       d3.select(this).attr('stroke-opacity', 0.5);
     })
     .on('click', async (event, d) => {
@@ -326,7 +336,7 @@ function renderSankey(state) {
     })
     .attr('stroke-width', 0.5)
     .style('cursor', 'pointer')
-    .on('mouseover', function(event, d) {
+    .on('mouseover touchstart', function(event, d) {
       d3.select(this).attr('fill-opacity', 0.6);
       const nodeData = sankeyNodes.find(n => n.name === d.name);
       const tooltip = getNodeTooltip(nodeData);
@@ -338,8 +348,11 @@ function renderSankey(state) {
       const tooltipDiv = document.createElement('div');
       tooltipDiv.id = 'sankey-tooltip';
       tooltipDiv.style.position = 'fixed';
-      tooltipDiv.style.left = event.pageX + 10 + 'px';
-      tooltipDiv.style.top = event.pageY + 10 + 'px';
+      // Handle both mouse and touch events
+      const x = event.touches ? event.touches[0].pageX : event.pageX;
+      const y = event.touches ? event.touches[0].pageY : event.pageY;
+      tooltipDiv.style.left = x + 10 + 'px';
+      tooltipDiv.style.top = y + 10 + 'px';
       tooltipDiv.style.background = 'rgba(15, 23, 42, 0.95)';
       tooltipDiv.style.color = '#e2e8f0';
       tooltipDiv.style.padding = '8px 12px';
@@ -352,7 +365,7 @@ function renderSankey(state) {
       tooltipDiv.innerHTML = tooltip;
       document.body.appendChild(tooltipDiv);
     })
-    .on('mouseout', function() {
+    .on('mouseout touchend', function() {
       d3.select(this).attr('fill-opacity', 0.3);
       const tooltip = document.getElementById('sankey-tooltip');
       if (tooltip) tooltip.remove();

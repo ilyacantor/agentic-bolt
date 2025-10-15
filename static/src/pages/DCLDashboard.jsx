@@ -12,9 +12,27 @@ function DCLDashboard(){
   const [selectedAgents, setSelectedAgents] = React.useState([]);
   const [processState, setProcessState] = React.useState({ active: false, stage: '', progress: 0, complete: false });
   const [viewType, setViewType] = React.useState('sankey');
-  const [leftPanelCollapsed, setLeftPanelCollapsed] = React.useState(false);
-  const [rightPanelCollapsed, setRightPanelCollapsed] = React.useState(false);
+  
+  // Auto-collapse panels on mobile by default
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 1024);
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = React.useState(window.innerWidth < 1024);
+  const [rightPanelCollapsed, setRightPanelCollapsed] = React.useState(window.innerWidth < 1024);
   const cyRef = React.useRef(null);
+
+  // Detect mobile screen size
+  React.useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      // Auto-collapse panels when switching to mobile
+      if (mobile && !isMobile) {
+        setLeftPanelCollapsed(true);
+        setRightPanelCollapsed(true);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMobile]);
 
   React.useEffect(()=>{
     async function initState() {
@@ -248,8 +266,8 @@ function DCLDashboard(){
   const confText = confidence != null ? `${Math.round(confidence*100)}%` : '--';
 
   return (
-    <div className="p-5 w-full">
-      <div className="grid grid-cols-12 gap-5 max-w-[1400px] mx-auto">
+    <div className="p-3 sm:p-5 w-full">
+      <div className="grid grid-cols-12 gap-3 sm:gap-5 max-w-[1400px] mx-auto">
         
         {/* Left Sidebar - Connectors */}
         <div className={`col-span-12 ${leftPanelCollapsed ? 'lg:col-span-1' : 'lg:col-span-3'} space-y-4 transition-all duration-300`}>
@@ -419,13 +437,13 @@ function DCLDashboard(){
           rightPanelCollapsed ? 'lg:col-span-8' : 
           'lg:col-span-6'
         } card transition-all duration-300`}>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
             <div className="card-title">Data Flow Graph</div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <div className="flex bg-slate-800 rounded-lg p-1">
                 <button
                   onClick={() => setViewType('cytoscape')}
-                  className={`px-3 py-1 text-xs rounded transition-all ${
+                  className={`px-2 sm:px-3 py-1 text-xs rounded transition-all ${
                     viewType === 'cytoscape' 
                       ? 'bg-cyan-600 text-white' 
                       : 'text-slate-400 hover:text-slate-200'
@@ -435,7 +453,7 @@ function DCLDashboard(){
                 </button>
                 <button
                   onClick={() => setViewType('sankey')}
-                  className={`px-3 py-1 text-xs rounded transition-all ${
+                  className={`px-2 sm:px-3 py-1 text-xs rounded transition-all ${
                     viewType === 'sankey' 
                       ? 'bg-cyan-600 text-white' 
                       : 'text-slate-400 hover:text-slate-200'
@@ -444,19 +462,19 @@ function DCLDashboard(){
                   Sankey
                 </button>
               </div>
-              <div className="text-xs text-slate-400">
+              <div className="text-xs text-slate-400 hidden sm:block">
                 {state.graph.nodes.length} nodes, {state.graph.edges.length} edges
               </div>
             </div>
           </div>
           <div 
             id="cy-container" 
-            className="rounded-xl bg-slate-900/50 border border-slate-800 h-[600px]"
+            className="rounded-xl bg-slate-900/50 border border-slate-800 h-[400px] sm:h-[500px] lg:h-[600px]"
             style={{ display: viewType === 'cytoscape' ? 'block' : 'none' }}
           ></div>
           <div 
             id="sankey-container" 
-            className="rounded-xl bg-slate-900/50 border border-slate-800 h-[600px]"
+            className="rounded-xl bg-slate-900/50 border border-slate-800 h-[400px] sm:h-[500px] lg:h-[600px] overflow-x-auto"
             style={{ display: viewType === 'sankey' ? 'block' : 'none' }}
           ></div>
         </div>
