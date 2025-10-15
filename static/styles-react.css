@@ -15,31 +15,3 @@ html, body, #root { height: 100%; }
 .badge-green { @apply bg-emerald-500/10 text-emerald-400 border border-emerald-500/20; }
 .badge-red { @apply bg-rose-500/10 text-rose-400 border border-rose-500/20; }
 .badge-amber { @apply bg-amber-500/10 text-amber-400 border border-amber-500/20; }
-
-/* Sankey edge animations */
-@keyframes flow {
-  0% {
-    stroke-dashoffset: 0;
-  }
-  100% {
-    stroke-dashoffset: -20;
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 0.9;
-  }
-}
-
-.sankey-link-flow {
-  stroke-dasharray: 10 10;
-  animation: flow 1s linear infinite;
-}
-
-.sankey-link-pulse {
-  animation: pulse 2s ease-in-out infinite;
-}
