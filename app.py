@@ -33,7 +33,7 @@ LLM_TOKENS = 0
 rag_engine = None
 RAG_CONTEXT = {"retrievals": [], "total_mappings": 0, "last_retrieval_count": 0}
 SOURCE_SCHEMAS: Dict[str, Dict[str, Any]] = {}
-DEV_MODE = True  # When True, uses AI/RAG for mapping; when False, uses only heuristics
+DEV_MODE = False  # When True, uses AI/RAG for mapping; when False, uses only heuristics
 STATE_LOCK = threading.Lock()  # Lock for thread-safe global state updates
 
 def log(msg: str):
