@@ -6,6 +6,7 @@ function OntologyMapping() {
   });
   
   const [sourceSchemas, setSourceSchemas] = React.useState({});
+  const [ontologySchema, setOntologySchema] = React.useState({});
 
   React.useEffect(() => {
     const fetchState = async () => {
@@ -27,6 +28,15 @@ function OntologyMapping() {
     fetchSchemas();
     const interval = setInterval(fetchSchemas, 2000);
     return () => clearInterval(interval);
+  }, []);
+  
+  React.useEffect(() => {
+    const fetchOntologySchema = async () => {
+      const res = await fetch('/ontology_schema');
+      const data = await res.json();
+      setOntologySchema(data);
+    };
+    fetchOntologySchema();
   }, []);
 
   // Parse data structure from graph state with safety checks
@@ -182,50 +192,58 @@ function OntologyMapping() {
               </div>
             </div>
 
-            {/* Column 2: Ontology Targets & Mappings */}
+            {/* Column 2: Ontology Entities & Fields */}
             <div className="card overflow-hidden">
               <div className="card-title mb-3 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                Unified Ontology (Mapped Fields)
+                Unified Ontology (All Fields)
               </div>
               <div className="space-y-3">
-                {Object.entries(consumedOntologyMappings).map(([ontoId, onto]) => (
-                  <div key={ontoId}>
-                    <div className="bg-green-900/20 border border-green-800/50 rounded-lg px-3 py-2">
-                      <div className="text-sm font-semibold text-green-400 mb-2">{onto?.label || 'Unknown'}</div>
-                      {onto?.sources && onto.sources.length > 0 ? (
-                        <div className="space-y-2">
-                          {onto.sources.map((src, i) => (
-                            <div key={i} className="space-y-1">
-                              <div className="text-[11px] text-blue-400 font-medium">{src.label.split(' → ')[0]}</div>
-                              {src.fieldMappings && src.fieldMappings.length > 0 ? (
-                                <div className="space-y-0.5 pl-2">
-                                  {src.fieldMappings.map((field, j) => (
-                                    <div key={j} className="text-xs text-slate-400 flex items-center gap-1">
-                                      <svg className="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                                      </svg>
-                                      <span className="text-blue-300">{field.source}</span>
-                                      <span className="text-slate-600">→</span>
-                                      <span className="text-green-300">{field.onto_field}</span>
-                                      {field.confidence && (
-                                        <span className="text-[10px] text-slate-600 ml-auto">({Math.round(field.confidence * 100)}%)</span>
-                                      )}
-                                    </div>
-                                  ))}
+                {Object.entries(consumedOntologyMappings).map(([ontoId, onto]) => {
+                  const entityName = ontoId.replace('dcl_', '');
+                  const entitySchema = ontologySchema[entityName] || { fields: [] };
+                  const allFields = entitySchema.fields || [];
+                  const pk = entitySchema.pk || '';
+                  
+                  // Get mapped field names for this entity
+                  const mappedFieldNames = new Set();
+                  (onto?.sources || []).forEach(src => {
+                    (src.fieldMappings || []).forEach(field => {
+                      mappedFieldNames.add(field.onto_field);
+                    });
+                  });
+                  
+                  return (
+                    <div key={ontoId}>
+                      <div className="bg-green-900/20 border border-green-800/50 rounded-lg px-3 py-2">
+                        <div className="text-sm font-semibold text-green-400 mb-2">{onto?.label || 'Unknown'}</div>
+                        {allFields.length > 0 ? (
+                          <div className="space-y-0.5 max-h-64 overflow-y-auto">
+                            {allFields.map((fieldName, i) => {
+                              const isMapped = mappedFieldNames.has(fieldName);
+                              const isPK = fieldName === pk;
+                              return (
+                                <div key={i} className={`text-xs flex items-center gap-1 ${isMapped ? 'text-green-300 font-medium' : 'text-slate-600'}`}>
+                                  {isMapped ? (
+                                    <svg className="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  ) : (
+                                    <div className="w-3 h-3 flex-shrink-0"></div>
+                                  )}
+                                  <span className="truncate">{fieldName}</span>
+                                  {isPK && <span className="text-[10px] text-yellow-500 ml-auto">PK</span>}
                                 </div>
-                              ) : (
-                                <div className="text-xs text-slate-600 italic pl-2">Table-level mapping only</div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-xs text-slate-600 italic">No mappings yet</div>
-                      )}
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="text-xs text-slate-600 italic">No fields defined</div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

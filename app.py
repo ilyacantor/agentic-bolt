@@ -956,6 +956,25 @@ def source_schemas():
     clean_schemas = sanitize(SOURCE_SCHEMAS)
     return JSONResponse(clean_schemas)
 
+@app.get("/ontology_schema")
+def ontology_schema():
+    """Return ontology entity definitions with all fields."""
+    global ontology
+    
+    if not ontology:
+        ontology = load_ontology()
+    
+    # Build schema: entity -> {pk, fields[]}
+    schema = {}
+    entities = ontology.get("entities", {})
+    for entity_name, entity_def in entities.items():
+        schema[entity_name] = {
+            "pk": entity_def.get("pk", ""),
+            "fields": entity_def.get("fields", [])
+        }
+    
+    return JSONResponse(schema)
+
 @app.get("/toggle_auto_ingest")
 def toggle_auto_ingest(enabled: bool = Query(...)):
     global AUTO_INGEST_UNMAPPED
