@@ -16,7 +16,7 @@ function NavBar({onSearch}){
   const navItems = [
     { href:'#/dcl', label:'DCL' },
     { href:'#/ontology', label:'Ontology' },
-    { href:'#/uncertain', label:'Uncertain Unifications' },
+    { href:'#/uncertain', label:'Edge Cases' },
     { href:'#/agents', label:'Agents' },
     { href:'#/faq', label:'FAQ' },
   ];

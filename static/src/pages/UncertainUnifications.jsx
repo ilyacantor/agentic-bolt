@@ -6,7 +6,8 @@ function UncertainUnifications() {
   });
   
   const [ontologySchema, setOntologySchema] = React.useState({});
-  const CONFIDENCE_THRESHOLD = 0.75;
+  const [confidenceFilter, setConfidenceFilter] = React.useState(75);
+  const CONFIDENCE_THRESHOLD = confidenceFilter / 100;
 
   React.useEffect(() => {
     const fetchState = async () => {
@@ -78,17 +79,37 @@ function UncertainUnifications() {
     <div className="p-5 w-full">
       <div className="max-w-[1600px] mx-auto">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Uncertain Unifications</h2>
-          <div className="text-sm text-slate-400">
-            Field mappings below {Math.round(CONFIDENCE_THRESHOLD * 100)}% confidence threshold
+          <h2 className="text-xl font-semibold">Edge Cases</h2>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-slate-400">Confidence Threshold:</label>
+              <select 
+                value={confidenceFilter}
+                onChange={(e) => setConfidenceFilter(Number(e.target.value))}
+                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              >
+                <option value={90}>Below 90%</option>
+                <option value={80}>Below 80%</option>
+                <option value={75}>Below 75%</option>
+                <option value={70}>Below 70%</option>
+                <option value={65}>Below 65%</option>
+                <option value={60}>Below 60%</option>
+                <option value={50}>Below 50%</option>
+                <option value={40}>Below 40%</option>
+                <option value={30}>Below 30%</option>
+              </select>
+            </div>
+            <div className="text-sm text-slate-500">
+              {uncertainMappings.length} edge case{uncertainMappings.length !== 1 ? 's' : ''}
+            </div>
           </div>
         </div>
 
         {!hasData ? (
           <div className="card text-center py-12">
             <div className="text-green-500 mb-2 text-4xl">✓</div>
-            <div className="text-slate-500 mb-2">All mappings are confident!</div>
-            <div className="text-sm text-slate-600">No uncertain unifications found. All field mappings meet or exceed the {Math.round(CONFIDENCE_THRESHOLD * 100)}% confidence threshold.</div>
+            <div className="text-slate-500 mb-2">No edge cases found!</div>
+            <div className="text-sm text-slate-600">All field mappings meet or exceed the {confidenceFilter}% confidence threshold.</div>
           </div>
         ) : (
           <div className="space-y-4">

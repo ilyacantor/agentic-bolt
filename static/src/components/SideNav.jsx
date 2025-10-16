@@ -4,7 +4,7 @@ function SideNav(){
   const items = [
     { href:'#/dcl', label:'Data Connectivity Layer', icon:'📊'},
     { href:'#/ontology', label:'Ontology Mapping', icon:'🗺️' },
-    { href:'#/uncertain', label:'Uncertain Unifications', icon:'⚠️' },
+    { href:'#/uncertain', label:'Edge Cases', icon:'⚠️' },
     { href:'#/agents', label:'Agents', icon:'🤖' },
     { href:'#/pipeline', label:'Pipeline', icon:'⚡' },
     { href:'#/command', label:'Command Center', icon:'💻' },
