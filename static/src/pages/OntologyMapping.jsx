@@ -192,24 +192,25 @@ function OntologyMapping() {
               </div>
             </div>
 
-            {/* Column 2: Ontology Entities & Fields */}
+            {/* Column 2: Ontology Entities & Field Mappings */}
             <div className="card overflow-hidden">
               <div className="card-title mb-3 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                Unified Ontology (All Fields)
+                Merged Ontology (Source → Unified)
               </div>
               <div className="space-y-3">
                 {Object.entries(consumedOntologyMappings).map(([ontoId, onto]) => {
                   const entityName = ontoId.replace('dcl_', '');
-                  const entitySchema = ontologySchema[entityName] || { fields: [] };
-                  const allFields = entitySchema.fields || [];
-                  const pk = entitySchema.pk || '';
                   
-                  // Get mapped field names for this entity
-                  const mappedFieldNames = new Set();
+                  // Collect all field mappings for this entity
+                  const fieldMappings = [];
                   (onto?.sources || []).forEach(src => {
                     (src.fieldMappings || []).forEach(field => {
-                      mappedFieldNames.add(field.onto_field);
+                      fieldMappings.push({
+                        source: field.source,
+                        unified: field.onto_field,
+                        confidence: field.confidence
+                      });
                     });
                   });
                   
@@ -217,28 +218,20 @@ function OntologyMapping() {
                     <div key={ontoId}>
                       <div className="bg-green-900/20 border border-green-800/50 rounded-lg px-3 py-2">
                         <div className="text-sm font-semibold text-green-400 mb-2">{onto?.label || 'Unknown'}</div>
-                        {allFields.length > 0 ? (
-                          <div className="space-y-0.5 max-h-64 overflow-y-auto">
-                            {allFields.map((fieldName, i) => {
-                              const isMapped = mappedFieldNames.has(fieldName);
-                              const isPK = fieldName === pk;
-                              return (
-                                <div key={i} className={`text-xs flex items-center gap-1 ${isMapped ? 'text-green-300 font-medium' : 'text-slate-600'}`}>
-                                  {isMapped ? (
-                                    <svg className="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                  ) : (
-                                    <div className="w-3 h-3 flex-shrink-0"></div>
-                                  )}
-                                  <span className="truncate">{fieldName}</span>
-                                  {isPK && <span className="text-[10px] text-yellow-500 ml-auto">PK</span>}
-                                </div>
-                              );
-                            })}
+                        {fieldMappings.length > 0 ? (
+                          <div className="space-y-1 max-h-64 overflow-y-auto">
+                            {fieldMappings.map((mapping, i) => (
+                              <div key={i} className="text-xs flex items-center gap-2 text-slate-300">
+                                <span className="text-blue-400 truncate max-w-[45%]">{mapping.source}</span>
+                                <svg className="w-3 h-3 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                </svg>
+                                <span className="text-green-300 font-medium truncate max-w-[45%]">{mapping.unified}</span>
+                              </div>
+                            ))}
                           </div>
                         ) : (
-                          <div className="text-xs text-slate-600 italic">No fields defined</div>
+                          <div className="text-xs text-slate-600 italic">No mappings defined</div>
                         )}
                       </div>
                     </div>
@@ -247,7 +240,7 @@ function OntologyMapping() {
               </div>
             </div>
 
-            {/* Column 3: Agent Consumption */}
+            {/* Column 3: Agent Consumption with Unified Fields */}
             <div className="card overflow-hidden">
               <div className="card-title mb-3 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-purple-500"></div>
@@ -262,15 +255,30 @@ function OntologyMapping() {
                         <div className="bg-purple-900/20 border border-purple-800/50 rounded-lg px-3 py-2">
                           <div className="text-sm font-semibold text-purple-400 mb-2">{consumption?.label || 'Unknown Agent'}</div>
                           {consumption?.entities && consumption.entities.length > 0 ? (
-                            <div className="space-y-1">
+                            <div className="space-y-2">
                               {consumption.entities.map((ent, i) => {
                                 const ontoNode = ontologyNodes.find(n => n.id === ent.ontoId);
+                                const entityName = ent.ontoId.replace('dcl_', '');
+                                const entitySchema = ontologySchema[entityName] || { fields: [] };
+                                const entityFields = entitySchema.fields || [];
+                                
                                 return (
-                                  <div key={i} className="text-xs text-slate-400 flex items-center gap-1">
-                                    <svg className="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                    <span>{ontoNode ? ontoNode.label.replace(' (Unified)', '') : ent.ontoId.replace('dcl_', '')}</span>
+                                  <div key={i} className="border-l-2 border-purple-600 pl-2">
+                                    <div className="text-xs font-medium text-purple-300 mb-1">
+                                      {ontoNode ? ontoNode.label.replace(' (Unified)', '') : entityName}
+                                    </div>
+                                    {entityFields.length > 0 ? (
+                                      <div className="space-y-0.5 ml-2">
+                                        {entityFields.map((field, j) => (
+                                          <div key={j} className="text-[11px] text-slate-400 flex items-center gap-1">
+                                            <span className="text-green-500">•</span>
+                                            <span>{field}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="text-[11px] text-slate-600 italic ml-2">No fields</div>
+                                    )}
                                   </div>
                                 );
                               })}
