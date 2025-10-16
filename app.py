@@ -800,8 +800,8 @@ def add_graph_nodes_for_source(source_key: str, tables: Dict[str, Any]):
     for t, table_data in tables.items():
         node_id = f"src_{source_key}_{t}"
         label = f"{t} ({source_key.title()})"
-        # Extract field names from the table data
-        fields = list(table_data.keys()) if isinstance(table_data, dict) else []
+        # Extract field names from the schema
+        fields = list(table_data.get("schema", {}).keys()) if isinstance(table_data, dict) else []
         GRAPH_STATE["nodes"].append({
             "id": node_id, 
             "label": label, 
