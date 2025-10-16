@@ -11,7 +11,7 @@ function App(){
     case '/':
     case '/dcl': Page = <DCLDashboard/>; break;
     case '/ontology': Page = <OntologyMapping/>; break;
-    case '/mappings': Page = <MappingDetails/>; break;
+    case '/uncertain': Page = <UncertainUnifications/>; break;
     case '/agents': Page = <Agents/>; break;
     case '/pipeline': Page = <Pipeline/>; break;
     case '/command': Page = <CommandCenter/>; break;
