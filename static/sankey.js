@@ -154,7 +154,9 @@ function renderSankey(state) {
         sourceSystem: linkSourceSystem,
         targetType: targetType,  // Track target type for coloring
         fieldMappings: e.field_mappings || [],  // Store field mapping info
-        edgeLabel: e.label || ''
+        edgeLabel: e.label || '',
+        entityFields: e.entity_fields || [],  // Store ontology entity fields for agent consumption
+        entityName: e.entity_name || ''
       });
     }
   });
@@ -514,6 +516,30 @@ function renderSankey(state) {
         tooltip += `
           <div style="font-size: 10px; margin: 2px 0; color: #cbd5e1;">
             <span style="color: #60a5fa;">${sourceField}</span> → <span style="color: #34d399;">${ontoField}</span> <span style="color: #94a3b8;">${confidence}</span>
+          </div>
+        `;
+      });
+      
+      tooltip += `
+          </div>
+        </div>
+      `;
+    }
+    
+    // Add entity fields for ontology→agent edges
+    if (sourceNodeData.type === 'ontology' && targetNodeData.type === 'agent' &&
+        linkData && linkData.entityFields && linkData.entityFields.length > 0) {
+      const entityName = linkData.entityName || 'entity';
+      tooltip += `
+        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #475569;">
+          <strong style="color: #a78bfa; font-size: 10px;">Unified ${entityName.replace('_', ' ').toUpperCase()} Fields:</strong><br>
+          <div style="max-height: 120px; overflow-y: auto; margin-top: 4px;">
+      `;
+      
+      linkData.entityFields.forEach(field => {
+        tooltip += `
+          <div style="font-size: 10px; margin: 2px 0; color: #cbd5e1;">
+            <span style="color: #34d399;">•</span> ${field}
           </div>
         `;
       });

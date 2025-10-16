@@ -827,10 +827,13 @@ def add_graph_nodes_for_source(source_key: str, tables: Dict[str, Any]):
 
 def add_ontology_to_agent_edges():
     """Create edges from ontology entities to agents based on agent consumption config"""
-    global agents_config, SELECTED_AGENTS, GRAPH_STATE
+    global agents_config, SELECTED_AGENTS, GRAPH_STATE, ontology
     
     if not agents_config:
         agents_config = load_agents_config()
+    
+    if not ontology:
+        ontology = load_ontology()
     
     # Get all existing ontology nodes
     ontology_nodes = [n for n in GRAPH_STATE["nodes"] if n["type"] == "ontology"]
@@ -851,11 +854,16 @@ def add_ontology_to_agent_edges():
                     for e in GRAPH_STATE["edges"]
                 )
                 if not edge_exists:
+                    # Get entity fields from ontology
+                    entity_fields = ontology.get("entities", {}).get(entity_name, {}).get("fields", [])
+                    
                     GRAPH_STATE["edges"].append({
                         "source": onto_node["id"],
                         "target": f"agent_{agent_id}",
                         "label": "",  # No label needed - agent node already shows its name
-                        "type": "consumption"
+                        "type": "consumption",
+                        "entity_fields": entity_fields,  # Add entity fields for tooltip
+                        "entity_name": entity_name
                     })
 
 def preview_table(con, name: str, limit: int = 6) -> List[Dict[str,Any]]:
