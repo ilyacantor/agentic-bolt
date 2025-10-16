@@ -14,6 +14,24 @@ The project aims to provide a dynamic data connection layer, aligning diverse da
 
 ## System Architecture
 
+### Production Mode (Prod Mode Toggle)
+The DCL features a Prod Mode toggle that controls how data mappings are validated:
+
+**Prod Mode ON (Production-Ready):**
+- Uses **LLM + RAG** for intelligent semantic validation
+- Each mapping is assessed by Gemini AI for domain alignment and business context
+- RAG engine provides historical mapping context for consistency
+- Rejects semantically incorrect mappings (e.g., billing data → sales entities)
+- Suitable for production data sources with high accuracy requirements
+- Logs detailed rejection reasons for transparency
+
+**Prod Mode OFF (Heuristic-Based):**
+- Uses **hard-wired rules** for fast, deterministic filtering
+- Domain categories: FinOps sources (snowflake, sap, netsuite, legacy_sql) map only to FinOps entities (aws_resources, cost_reports)
+- RevOps sources (dynamics, salesforce, supabase, mongodb) map only to RevOps entities (account, opportunity, health, usage)
+- No LLM calls = faster processing, zero API costs
+- Suitable for testing and development scenarios
+
 ### UI/UX Decisions
 - **Collapsible Panels**: Left Navigation, Left Data Sources, and Right Status/Narration panels are independently collapsible with smooth animations, allowing the center graph to intelligently expand.
 - **Sankey Default View**: The default visualization is a Sankey diagram for clearer data flow representation, with a toggle to switch to a Graph view.

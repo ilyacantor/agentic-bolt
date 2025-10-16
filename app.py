@@ -270,8 +270,85 @@ def llm_propose(ontology: Dict[str, Any], source_key: str, tables: Dict[str, Any
     
     return result
 
+def validate_mapping_semantics_llm(source_key: str, table_name: str, entity: str, fields: List[Dict]) -> bool:
+    """Use LLM + RAG to validate if a source table mapping to an entity makes semantic sense."""
+    global LLM_CALLS, LLM_TOKENS, rag_engine
+    
+    if not os.getenv("GEMINI_API_KEY"):
+        return True  # Default to allowing if no API key
+    
+    # Get RAG context for similar mappings (if available)
+    rag_context = ""
+    if rag_engine:
+        try:
+            # Query RAG for similar mappings to this entity
+            similar_mappings = rag_engine.retrieve_similar_mappings(
+                field_name=table_name,
+                field_type="table",
+                source_system=source_key,
+                top_k=3
+            )
+            if similar_mappings:
+                rag_context = "\nPrevious validated mappings for context:\n"
+                for sm in similar_mappings:
+                    rag_context += f"- {sm.get('source_system', 'unknown')}.{sm.get('source_field', 'unknown')} → {sm.get('ontology_entity', 'unknown')} (conf: {sm.get('confidence', 0):.2f})\n"
+        except Exception as e:
+            log(f"⚠️ RAG retrieval failed during validation: {e}")
+    
+    prompt = f"""You are a semantic data mapping validator. Assess if this mapping makes sense.
+
+Source System: {source_key}
+Source Table: {table_name}
+Target Entity: {entity}
+Field Mappings: {json.dumps(fields, indent=2)}
+
+{rag_context}
+
+Common patterns:
+- FinOps sources (snowflake, sap, netsuite, legacy_sql) should map to FinOps entities (aws_resources, cost_reports)
+- RevOps sources (dynamics, salesforce, supabase, mongodb) should map to RevOps entities (account, opportunity, health, usage)
+- Billing/cost tables should NOT map to sales/revenue entities
+- Infrastructure data should NOT map to customer relationship entities
+
+Does this mapping make semantic sense? Consider:
+1. Domain alignment (FinOps vs RevOps)
+2. Business context (is this table appropriate for this entity?)
+3. Field semantics (do the field names match the entity purpose?)
+4. Consistency with previous validated mappings
+
+Answer with ONLY a JSON object:
+{{"valid": true/false, "reason": "brief explanation", "confidence": 0.0-1.0}}"""
+
+    try:
+        LLM_CALLS += 1
+        model = genai.GenerativeModel("gemini-2.0-flash-exp")
+        response = model.generate_content(prompt)
+        text = response.text.strip()
+        
+        # Extract JSON from response
+        json_match = re.search(r'\{.*\}', text, re.DOTALL)
+        if json_match:
+            result = json.loads(json_match.group())
+            LLM_TOKENS += len(prompt.split()) + len(text.split())
+            
+            valid = result.get("valid", True)
+            reason = result.get("reason", "")
+            confidence = result.get("confidence", 0.5)
+            
+            if not valid and confidence > 0.7:
+                log(f"🚫 Semantic validation rejected: {source_key}.{table_name} → {entity} ({reason})")
+            
+            return valid
+        else:
+            log(f"⚠️ LLM validation response not parseable, defaulting to allow")
+            return True
+            
+    except Exception as e:
+        log(f"⚠️ LLM semantic validation failed: {e}, defaulting to allow")
+        return True
+
 def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, Any]) -> Dict[str, Any]:
-    global SELECTED_AGENTS, agents_config
+    global SELECTED_AGENTS, agents_config, DEV_MODE
     
     # Get available ontology entities based on selected agents
     if not agents_config:
@@ -448,31 +525,52 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
             if fields:
                 mappings.append({"entity":"cost_reports","source_table": f"{source_key}_{tname}", "fields": fields})
     
-    # Domain-based semantic filtering: prevent FinOps sources from mapping to RevOps entities and vice versa
-    FINOPS_SOURCES = {"snowflake", "sap", "netsuite", "legacy_sql"}
-    REVOPS_SOURCES = {"dynamics", "salesforce", "supabase", "mongodb"}
-    FINOPS_ENTITIES = {"aws_resources", "cost_reports"}
-    REVOPS_ENTITIES = {"account", "opportunity", "health", "usage"}
-    
-    semantically_valid_mappings = []
-    for mapping in mappings:
-        entity = mapping.get("entity")
-        source_system = source_key.lower()
+    # Semantic filtering based on Prod Mode setting
+    if DEV_MODE:
+        # PROD MODE ON: Use LLM for intelligent semantic validation (production-ready)
+        log("🔍 Prod Mode ON: Using LLM for semantic validation")
+        semantically_valid_mappings = []
+        for mapping in mappings:
+            entity = mapping.get("entity")
+            source_table = mapping.get("source_table", "")
+            table_name = source_table.replace(f"{source_key}_", "")
+            fields = mapping.get("fields", [])
+            
+            # Ask LLM to validate semantic alignment
+            is_valid = validate_mapping_semantics_llm(source_key, table_name, entity, fields)
+            if is_valid:
+                semantically_valid_mappings.append(mapping)
         
-        # Check domain alignment
-        is_finops_source = source_system in FINOPS_SOURCES
-        is_revops_source = source_system in REVOPS_SOURCES
-        is_finops_entity = entity in FINOPS_ENTITIES
-        is_revops_entity = entity in REVOPS_ENTITIES
+        mappings = semantically_valid_mappings
+        log(f"✅ LLM validated {len(mappings)} mappings as semantically correct")
+    else:
+        # PROD MODE OFF: Use hard-wired heuristic rules (fast, deterministic)
+        log("⚡ Prod Mode OFF: Using heuristic domain filtering")
+        FINOPS_SOURCES = {"snowflake", "sap", "netsuite", "legacy_sql"}
+        REVOPS_SOURCES = {"dynamics", "salesforce", "supabase", "mongodb"}
+        FINOPS_ENTITIES = {"aws_resources", "cost_reports"}
+        REVOPS_ENTITIES = {"account", "opportunity", "health", "usage"}
         
-        # Allow mapping only if domains align
-        if (is_finops_source and is_finops_entity) or (is_revops_source and is_revops_entity):
-            semantically_valid_mappings.append(mapping)
-        elif not is_finops_source and not is_revops_source:
-            # Unknown source - allow it (future extensibility)
-            semantically_valid_mappings.append(mapping)
-    
-    mappings = semantically_valid_mappings
+        semantically_valid_mappings = []
+        for mapping in mappings:
+            entity = mapping.get("entity")
+            source_system = source_key.lower()
+            
+            # Check domain alignment
+            is_finops_source = source_system in FINOPS_SOURCES
+            is_revops_source = source_system in REVOPS_SOURCES
+            is_finops_entity = entity in FINOPS_ENTITIES
+            is_revops_entity = entity in REVOPS_ENTITIES
+            
+            # Allow mapping only if domains align
+            if (is_finops_source and is_finops_entity) or (is_revops_source and is_revops_entity):
+                semantically_valid_mappings.append(mapping)
+            elif not is_finops_source and not is_revops_source:
+                # Unknown source - allow it (future extensibility)
+                semantically_valid_mappings.append(mapping)
+        
+        mappings = semantically_valid_mappings
+        log(f"✅ Heuristic filtered {len(mappings)} mappings as valid")
     
     # Filter out mappings that don't provide any useful fields for selected agents
     if SELECTED_AGENTS:
