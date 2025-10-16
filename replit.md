@@ -31,6 +31,7 @@ The DCL features a Prod Mode toggle that controls how data mappings are validate
 - RevOps sources (dynamics, salesforce, supabase, mongodb) map only to RevOps entities (account, opportunity, health, usage)
 - No LLM calls = faster processing, zero API costs
 - Suitable for testing and development scenarios
+- Health entity now properly maps all fields: health_score, account_id, last_updated, risk_level
 
 ### UI/UX Decisions
 - **Collapsible Panels**: Left Navigation, Left Data Sources, and Right Status/Narration panels are independently collapsible with smooth animations, allowing the center graph to intelligently expand.

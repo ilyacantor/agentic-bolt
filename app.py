@@ -373,6 +373,8 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
     amount_fields = ["amount","Amount","NETWR","TotalAmount","estimatedvalue","AMOUNT"]
     date_fields = ["createdon","CreatedDate","CloseDate","ERDAT","ORDER_DATE","tranDate","created_at","CREATED_AT","OrderDate","ORDER_DATE","close_date"]
     health_score_fields = ["health_score","healthScore","HealthScore","HEALTH_SCORE","score"]
+    risk_level_fields = ["risk_level","riskLevel","RiskLevel","RISK_LEVEL","risk","churn_risk"]
+    last_updated_fields = ["last_updated","lastUpdated","LastUpdated","LAST_UPDATED","updated_at","updatedAt"]
     login_fields = ["last_login_days","lastLoginDays","LAST_LOGIN_DAYS","days_since_login"]
     session_fields = ["sessions_30d","sessions30d","SESSIONS_30D","session_count"]
     
@@ -421,6 +423,8 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
         amount = next((c for c in cols if c in amount_fields or "amount" in c.lower() or "price" in c.lower()), None)
         close_date = next((c for c in cols if c in date_fields or "date" in c.lower()), None)
         health_score = next((c for c in cols if c in health_score_fields or "health" in c.lower() or "score" in c.lower()), None)
+        risk_level = next((c for c in cols if c in risk_level_fields or "risk" in c.lower()), None)
+        last_updated = next((c for c in cols if c in last_updated_fields or "updated" in c.lower()), None)
         last_login = next((c for c in cols if c in login_fields or "login" in c.lower()), None)
         sessions = next((c for c in cols if c in session_fields or "session" in c.lower()), None)
         
@@ -476,6 +480,8 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
             fields = []
             fields.append({"source": health_score, "onto_field": "health_score", "confidence": 0.9})
             if account_id: fields.append({"source": account_id, "onto_field": "account_id", "confidence": 0.85})
+            if last_updated: fields.append({"source": last_updated, "onto_field": "last_updated", "confidence": 0.85})
+            if risk_level: fields.append({"source": risk_level, "onto_field": "risk_level", "confidence": 0.85})
             mappings.append({"entity":"health","source_table": f"{source_key}_{tname}", "fields": fields})
         
         if (last_login or sessions) and "usage" in available_entities:
