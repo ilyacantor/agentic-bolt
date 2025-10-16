@@ -80,6 +80,7 @@ function renderSankey(state) {
 
       usefulTables.forEach(table => {
         nodeIndexMap[table.id] = nodeIndex;
+        const sourceNode = state.graph.nodes.find(n => n.id === table.id);
         sankeyNodes.push({ 
           name: table.tableName.toLowerCase(), 
           type: 'source',
@@ -90,7 +91,8 @@ function renderSankey(state) {
           source: nodeIndexMap[parentNodeId],
           target: nodeIndexMap[table.id],
           value: 1,
-          sourceSystem: sourceSystem
+          sourceSystem: sourceSystem,
+          tableFields: sourceNode?.fields || []  // Store table fields for tooltip
         });
         nodeIndex++;
       });
@@ -474,7 +476,30 @@ function renderSankey(state) {
       </div>
     `;
     
-    // Add field mappings if available
+    // Add table fields if this is a parent→table edge
+    if (sourceNodeData.type === 'source_parent' && targetNodeData.type === 'source' && 
+        linkData && linkData.tableFields && linkData.tableFields.length > 0) {
+      tooltip += `
+        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #475569;">
+          <strong style="color: #a78bfa; font-size: 10px;">Table Fields:</strong><br>
+          <div style="max-height: 120px; overflow-y: auto; margin-top: 4px;">
+      `;
+      
+      linkData.tableFields.forEach(field => {
+        tooltip += `
+          <div style="font-size: 10px; margin: 2px 0; color: #cbd5e1;">
+            <span style="color: #60a5fa;">•</span> ${field}
+          </div>
+        `;
+      });
+      
+      tooltip += `
+          </div>
+        </div>
+      `;
+    }
+    
+    // Add field mappings if available (for source→ontology edges)
     if (linkData && linkData.fieldMappings && linkData.fieldMappings.length > 0) {
       tooltip += `
         <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #475569;">

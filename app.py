@@ -797,10 +797,17 @@ def add_graph_nodes_for_source(source_key: str, tables: Dict[str, Any]):
     global ontology, agents_config, SELECTED_AGENTS
     
     # Add source nodes
-    for t in tables.keys():
+    for t, table_data in tables.items():
         node_id = f"src_{source_key}_{t}"
         label = f"{t} ({source_key.title()})"
-        GRAPH_STATE["nodes"].append({"id": node_id, "label": label, "type": "source"})
+        # Extract field names from the table data
+        fields = list(table_data.keys()) if isinstance(table_data, dict) else []
+        GRAPH_STATE["nodes"].append({
+            "id": node_id, 
+            "label": label, 
+            "type": "source",
+            "fields": fields
+        })
     
     # Note: Ontology nodes will be added dynamically in apply_plan() 
     # only when they actually receive data from sources
