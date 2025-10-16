@@ -448,6 +448,32 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
             if fields:
                 mappings.append({"entity":"cost_reports","source_table": f"{source_key}_{tname}", "fields": fields})
     
+    # Domain-based semantic filtering: prevent FinOps sources from mapping to RevOps entities and vice versa
+    FINOPS_SOURCES = {"snowflake", "sap", "netsuite", "legacy_sql"}
+    REVOPS_SOURCES = {"dynamics", "salesforce", "supabase", "mongodb"}
+    FINOPS_ENTITIES = {"aws_resources", "cost_reports"}
+    REVOPS_ENTITIES = {"account", "opportunity", "health", "usage"}
+    
+    semantically_valid_mappings = []
+    for mapping in mappings:
+        entity = mapping.get("entity")
+        source_system = source_key.lower()
+        
+        # Check domain alignment
+        is_finops_source = source_system in FINOPS_SOURCES
+        is_revops_source = source_system in REVOPS_SOURCES
+        is_finops_entity = entity in FINOPS_ENTITIES
+        is_revops_entity = entity in REVOPS_ENTITIES
+        
+        # Allow mapping only if domains align
+        if (is_finops_source and is_finops_entity) or (is_revops_source and is_revops_entity):
+            semantically_valid_mappings.append(mapping)
+        elif not is_finops_source and not is_revops_source:
+            # Unknown source - allow it (future extensibility)
+            semantically_valid_mappings.append(mapping)
+    
+    mappings = semantically_valid_mappings
+    
     # Filter out mappings that don't provide any useful fields for selected agents
     if SELECTED_AGENTS:
         agent_key_metrics = set()
