@@ -369,25 +369,42 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
     name_fields = ["name","Name","account_name","AccountName","ACCOUNT_NAME"]
     revenue_fields = ["revenue","Revenue","annual_revenue","AnnualRevenue","ANNUAL_REVENUE"]
     industry_fields = ["industry","Industry","INDUSTRY"]
+    employee_count_fields = ["employee_count","employeeCount","EmployeeCount","EMPLOYEE_COUNT","number_of_employees","NumberOfEmployees"]
+    created_date_fields = ["created_date","createdDate","CreatedDate","CREATED_DATE","createdon","CreatedOn"]
+    
+    opportunity_id_fields = ["opportunity_id","opportunityId","OpportunityId","OPPORTUNITY_ID","opp_id","OPP_ID"]
+    opportunity_name_fields = ["opportunity_name","opportunityName","OpportunityName","OPPORTUNITY_NAME","opp_name"]
     stage_fields = ["stage","Stage","StageName","STAGE_NAME","status","Status"]
     amount_fields = ["amount","Amount","NETWR","TotalAmount","estimatedvalue","AMOUNT"]
-    date_fields = ["createdon","CreatedDate","CloseDate","ERDAT","ORDER_DATE","tranDate","created_at","CREATED_AT","OrderDate","ORDER_DATE","close_date"]
+    close_date_fields = ["close_date","closeDate","CloseDate","CLOSE_DATE","closedon","ClosedDate"]
+    probability_fields = ["probability","Probability","PROBABILITY","win_probability","WinProbability","forecast_probability"]
+    
     health_score_fields = ["health_score","healthScore","HealthScore","HEALTH_SCORE","score"]
     risk_level_fields = ["risk_level","riskLevel","RiskLevel","RISK_LEVEL","risk","churn_risk"]
     last_updated_fields = ["last_updated","lastUpdated","LastUpdated","LAST_UPDATED","updated_at","updatedAt"]
+    
     login_fields = ["last_login_days","lastLoginDays","LAST_LOGIN_DAYS","days_since_login"]
     session_fields = ["sessions_30d","sessions30d","SESSIONS_30D","session_count"]
+    avg_session_duration_fields = ["avg_session_duration","avgSessionDuration","AVG_SESSION_DURATION","average_session_duration"]
+    features_used_fields = ["features_used","featuresUsed","FEATURES_USED","feature_count","active_features"]
     
     # FinOps patterns - Core identifiers
     resource_fields = ["resource_id","resourceId","ResourceId","RESOURCE_ID","instance_id","instanceId","INSTANCE_ID"]
+    resource_type_fields = ["resource_type","resourceType","RESOURCE_TYPE","service_type","SERVICE_TYPE"]
+    region_fields = ["region","Region","REGION","AWS_REGION","aws_region","availability_zone"]
     cost_fields = ["cost","monthly_cost","monthlyCost","Monthly_Cost","MONTHLY_COST","spend","price","billing_amount","totalCost"]
     
     # FinOps patterns - Resource config (EC2, RDS, S3)
-    instance_type_fields = ["instance_type","instanceType","INSTANCE_TYPE","instanceClass","INSTANCE_CLASS"]
+    instance_type_fields = ["instance_type","instanceType","INSTANCE_TYPE"]
+    instance_class_fields = ["instance_class","instanceClass","INSTANCE_CLASS","db_instance_class"]
     vcpu_fields = ["vcpus","vCPUs","VCPUS","cpu_count","CPU_COUNT"]
     memory_fields = ["memory","memoryGiB","MEMORY_GB","ram","RAM"]
     storage_fields = ["storage","allocatedStorage","ALLOCATED_STORAGE_GB","sizeGB","SIZE_GB","size_gb"]
+    storage_type_fields = ["storage_type","storageType","STORAGE_TYPE","disk_type"]
+    storage_class_fields = ["storage_class","storageClass","STORAGE_CLASS","s3_storage_class"]
     db_engine_fields = ["engine","db_engine","DB_ENGINE","dbEngine"]
+    object_count_fields = ["object_count","objectCount","OBJECT_COUNT","num_objects"]
+    versioning_fields = ["versioning","versioningEnabled","VERSIONING_ENABLED","versioning_enabled"]
     
     # FinOps patterns - Utilization metrics (enhanced for detailed fields)
     cpu_util_fields = ["cpuUtilization","cpu_utilization","cpu_percent","CPU_UTILIZATION"]
@@ -401,15 +418,23 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
     # FinOps patterns - S3 metrics (enhanced)
     get_requests_fields = ["getRequests","get_requests","s3_gets","GET_REQUESTS"]
     put_requests_fields = ["putRequests","put_requests","s3_puts","PUT_REQUESTS"]
+    data_transfer_out_fields = ["data_transfer_out","dataTransferOut","DATA_TRANSFER_OUT","bytes_transferred","transfer_out_gb"]
     
     # FinOps patterns - RDS/Database metrics
     read_latency_fields = ["read_latency","readLatency","READ_LATENCY_MS","read_latency_ms"]
     write_latency_fields = ["write_latency","writeLatency","WRITE_LATENCY_MS","write_latency_ms"]
     free_storage_fields = ["free_storage","freeStorage","FREE_STORAGE_GB","available_storage"]
     
+    # FinOps patterns - Timestamps
+    last_analyzed_fields = ["last_analyzed","lastAnalyzed","LAST_ANALYZED","analyzed_at","analysis_date"]
+    created_at_fields = ["created_at","createdAt","CREATED_AT","creation_date","create_time"]
+    report_date_fields = ["report_date","reportDate","REPORT_DATE","billing_date","invoice_date"]
+    
     # FinOps patterns - Cost/Billing
-    service_category_fields = ["serviceCategory","service_category","service_name","serviceName"]
-    usage_type_fields = ["usageType","usage_type","usage_unit"]
+    cost_id_fields = ["cost_id","costId","COST_ID","billing_id","invoice_id"]
+    service_category_fields = ["serviceCategory","service_category","service_name","serviceName","SERVICE"]
+    usage_fields = ["usage","Usage","USAGE","usage_amount","usage_quantity"]
+    usage_type_fields = ["usageType","usage_type","usage_unit","UsageType"]
     
     for tname, info in tables.items():
         cols = list(info["schema"].keys())
@@ -419,25 +444,42 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
         account_name = next((c for c in cols if c in name_fields or "name" in c.lower()), None)
         revenue = next((c for c in cols if c in revenue_fields or "revenue" in c.lower()), None)
         industry = next((c for c in cols if c in industry_fields or "industry" in c.lower()), None)
+        employee_count = next((c for c in cols if c in employee_count_fields), None)
+        created_date = next((c for c in cols if c in created_date_fields), None)
+        
+        opportunity_id = next((c for c in cols if c in opportunity_id_fields), None)
+        opportunity_name = next((c for c in cols if c in opportunity_name_fields), None)
         stage = next((c for c in cols if c in stage_fields or "stage" in c.lower()), None)
         amount = next((c for c in cols if c in amount_fields or "amount" in c.lower() or "price" in c.lower()), None)
-        close_date = next((c for c in cols if c in date_fields or "date" in c.lower()), None)
+        close_date = next((c for c in cols if c in close_date_fields), None)
+        probability = next((c for c in cols if c in probability_fields), None)
+        
         health_score = next((c for c in cols if c in health_score_fields or "health" in c.lower() or "score" in c.lower()), None)
         risk_level = next((c for c in cols if c in risk_level_fields or "risk" in c.lower()), None)
         last_updated = next((c for c in cols if c in last_updated_fields or "updated" in c.lower()), None)
+        
         last_login = next((c for c in cols if c in login_fields or "login" in c.lower()), None)
         sessions = next((c for c in cols if c in session_fields or "session" in c.lower()), None)
+        avg_session_duration = next((c for c in cols if c in avg_session_duration_fields), None)
+        features_used = next((c for c in cols if c in features_used_fields), None)
         
         # FinOps: Core identifiers
         resource = next((c for c in cols if c in resource_fields or "resource_id" in c.lower() or "instance_id" in c.lower()), None)
+        resource_type = next((c for c in cols if c in resource_type_fields), None)
+        region = next((c for c in cols if c in region_fields), None)
         cost = next((c for c in cols if c in cost_fields or "cost" in c.lower()), None)
         
         # FinOps: Resource config
         instance_type = next((c for c in cols if c in instance_type_fields), None)
+        instance_class = next((c for c in cols if c in instance_class_fields), None)
         vcpus = next((c for c in cols if c in vcpu_fields), None)
         memory = next((c for c in cols if c in memory_fields), None)
         storage = next((c for c in cols if c in storage_fields), None)
+        storage_type = next((c for c in cols if c in storage_type_fields), None)
+        storage_class = next((c for c in cols if c in storage_class_fields), None)
         db_engine = next((c for c in cols if c in db_engine_fields), None)
+        object_count = next((c for c in cols if c in object_count_fields), None)
+        versioning = next((c for c in cols if c in versioning_fields), None)
         
         # FinOps: Utilization metrics (enhanced)
         cpu_util = next((c for c in cols if c in cpu_util_fields), None)
@@ -449,12 +491,20 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
         disk_write = next((c for c in cols if c in disk_write_fields), None)
         get_requests = next((c for c in cols if c in get_requests_fields), None)
         put_requests = next((c for c in cols if c in put_requests_fields), None)
+        data_transfer_out = next((c for c in cols if c in data_transfer_out_fields), None)
         read_latency = next((c for c in cols if c in read_latency_fields), None)
         write_latency = next((c for c in cols if c in write_latency_fields), None)
         free_storage = next((c for c in cols if c in free_storage_fields), None)
         
+        # FinOps: Timestamps
+        last_analyzed = next((c for c in cols if c in last_analyzed_fields), None)
+        created_at = next((c for c in cols if c in created_at_fields), None)
+        report_date = next((c for c in cols if c in report_date_fields), None)
+        
         # FinOps: Cost/Billing
+        cost_id = next((c for c in cols if c in cost_id_fields), None)
         service_category = next((c for c in cols if c in service_category_fields), None)
+        usage = next((c for c in cols if c in usage_fields), None)
         usage_type = next((c for c in cols if c in usage_type_fields), None)
         
         # RevOps mappings (aligned with dcl-light agent entities)
@@ -464,14 +514,19 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
             if account_name: fields.append({"source": account_name, "onto_field": "account_name", "confidence": 0.85})
             if revenue: fields.append({"source": revenue, "onto_field": "revenue", "confidence": 0.85})
             if industry: fields.append({"source": industry, "onto_field": "industry", "confidence": 0.8})
+            if employee_count: fields.append({"source": employee_count, "onto_field": "employee_count", "confidence": 0.8})
+            if created_date: fields.append({"source": created_date, "onto_field": "created_date", "confidence": 0.8})
             if fields:
                 mappings.append({"entity":"account","source_table": f"{source_key}_{tname}", "fields": fields})
         
-        if (amount or close_date or stage) and "opportunity" in available_entities:
+        if (opportunity_id or opportunity_name or amount or close_date or stage) and "opportunity" in available_entities:
             fields = []
+            if opportunity_id: fields.append({"source": opportunity_id, "onto_field": "opportunity_id", "confidence": 0.85})
+            if opportunity_name: fields.append({"source": opportunity_name, "onto_field": "opportunity_name", "confidence": 0.85})
             if amount: fields.append({"source": amount, "onto_field": "amount", "confidence": 0.82})
             if close_date: fields.append({"source": close_date, "onto_field": "close_date", "confidence": 0.8})
             if stage: fields.append({"source": stage, "onto_field": "stage", "confidence": 0.85})
+            if probability: fields.append({"source": probability, "onto_field": "probability", "confidence": 0.8})
             if account_id: fields.append({"source": account_id, "onto_field": "account_id", "confidence": 0.85})
             if fields:
                 mappings.append({"entity":"opportunity","source_table": f"{source_key}_{tname}", "fields": fields})
@@ -484,26 +539,38 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
             if risk_level: fields.append({"source": risk_level, "onto_field": "risk_level", "confidence": 0.85})
             mappings.append({"entity":"health","source_table": f"{source_key}_{tname}", "fields": fields})
         
-        if (last_login or sessions) and "usage" in available_entities:
+        if (last_login or sessions or avg_session_duration or features_used) and "usage" in available_entities:
             fields = []
             if last_login: fields.append({"source": last_login, "onto_field": "last_login_days", "confidence": 0.85})
             if sessions: fields.append({"source": sessions, "onto_field": "sessions_30d", "confidence": 0.85})
+            if avg_session_duration: fields.append({"source": avg_session_duration, "onto_field": "avg_session_duration", "confidence": 0.85})
+            if features_used: fields.append({"source": features_used, "onto_field": "features_used", "confidence": 0.85})
             if account_id: fields.append({"source": account_id, "onto_field": "account_id", "confidence": 0.85})
             if fields:
                 mappings.append({"entity":"usage","source_table": f"{source_key}_{tname}", "fields": fields})
         
         # FinOps mappings - aws_resources (config + utilization + cost - consolidated per FinOps Autopilot schema)
-        if (resource or instance_type or vcpus or db_engine or cpu_util or mem_util or network_in or cost) and "aws_resources" in available_entities:
+        if (resource or resource_type or region or instance_type or instance_class or vcpus or memory or storage or storage_type or storage_class or db_engine or object_count or versioning or cpu_util or mem_util or network_in or network_out or connections or read_latency or write_latency or get_requests or put_requests or data_transfer_out or cost or last_analyzed or created_at) and "aws_resources" in available_entities:
             fields = []
             # Core identifiers
             if resource: fields.append({"source": resource, "onto_field": "resource_id", "confidence": 0.9})
+            if resource_type: fields.append({"source": resource_type, "onto_field": "resource_type", "confidence": 0.85})
+            if region: fields.append({"source": region, "onto_field": "region", "confidence": 0.85})
             # EC2 config
             if instance_type: fields.append({"source": instance_type, "onto_field": "instance_type", "confidence": 0.85})
             if vcpus: fields.append({"source": vcpus, "onto_field": "vcpus", "confidence": 0.85})
             if memory: fields.append({"source": memory, "onto_field": "memory", "confidence": 0.85})
-            if storage: fields.append({"source": storage, "onto_field": "allocated_storage", "confidence": 0.85})
+            if storage: fields.append({"source": storage, "onto_field": "storage", "confidence": 0.85})
+            if storage_type: fields.append({"source": storage_type, "onto_field": "storage_type", "confidence": 0.85})
             # RDS config
             if db_engine: fields.append({"source": db_engine, "onto_field": "db_engine", "confidence": 0.85})
+            if instance_class: fields.append({"source": instance_class, "onto_field": "instance_class", "confidence": 0.85})
+            if storage: fields.append({"source": storage, "onto_field": "allocated_storage", "confidence": 0.85})
+            # S3 config
+            if storage_class: fields.append({"source": storage_class, "onto_field": "storage_class", "confidence": 0.85})
+            if object_count: fields.append({"source": object_count, "onto_field": "object_count", "confidence": 0.85})
+            if storage: fields.append({"source": storage, "onto_field": "size_gb", "confidence": 0.85})
+            if versioning: fields.append({"source": versioning, "onto_field": "versioning", "confidence": 0.85})
             # EC2 utilization
             if cpu_util: fields.append({"source": cpu_util, "onto_field": "cpu_utilization", "confidence": 0.9})
             if mem_util: fields.append({"source": mem_util, "onto_field": "memory_utilization", "confidence": 0.9})
@@ -516,18 +583,26 @@ def heuristic_plan(ontology: Dict[str, Any], source_key: str, tables: Dict[str, 
             # S3 utilization
             if get_requests: fields.append({"source": get_requests, "onto_field": "get_requests", "confidence": 0.85})
             if put_requests: fields.append({"source": put_requests, "onto_field": "put_requests", "confidence": 0.85})
-            # Cost
+            if data_transfer_out: fields.append({"source": data_transfer_out, "onto_field": "data_transfer_out", "confidence": 0.85})
+            # Cost & metadata
             if cost: fields.append({"source": cost, "onto_field": "monthly_cost", "confidence": 0.9})
+            if last_analyzed: fields.append({"source": last_analyzed, "onto_field": "last_analyzed", "confidence": 0.8})
+            if created_at: fields.append({"source": created_at, "onto_field": "created_at", "confidence": 0.8})
             if fields:
                 mappings.append({"entity":"aws_resources","source_table": f"{source_key}_{tname}", "fields": fields})
         
         # FinOps mappings - cost_reports (detailed cost reporting per FinOps Autopilot schema)
-        if (cost or service_category or usage_type) and "cost_reports" in available_entities:
+        if (cost_id or report_date or service_category or resource or cost or usage or usage_type or region or created_at) and "cost_reports" in available_entities:
             fields = []
-            if cost: fields.append({"source": cost, "onto_field": "cost", "confidence": 0.9})
+            if cost_id: fields.append({"source": cost_id, "onto_field": "cost_id", "confidence": 0.85})
+            if report_date: fields.append({"source": report_date, "onto_field": "report_date", "confidence": 0.85})
             if service_category: fields.append({"source": service_category, "onto_field": "service_category", "confidence": 0.85})
-            if usage_type: fields.append({"source": usage_type, "onto_field": "usage_type", "confidence": 0.85})
             if resource: fields.append({"source": resource, "onto_field": "resource_id", "confidence": 0.85})
+            if cost: fields.append({"source": cost, "onto_field": "cost", "confidence": 0.9})
+            if usage: fields.append({"source": usage, "onto_field": "usage", "confidence": 0.85})
+            if usage_type: fields.append({"source": usage_type, "onto_field": "usage_type", "confidence": 0.85})
+            if region: fields.append({"source": region, "onto_field": "region", "confidence": 0.85})
+            if created_at: fields.append({"source": created_at, "onto_field": "created_at", "confidence": 0.8})
             if fields:
                 mappings.append({"entity":"cost_reports","source_table": f"{source_key}_{tname}", "fields": fields})
     
