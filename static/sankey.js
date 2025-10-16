@@ -302,11 +302,40 @@ function renderSankey(state) {
     .attr('stroke-width', d => Math.min(Math.max(0.5, d.width * 0.5), 20))
     .attr('stroke-opacity', 0.3)
     .style('cursor', 'pointer')
-    .on('mouseover touchstart', function() {
+    .on('mouseover touchstart', function(event, d) {
       d3.select(this).attr('stroke-opacity', 0.7);
+      
+      // Create edge tooltip
+      const sourceNodeData = sankeyNodes.find(n => n.name === d.source.name);
+      const targetNodeData = sankeyNodes.find(n => n.name === d.target.name);
+      const tooltip = getEdgeTooltip(sourceNodeData, targetNodeData);
+      
+      const existingTooltip = document.getElementById('sankey-tooltip');
+      if (existingTooltip) existingTooltip.remove();
+      
+      const tooltipDiv = document.createElement('div');
+      tooltipDiv.id = 'sankey-tooltip';
+      tooltipDiv.style.position = 'fixed';
+      const x = event.touches ? event.touches[0].pageX : event.pageX;
+      const y = event.touches ? event.touches[0].pageY : event.pageY;
+      tooltipDiv.style.left = x + 10 + 'px';
+      tooltipDiv.style.top = y + 10 + 'px';
+      tooltipDiv.style.background = 'rgba(15, 23, 42, 0.95)';
+      tooltipDiv.style.color = '#e2e8f0';
+      tooltipDiv.style.padding = '8px 12px';
+      tooltipDiv.style.borderRadius = '6px';
+      tooltipDiv.style.border = '1px solid #475569';
+      tooltipDiv.style.fontSize = '12px';
+      tooltipDiv.style.zIndex = '10000';
+      tooltipDiv.style.pointerEvents = 'none';
+      tooltipDiv.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+      tooltipDiv.innerHTML = tooltip;
+      document.body.appendChild(tooltipDiv);
     })
     .on('mouseout touchend', function() {
       d3.select(this).attr('stroke-opacity', 0.3);
+      const tooltip = document.getElementById('sankey-tooltip');
+      if (tooltip) tooltip.remove();
     })
     .on('click', async (event, d) => {
       const sourceNodeData = sankeyNodes.find(n => n.name === d.source.name);
@@ -410,6 +439,36 @@ function renderSankey(state) {
     };
     
     return typeDescriptions[nodeData.type] || `<strong>${nodeData.name}</strong>`;
+  }
+
+  // Helper function for edge tooltips
+  function getEdgeTooltip(sourceNodeData, targetNodeData) {
+    if (!sourceNodeData || !targetNodeData) return 'Data Flow';
+    
+    const sourceName = sourceNodeData.name || 'Unknown';
+    const targetName = targetNodeData.name || 'Unknown';
+    
+    // Determine flow type based on node types
+    let flowDescription = '';
+    
+    if (sourceNodeData.type === 'source_parent' && targetNodeData.type === 'source') {
+      flowDescription = 'System to table connection';
+    } else if (sourceNodeData.type === 'source' && targetNodeData.type === 'ontology') {
+      flowDescription = 'Raw data mapped to unified schema';
+    } else if (sourceNodeData.type === 'ontology' && targetNodeData.type === 'agent') {
+      flowDescription = 'Ontology field consumed by agent';
+    } else {
+      flowDescription = 'Data flow';
+    }
+    
+    return `
+      <strong>Data Flow</strong><br>
+      <span style="color: #94a3b8; font-size: 10px;">${flowDescription}</span><br>
+      <div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid #475569;">
+        <span style="color: #60a5fa;">From:</span> ${sourceName}<br>
+        <span style="color: #34d399;">To:</span> ${targetName}
+      </div>
+    `;
   }
 
   // Helper to get source system type and colors
