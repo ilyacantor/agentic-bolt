@@ -153,47 +153,32 @@ function OntologyMapping() {
                       const schema = tableInfo?.schema || {};
                       const allFields = Object.keys(schema);
                       
-                      // Get field mappings for this table
-                      const tableMappingEdges = allMappingEdges.filter(e => e?.source === sourceId);
-                      const fieldMappingsMap = new Map(); // source field -> {ontoField, ontoEntity, confidence}
-                      
-                      tableMappingEdges.forEach(edge => {
-                        (edge?.field_mappings || []).forEach(fm => {
-                          const ontoEntity = edge?.target?.replace('dcl_', '') || 'unknown';
-                          fieldMappingsMap.set(fm.source, {
-                            ontoField: fm.onto_field,
-                            ontoEntity: ontoEntity,
-                            confidence: fm.confidence
-                          });
-                        });
-                      });
+                      // Get consumed field labels for this table - use ALL mappings not just agent-consumed ones
+                      const consumedFieldLabels = new Set(
+                        allMappingEdges
+                          .filter(e => e?.source === sourceId)
+                          .map(e => e?.label?.split(' → ')[0]?.trim())
+                          .filter(Boolean)
+                      );
                       
                       return (
                         <div key={sourceId} className="mb-2">
                           <div className="bg-blue-900/20 border border-blue-800/50 rounded-lg px-3 py-2">
                             <div className="text-sm font-medium text-blue-300 mb-2">{tableName}</div>
-                            <div className="space-y-1 max-h-64 overflow-y-auto">
+                            <div className="space-y-1 max-h-48 overflow-y-auto">
                               {allFields.map((field, i) => {
-                                const mapping = fieldMappingsMap.get(field);
-                                const isMapped = !!mapping;
+                                const isConsumed = consumedFieldLabels.has(field);
                                 return (
-                                  <div key={i} className={`text-xs ${isMapped ? 'text-green-400 font-medium' : 'text-slate-500'}`}>
-                                    <div className="flex items-center gap-1">
-                                      {isMapped ? (
-                                        <svg className="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                        </svg>
-                                      ) : (
-                                        <div className="w-3 h-3 flex-shrink-0"></div>
-                                      )}
-                                      <span className="truncate">{field}</span>
-                                      <span className="text-[10px] text-slate-600 ml-auto flex-shrink-0">({schema[field]})</span>
-                                    </div>
-                                    {isMapped && (
-                                      <div className="ml-4 mt-0.5 text-[10px] text-green-300">
-                                        → unified to: <span className="font-semibold">{mapping.ontoField}</span> in {mapping.ontoEntity}
-                                      </div>
+                                  <div key={i} className={`text-xs flex items-center gap-1 ${isConsumed ? 'text-green-400 font-medium' : 'text-slate-500'}`}>
+                                    {isConsumed ? (
+                                      <svg className="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                    ) : (
+                                      <div className="w-3 h-3 flex-shrink-0"></div>
                                     )}
+                                    <span className="truncate">{field}</span>
+                                    <span className="text-[10px] text-slate-600 ml-auto flex-shrink-0">({schema[field]})</span>
                                   </div>
                                 );
                               })}
@@ -277,39 +262,15 @@ function OntologyMapping() {
                         <div className="bg-purple-900/20 border border-purple-800/50 rounded-lg px-3 py-2">
                           <div className="text-sm font-semibold text-purple-400 mb-2">{consumption?.label || 'Unknown Agent'}</div>
                           {consumption?.entities && consumption.entities.length > 0 ? (
-                            <div className="space-y-2">
+                            <div className="space-y-1">
                               {consumption.entities.map((ent, i) => {
                                 const ontoNode = ontologyNodes.find(n => n.id === ent.ontoId);
-                                const entityName = ent.ontoId.replace('dcl_', '');
-                                const entitySchema = ontologySchema[entityName] || { fields: [] };
-                                
-                                // Get mapped fields for this entity
-                                const mappedFields = new Set();
-                                const incomingMappings = mappingEdges.filter(e => e?.target === ent.ontoId);
-                                incomingMappings.forEach(edge => {
-                                  (edge?.field_mappings || []).forEach(fm => {
-                                    mappedFields.add(fm.onto_field);
-                                  });
-                                });
-                                
                                 return (
-                                  <div key={i} className="text-xs">
-                                    <div className="text-green-400 font-medium mb-1 flex items-center gap-1">
-                                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                      </svg>
-                                      {ontoNode ? ontoNode.label.replace(' (Unified)', '') : entityName}
-                                    </div>
-                                    <div className="ml-4 space-y-0.5 max-h-32 overflow-y-auto">
-                                      {Array.from(mappedFields).map((field, j) => (
-                                        <div key={j} className="text-[10px] text-slate-400">
-                                          • {field}
-                                        </div>
-                                      ))}
-                                      {mappedFields.size === 0 && (
-                                        <div className="text-[10px] text-slate-600 italic">No fields mapped yet</div>
-                                      )}
-                                    </div>
+                                  <div key={i} className="text-xs text-slate-400 flex items-center gap-1">
+                                    <svg className="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    <span>{ontoNode ? ontoNode.label.replace(' (Unified)', '') : ent.ontoId.replace('dcl_', '')}</span>
                                   </div>
                                 );
                               })}
