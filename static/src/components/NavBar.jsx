@@ -16,6 +16,7 @@ function NavBar({onSearch}){
   const navItems = [
     { href:'#/dcl', label:'DCL' },
     { href:'#/ontology', label:'Ontology' },
+    { href:'#/mappings', label:'Mappings' },
     { href:'#/agents', label:'Agents' },
     { href:'#/faq', label:'FAQ' },
   ];
