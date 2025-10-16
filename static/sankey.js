@@ -150,7 +150,9 @@ function renderSankey(state) {
         target: nodeIndexMap[e.target],
         value: 1,
         sourceSystem: linkSourceSystem,
-        targetType: targetType  // Track target type for coloring
+        targetType: targetType,  // Track target type for coloring
+        fieldMappings: e.field_mappings || [],  // Store field mapping info
+        edgeLabel: e.label || ''
       });
     }
   });
@@ -308,7 +310,9 @@ function renderSankey(state) {
       // Create edge tooltip
       const sourceNodeData = sankeyNodes.find(n => n.name === d.source.name);
       const targetNodeData = sankeyNodes.find(n => n.name === d.target.name);
-      const tooltip = getEdgeTooltip(sourceNodeData, targetNodeData);
+      const linkIndex = links.indexOf(d);
+      const originalLink = sankeyLinks[linkIndex];
+      const tooltip = getEdgeTooltip(sourceNodeData, targetNodeData, originalLink);
       
       const existingTooltip = document.getElementById('sankey-tooltip');
       if (existingTooltip) existingTooltip.remove();
@@ -442,7 +446,7 @@ function renderSankey(state) {
   }
 
   // Helper function for edge tooltips
-  function getEdgeTooltip(sourceNodeData, targetNodeData) {
+  function getEdgeTooltip(sourceNodeData, targetNodeData, linkData) {
     if (!sourceNodeData || !targetNodeData) return 'Data Flow';
     
     const sourceName = sourceNodeData.name || 'Unknown';
@@ -461,7 +465,7 @@ function renderSankey(state) {
       flowDescription = 'Data flow';
     }
     
-    return `
+    let tooltip = `
       <strong>Data Flow</strong><br>
       <span style="color: #94a3b8; font-size: 10px;">${flowDescription}</span><br>
       <div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid #475569;">
@@ -469,6 +473,33 @@ function renderSankey(state) {
         <span style="color: #34d399;">To:</span> ${targetName}
       </div>
     `;
+    
+    // Add field mappings if available
+    if (linkData && linkData.fieldMappings && linkData.fieldMappings.length > 0) {
+      tooltip += `
+        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #475569;">
+          <strong style="color: #a78bfa; font-size: 10px;">Field Mappings:</strong><br>
+          <div style="max-height: 120px; overflow-y: auto; margin-top: 4px;">
+      `;
+      
+      linkData.fieldMappings.forEach(field => {
+        const sourceField = field.source || 'N/A';
+        const ontoField = field.onto_field || 'N/A';
+        const confidence = field.confidence ? `(${Math.round(field.confidence * 100)}%)` : '';
+        tooltip += `
+          <div style="font-size: 10px; margin: 2px 0; color: #cbd5e1;">
+            <span style="color: #60a5fa;">${sourceField}</span> → <span style="color: #34d399;">${ontoField}</span> <span style="color: #94a3b8;">${confidence}</span>
+          </div>
+        `;
+      });
+      
+      tooltip += `
+          </div>
+        </div>
+      `;
+    }
+    
+    return tooltip;
   }
 
   // Helper to get source system type and colors
